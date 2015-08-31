@@ -49,7 +49,7 @@ qsublapply <- function(X, FUN,
                        qsub.memory="1G",
                        qsub.src.dir="/tmp", 
                        qsub.remote.dir="/scratch/irc/personal/robrechtc/tmp", 
-                       qsub.tmp.foldername=paste0("qsubapply_", random::randomStrings(n=1, len=10)[1,]),
+                       qsub.tmp.foldername=paste0("qsubapply-", random::randomStrings(n=1, len=10)[1,]),
                        qsub.remove.tmpdirs=T) {
   src.dir=paste0(qsub.src.dir, "/", qsub.tmp.foldername)
   remote.dir=paste0(qsub.remote.dir, "/", qsub.tmp.foldername)
@@ -84,7 +84,7 @@ qsublapply <- function(X, FUN,
 "setwd(\"", remote.dir, "\")
 load(\"data.RData\")
 index <- as.integer(commandArgs(trailingOnly=T)[[1]])
-out <- qsublapply.function(qsublapply.indices[[index]])
+out <- FUN(X[[index]])
 save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))")
   write(rscript, src.rfile)
   ssh.utils::cp.remote(remote.src="", path.src=src.rfile, remote.dest="irccluster", path.dest=remote.rfile)
