@@ -49,7 +49,7 @@ my.cp.remote <- function (remote.src, path.src, remote.dest, path.dest, verbose 
 #' # not run 
 #' # X=seq_len(100)
 #' # FUN=function(i) { Sys.sleep(1); i }
-#' # qsublapply(X, FUN)
+#' # qsublapply(X, FUN, qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp")
 qsublapply <- function(X, FUN, 
                        qsub.memory="1G",
                        qsub.src.dir="/tmp", 
