@@ -45,6 +45,11 @@ my.cp.remote <- function (remote.src, path.src, remote.dest, path.dest, verbose 
 #' @import ssh.utils
 #' @import random
 #' @export
+#' @examples 
+#' # not run 
+#' # X=seq_len(100)
+#' # FUN=function(i) { Sys.sleep(1); i }
+#' # qsublapply(X, FUN)
 qsublapply <- function(X, FUN, 
                        qsub.memory="1G",
                        qsub.src.dir="/tmp", 
