@@ -104,7 +104,7 @@ Rscript script.R $SGE_TASK_ID")
   ssh.utils::cp.remote(remote.src="", path.src=src.shfile, remote.dest="irccluster", path.dest=remote.shfile)
   
   command <- paste0(
-"ssh irccluster << HERE
+"ssh irccluster -T << HERE
 module load gridengine
 module load R
 cd ", remote.dir, "
