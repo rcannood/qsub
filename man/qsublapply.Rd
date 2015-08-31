@@ -4,24 +4,25 @@
 \alias{qsublapply}
 \title{Apply a Function over a List or Vector on PRISM!}
 \usage{
-qsublapply(X, FUN, qsub.memory = "1G",
-  qsub.tmp.foldername = random::randomStrings(n = 1, len = 10)[1, ],
-  qsub.src.dir = paste0("/tmp/", qsub.tmp.foldername),
-  qsub.remote.dir = paste0("/scratch/irc/personal/robrechtc/tmp/",
-  qsub.tmp.foldername))
+qsublapply(X, FUN, qsub.memory = "1G", qsub.src.dir = "/tmp",
+  qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp",
+  qsub.tmp.foldername = paste0("qsubapply_", random::randomStrings(n = 1, len
+  = 10)[1, ]), qsub.remove.tmpdirs = T)
 }
 \arguments{
 \item{X}{a vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.}
 
-\item{FUN}{the function to be applied to each element of X. In the case of functions like +, %*%, the function name must be backquoted or quoted.}
+\item{FUN}{the function to be applied to each element of X.}
 
 \item{qsub.memory}{memory to allocate for each task.}
-
-\item{qsub.tmp.foldername}{a random tmp folder name.}
 
 \item{qsub.src.dir}{a local temporary folder.}
 
 \item{qsub.remote.dir}{a remote temporary folder.}
+
+\item{qsub.tmp.foldername}{a random tmp folder name.}
+
+\item{qsub.remove.tmpdirs}{remove the temporary folders at the end of this procedure?}
 }
 \description{
 Apply a Function over a List or Vector on PRISM!
