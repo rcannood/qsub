@@ -72,8 +72,10 @@ qsublapply <- function(X, FUN,
   remote.outdir <- paste0(remote.dir, "/out")
   ssh.utils::mkdir.remote(remote.outdir, remote="irccluster")
   
-  src.rdata <- paste0(src.dir, "/data.RData")
-  remote.rdata <- paste0(remote.dir, "/data.RData")
+  src.rdata1 <- paste0(src.dir, "/data1.RData")
+  remote.rdata1 <- paste0(remote.dir, "/data1.RData")
+  src.rdata2 <- paste0(src.dir, "/data2.RData")
+  remote.rdata2 <- paste0(remote.dir, "/data2.RData")
   
   src.rfile <- paste0(src.dir, "/script.R")
   remote.rfile <- paste0(remote.dir, "/script.R")
@@ -81,14 +83,16 @@ qsublapply <- function(X, FUN,
   src.shfile <- paste0(src.dir, "/script.sh")
   remote.shfile <- paste0(remote.dir, "/script.sh")
   
-  save(list=ls(environment()), file=src.rdata, envir=environment())
-  #save.image(src.rdata)
+  save(list=ls(environment()), file=src.rdata1, envir=environment())
+  save.image(src.rdata2)
   
-  ssh.utils::cp.remote(remote.src="", path.src=src.rdata, remote.dest="irccluster", path.dest=remote.rdata)
+  ssh.utils::cp.remote(remote.src="", path.src=src.rdata1, remote.dest="irccluster", path.dest=remote.rdata1)
+  ssh.utils::cp.remote(remote.src="", path.src=src.rdata2, remote.dest="irccluster", path.dest=remote.rdata2)
   
   rscript <- paste0(
 "setwd(\"", remote.dir, "\")
-load(\"data.RData\")
+load(\"data1.RData\")
+load(\"data2.RData\")
 index <- as.integer(commandArgs(trailingOnly=T)[[1]])
 out <- FUN(X[[index]])
 save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))")
