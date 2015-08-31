@@ -81,7 +81,8 @@ qsublapply <- function(X, FUN,
   src.shfile <- paste0(src.dir, "/script.sh")
   remote.shfile <- paste0(remote.dir, "/script.sh")
   
-  save.image(src.rdata)
+  save(list=ls(environment()), file=src.rdata, envir=environment())
+  #save.image(src.rdata)
   
   ssh.utils::cp.remote(remote.src="", path.src=src.rdata, remote.dest="irccluster", path.dest=remote.rdata)
   
