@@ -118,21 +118,17 @@ run.withwarn <- function(expr) {
 #' file.length <- as.integer(res$cmd.out)
 #' }
 #' @rdname run.remote
-run.remote <- function(cmd, remote = "", intern = T, stderr.redirect = T, verbose = F)
-{
+run.remote <- function(cmd, remote = "", intern = T, stderr.redirect = T, verbose = F) {
   redir <- ifelse(stderr.redirect, " 2>&1", "")
-  if (!is.null(remote) && nchar(remote) > 0)
-  {
+  if (!is.null(remote) && nchar(remote) > 0) {
     command <- paste0("ssh -T ", remote, redir, " << 'LAMBORGHINIINTHESTREETSOFLONDON'\n", cmd, "\nLAMBORGHINIINTHESTREETSOFLONDON")
-  } else
-  {
+  } else {
     command <- paste(cmd, redir)      
   }
   if (verbose) print(command)    
   tm <- round(system.time(cmd.out <- run.withwarn(system(command, intern=intern)))[3], 3)
   attr(cmd.out, "elapsed.time") <- tm
-  if (attr(cmd.out, "num.warnings") > 0)
-  {
+  if (attr(cmd.out, "num.warnings") > 0) {
     return(list(cmd.error = TRUE, cmd.out = cmd.out, warn.msg = attr(cmd.out, "last.message")))
   }   
   list(cmd.error = FALSE, cmd.out = cmd.out, warn.msg = NULL)
