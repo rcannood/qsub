@@ -1,3 +1,13 @@
+
+#' Create a qsub configuration object.
+#'
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
+#'        require interactive password entry.
+#' @param qsub.src.dir A directory on the local machine in which to store temporary files.
+#' @param qsub.remote.dir A directory on the remote machine in which to store temporary files.
+#' @param qsub.tmp.foldername A temporary name for this execution.
+#'
+#' @export
 create.qsub.object <- function(remote, qsub.src.dir, qsub.remote.dir, qsub.tmp.foldername) {
   # folder paths
   src.dir <- paste0(qsub.src.dir, "/", qsub.tmp.foldername)
@@ -10,8 +20,6 @@ create.qsub.object <- function(remote, qsub.src.dir, qsub.remote.dir, qsub.tmp.f
   # file paths
   src.rdata1 <- paste0(src.dir, "/data1.RData")
   src.rdata2 <- paste0(src.dir, "/data2.RData")
-  src.rfile <- paste0(src.dir, "/script.R")
-  src.shfile <- paste0(src.dir, "/script.sh")
   remote.rdata1 <- paste0(remote.dir, "/data1.RData")
   remote.rdata2 <- paste0(remote.dir, "/data2.RData")
   remote.rfile <- paste0(remote.dir, "/script.R")
@@ -21,10 +29,10 @@ create.qsub.object <- function(remote, qsub.src.dir, qsub.remote.dir, qsub.tmp.f
     remote=remote,
     src.dir=src.dir, src.outdir=src.outdir, src.logdir=src.logdir,
     remote.dir=remote.dir, remote.outdir=remote.outdir, remote.logdir=remote.logdir,
-    src.rdata1=src.rdata1, src.rdata2=src.rdata2, src.rfile=src.rfile, src.shfile=src.shfile,
+    src.rdata1=src.rdata1, src.rdata2=src.rdata2, 
     remote.rdata1=remote.rdata1, remote.rdata2=remote.rdata2, remote.rfile=remote.rfile, remote.shfile=remote.shfile
   )
-  class(qsub) <- "qsub"
+  class(qsub) <- "qsub_configuration"
   qsub
 }
 
@@ -44,11 +52,13 @@ is.job.running <- function(qsub.object) {
 #' @param FUN the function to be applied to each element of X.
 #' @param qsub.remote ssh alias for PRISM
 #' @param qsub.memory memory to allocate for each task.
+#' @param qsub.cores number of cores per task.
+#' @param qsub.name name given to the task.
 #' @param qsub.src.dir a local temporary folder.
 #' @param qsub.remote.dir a remote temporary folder.
 #' @param qsub.tmp.foldername a random tmp folder name. 
 #' @param qsub.remove.tmpdirs remove the temporary folders at the end of this procedure?
-#' 
+#' @param qsub.verbose When \code{TRUE}, prints out the commands which are run.
 #' @import random
 #' @export
 #' @examples 
@@ -60,10 +70,13 @@ is.job.running <- function(qsub.object) {
 qsublapply <- function(X, FUN, 
                        qsub.remote="prism",
                        qsub.memory="1G",
-                       qsub.src.dir="/tmp", 
-                       qsub.remote.dir="/scratch/irc/personal/robrechtc/tmp", 
-                       qsub.tmp.foldername=paste0("qsubapply-", random::randomStrings(n=1, len=10)[1,]),
-                       qsub.remove.tmpdirs=T) {
+                       qsub.cores=1,
+                       qsub.name="R2PRISM",
+                       qsub.src.dir="/tmp",
+                       qsub.remote.dir="/scratch/irc/personal/robrechtc/tmp",
+                       qsub.tmp.foldername=paste0("R2PRISM-", random::randomStrings(n=1, len=10)[1,]),
+                       qsub.remove.tmpdirs=T,
+                       qsub.verbose=F) {
   qsub <- create.qsub.object(qsub.remote, qsub.src.dir, qsub.remote.dir, qsub.tmp.foldername)
 
   # check folders existance
@@ -75,10 +88,10 @@ qsublapply <- function(X, FUN,
   }
   
   # create folders
-  mkdir.remote(qsub$src.dir, "")
-  mkdir.remote(qsub$remote.dir, qsub$remote)
-  mkdir.remote(qsub$remote.outdir, qsub$remote)
-  mkdir.remote(qsub$remote.logdir, qsub$remote)
+  mkdir.remote(qsub$src.dir, "", verbose=qsub.verbose)
+  mkdir.remote(qsub$remote.dir, remote=qsub$remote, verbose=qsub.verbose)
+  mkdir.remote(qsub$remote.outdir, remote=qsub$remote, verbose=qsub.verbose)
+  mkdir.remote(qsub$remote.logdir, remote=qsub$remote, verbose=qsub.verbose)
   
   # save environment to RData and copy to remote
   save(list=ls(environment()), file=qsub$src.rdata1, envir=environment())
@@ -88,29 +101,30 @@ qsublapply <- function(X, FUN,
   
   # save R script and copy to remote
   rscript <- paste0(
-"setwd(\"", qsub$remote.dir, "\")
-load(\"data1.RData\")
-load(\"data2.RData\")
-index <- as.integer(commandArgs(trailingOnly=T)[[1]])
-out <- FUN(X[[index]])
-save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))")
-  write(rscript, qsub$src.rfile)
-  cp.remote(remote.src="", path.src=qsub$src.rfile, remote.dest=qsub$remote, path.dest=qsub$remote.rfile)
+    "setwd(\"", qsub$remote.dir, "\")\n",
+    "load(\"data1.RData\")\n",
+    "load(\"data2.RData\")\n",
+    "index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
+    "out <- FUN(X[[index]])\n",
+    "save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))\n"
+  )
+  write.remote(rscript, qsub$remote.rfile, qsub$remote)
   
   # save bash script and copy to remote
   script <- paste0(
-"#!/bin/bash
-#$ -t ", 1, "-", length(X), "
-#$ -N interactive
-#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt
-#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt
-#$ -l h_vmem=", qsub.memory, "
-module load R
-module unload gcc
-export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"
-Rscript script.R $SGE_TASK_ID")
-  write(script, qsub$src.shfile)
-  cp.remote(remote.src="", path.src=qsub$src.shfile, remote.dest=qsub$remote, path.dest=qsub$remote.shfile)
+    "#!/bin/bash\n", 
+    ifelse(qsub.cores==1, "", paste0("#$ -pe serial ", qsub.cores, "\n")), 
+    "#$ -t ", 1, "-", length(X), "\n",
+    "#$ -N ", qsub.name, "\n",
+    "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
+    "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
+    "#$ -l h_vmem=", qsub.memory, "\n",
+    "module load R\n",
+    "module unload gcc\n",
+    "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
+    "Rscript script.R $SGE_TASK_ID\n"
+  )
+  write.remote(rscript, qsub$remote.shfile, qsub$remote)
   
   # start job remotely and read job.id
   command.out <- run.remote(paste0("cd ", qsub$remote.dir, "; qsub script.sh"), qsub$remote)

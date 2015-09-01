@@ -7,8 +7,7 @@
 \usage{
 run.withwarn(expr)
 
-run.remote(cmd, remote = "", intern = T, stderr.redirect = T,
-  verbose = F)
+run.remote(cmd, remote, intern = T, stderr.redirect = T, verbose = F)
 }
 \arguments{
 \item{expr}{Expression to be evaluated.}

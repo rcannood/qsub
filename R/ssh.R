@@ -30,6 +30,7 @@
 #' @name run.remote
 #' @title Functions to run commands remotely via \code{ssh} and capture output.
 #' @rdname run.remote
+#' @export
 run.withwarn <- function(expr) {
   .number_of_warnings <- 0L
   .last_warning_msg <- NULL
@@ -118,7 +119,8 @@ run.withwarn <- function(expr) {
 #' file.length <- as.integer(res$cmd.out)
 #' }
 #' @rdname run.remote
-run.remote <- function(cmd, remote = "", intern = T, stderr.redirect = T, verbose = F) {
+#' @export
+run.remote <- function(cmd, remote, intern = T, stderr.redirect = T, verbose = F) {
   redir <- ifelse(stderr.redirect, " 2>&1", "")
   if (!is.null(remote) && nchar(remote) > 0) {
     command <- paste0("ssh -T ", remote, redir, " << 'LAMBORGHINIINTHESTREETSOFLONDON'\n", cmd, "\nLAMBORGHINIINTHESTREETSOFLONDON")
@@ -187,6 +189,7 @@ run.remote <- function(cmd, remote = "", intern = T, stderr.redirect = T, verbos
 #' # 9    9 NA
 #' # 10  10 NA
 #' }
+#' @export
 cp.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = FALSE, 
                       via.local = FALSE, local.temp.dir = tempdir(), recursively = FALSE) {   
   if (remote.src == "" || is.na(remote.src)) remote.src = NULL;
@@ -230,6 +233,7 @@ cp.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = FA
 #' file.exists.remote("~/myfile.csv", remote = "me@@myserver")
 #' # [1] TRUE
 #' }
+#' @export
 file.exists.remote <- function(file, remote = "") {
   cmd <- paste("if [ -e ", file, " ] ; then echo TRUE; else echo FALSE; fi ", sep="")
   res <- run.remote(cmd, remote)
@@ -252,6 +256,7 @@ file.exists.remote <- function(file, remote = "") {
 #' # [1] 37268
 #' }
 #' @rdname mem.usage
+#' @export
 mem.usage <- function(pid = Sys.getpid()) {
   df <- read.delim(pipe("ps axo pid,rss"), sep = ""); 
   df[df$PID == pid, "RSS"] 
@@ -268,20 +273,20 @@ mem.usage <- function(pid = Sys.getpid()) {
 #' @param user.group The user group. If NULL, the default group is used.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param permissions The group permissions on the directory. Default is 'rwx'.
+#' @param permissions The group permissions on the directory. Default is '-'.
+#' @param verbose When \code{TRUE} prints the command.
 #' @rdname mkdir.remote
 #' @note This may not work on Windows.
-# COMPATIBILITY WARNING: WINDOWS 
-mkdir.remote <- function(path, user.group = NULL, remote = "", permissions = c("g+rwx", "g+rx", "go-w", "go-rwx", "-")) {
-  permissions <- match.arg(permissions)
-  if (!file.exists.remote(path, remote = remote)) {
-    run.remote(paste("mkdir -p", path), remote = remote)
+#' @export
+mkdir.remote <- function(path, remote = "", user.group = NULL, permissions = "-", verbose = F) {
+  if (!file.exists.remote(path, remote)) {
+    run.remote(paste("mkdir -p", path), remote=remote, verbose=verbose)
   }
   if (!is.null(user.group)) {
-    run.remote(paste("chgrp -R", user.group, path), remote = remote)
+    run.remote(paste("chgrp -R", user.group, path), remote=remote, verbose=verbose)
   }
   if (permissions != "-") {
-    run.remote(paste("chmod ", permissions, " ", path, sep = ""), remote = remote)         
+    run.remote(paste0("chmod ", permissions, " ", path), remote=remote, verbose=verbose)         
   }
 }
 
@@ -306,6 +311,7 @@ mkdir.remote <- function(path, user.group = NULL, remote = "", permissions = c("
 #' ps.grep.remote("Eclipse", remote = "")
 #' # [1] TRUE
 #' }
+#' @export
 ps.grep.remote <- function(
   grep.string,           # string(s) to check for in 'ps'
   remote,                # remote location to look for script
@@ -352,14 +358,51 @@ ps.grep.remote <- function(
   return(running)   
 }
 
+#' Read from a file remotely
+#'
+#' @param path Path of the file.
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
+#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#' @param verbose When \code{TRUE} prints the command.
+#'
+#' @export
 cat.remote <- function(path, remote=NULL, verbose=F) {
   run.remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
 }
 
+#' Write to a file remotely
+#'
+#' @param x The text to write to the file.
+#' @param path Path of the file.
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
+#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#' @param verbose When \code{TRUE} prints the command.
+#'
+#' @export
+write.remote <- function(x, path, remote, verbose=F) {
+  run.remote(paste0("cat > ", path, " << 'FLEMISHPLANTSFORSALE'\n", paste(x, collapse="\n"), "FLEMISHPLANTSFORSALE\n"), remote, verbose=verbose)
+}
+
+#' View the contents of a directory remotely
+#'
+#' @param path Path of the directory.
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
+#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#' @param verbose When \code{TRUE} prints the command.
+#'
+#' @export
 ls.remote <- function(path, remote=NULL, verbose=F) {
   run.remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
 }
 
+#' Show the status of Grid Engine jobs and queues
+#'
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
+#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#' @param verbose When \code{TRUE} prints the command.
+#'
+#' @export
 qstat.remote <- function(remote=NULL, verbose=F) {
   run.remote("qstat", remote, verbose=verbose)$cmd.out
 }
+
