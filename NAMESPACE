@@ -2,4 +2,4 @@
 
 export(qsublapply)
 import(random)
-import(ssh.utils)
+importFrom(stringr,str_detect)

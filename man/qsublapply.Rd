@@ -6,7 +6,7 @@
 \usage{
 qsublapply(X, FUN, qsub.memory = "1G", qsub.src.dir = "/tmp",
   qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp",
-  qsub.tmp.foldername = paste0("qsubapply_", random::randomStrings(n = 1, len
+  qsub.tmp.foldername = paste0("qsubapply-", random::randomStrings(n = 1, len
   = 10)[1, ]), qsub.remove.tmpdirs = T)
 }
 \arguments{
@@ -26,5 +26,11 @@ qsublapply(X, FUN, qsub.memory = "1G", qsub.src.dir = "/tmp",
 }
 \description{
 Apply a Function over a List or Vector on PRISM!
+}
+\examples{
+# not run
+# X=seq_len(100)
+# FUN=function(i) { Sys.sleep(1); i }
+# qsublapply(X, FUN, qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp")
 }
 

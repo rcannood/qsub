@@ -10,6 +10,6 @@ License: GPL (>= 2)
 LazyData: true
 Author: Robrecht Cannoodt
 Maintainer: 'Robrecht Cannoodt' <robrecht.cannoodt@gmail.com>
-Imports: ssh.utils, random
+Imports: random, stringr
 URL: http://github.com/rcannood/qsubapply
 BugReports: https://github.com/rcannood/qsubapply/issues

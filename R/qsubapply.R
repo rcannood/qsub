@@ -1,36 +1,48 @@
-my.cp.remote <- function (remote.src, path.src, remote.dest, path.dest, verbose = FALSE, 
-                          via.local = FALSE, local.temp.dir = tempdir(), recursively=F) {
-  if (remote.src == "" || is.na(remote.src)) 
-    remote.src = NULL
-  path.src <- paste(c(remote.src, path.src), collapse = ":")
-  if (remote.dest == "" || is.na(remote.dest)) 
-    remote.dest = NULL
-  path.dest <- paste(c(remote.dest, path.dest), collapse = ":")
-  if (via.local) {
-    path.tmp <- tempfile(pattern = "tmp_scp_", tmpdir = local.temp.dir)
-    res <- run.remote(paste("scp", path.src, path.tmp), remote = "")
-    if (res$cmd.error) {
-      stop(paste("scp failed:", res$warn.msg))
-    }
-    if (verbose) 
-      print(paste("Elapsed:", attr(res$cmd.out, "elapsed.time"), 
-                  "sec"))
-    path.src <- path.tmp
-  }
-  if (recursively) {
-    res <- ssh.utils::run.remote(paste("scp -r", path.src, path.dest), remote = "")
-  } else {
-    res <- ssh.utils::run.remote(paste("scp", path.src, path.dest), remote = "")
-  }
-  if (res$cmd.error) {
-    stop(paste("scp failed:", res$warn.msg))
-  }
-  if (verbose) 
-    print(paste("Elapsed:", attr(res$cmd.out, "elapsed.time"), 
-                "sec"))
-  if (via.local) 
-    ssh.utils::run.remote(paste("rm -f", path.tmp), remote = "")
+cat.remote <- function(path, remote=NULL, verbose=F) {
+  run.remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
 }
+
+ls.remote <- function(path, remote=NULL, verbose=F) {
+  run.remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
+}
+
+qstat.remote <- function(remote=NULL, verbose=F) {
+  run.remote("qstat", remote, verbose=verbose)$cmd.out
+}
+
+create.qsub.object <- function(qsub.src.dir, qsub.remote.dir, qsub.tmp.foldername) {
+  # folder paths
+  src.dir <- paste0(qsub.src.dir, "/", qsub.tmp.foldername)
+  remote.dir <- paste0(qsub.remote.dir, "/", qsub.tmp.foldername)
+  src.outdir <- paste0(src.dir, "/out")
+  remote.outdir <- paste0(remote.dir, "/out")
+  src.logdir <- paste0(src.dir, "/log")
+  remote.logdir <- paste0(remote.dir, "/log")
+  
+  # file paths
+  src.rdata1 <- paste0(src.dir, "/data1.RData")
+  src.rdata2 <- paste0(src.dir, "/data2.RData")
+  src.rfile <- paste0(src.dir, "/script.R")
+  src.shfile <- paste0(src.dir, "/script.sh")
+  remote.rdata1 <- paste0(remote.dir, "/data1.RData")
+  remote.rdata2 <- paste0(remote.dir, "/data2.RData")
+  remote.rfile <- paste0(remote.dir, "/script.R")
+  remote.shfile <- paste0(remote.dir, "/script.sh")
+  
+  qsub <- list(
+    src.dir=src.dir, src.outdir=src.outdir, src.logdir=src.logdir,
+    remote.dir=remote.dir, remote.outdir=remote.outdir, remote.logdir=remote.logdir,
+    src.rdata1=src.rdata1, src.rdata2=src.rdata2, src.rfile=src.rfile, src.shfile=src.shfile,
+    remote.rdata1=remote.rdata1, remote.rdata2=remote.rdata2, remote.rfile=remote.rfile, remote.shfile=remote.shfile
+  )
+  class(qsub) <- "qsub"
+  qsub
+}
+
+# is.running <- function(qsub.object) {
+#   !is.null(qsub.object$job.id) && 
+# }
+
 
 #' Apply a Function over a List or Vector on PRISM!
 #'
@@ -42,7 +54,6 @@ my.cp.remote <- function (remote.src, path.src, remote.dest, path.dest, verbose 
 #' @param qsub.tmp.foldername a random tmp folder name. 
 #' @param qsub.remove.tmpdirs remove the temporary folders at the end of this procedure?
 #' 
-#' @import ssh.utils
 #' @import random
 #' @export
 #' @examples 
@@ -56,49 +67,40 @@ qsublapply <- function(X, FUN,
                        qsub.remote.dir="/scratch/irc/personal/robrechtc/tmp", 
                        qsub.tmp.foldername=paste0("qsubapply-", random::randomStrings(n=1, len=10)[1,]),
                        qsub.remove.tmpdirs=T) {
-  src.dir=paste0(qsub.src.dir, "/", qsub.tmp.foldername)
-  remote.dir=paste0(qsub.remote.dir, "/", qsub.tmp.foldername)
-  if (dir.exists(src.dir)) {
+  qsub <- create.qsub.object(qsub.src.dir, qsub.remote.dir, qsub.tmp.foldername)
+
+  # check folders existance
+  if (dir.exists(qsub$src.dir)) {
     stop("The local temporary folder already exists!")
   }
-  if (ssh.utils::file.exists.remote(remote.dir)) {
+  if (file.exists.remote(qsub$remote.dir)) {
     stop("The remote temporary folder already exists!")
   }
   
-  dir.create(src.dir)
-  ssh.utils::mkdir.remote(remote.dir, remote="irccluster")
-  ssh.utils::mkdir.remote(paste0(remote.dir, "/log"), remote="irccluster")
+  # create folders
+  dir.create(qsub$src.dir)
+  mkdir.remote(qsub$remote.dir, remote="irccluster")
+  mkdir.remote(qsub$remote.outdir, remote="irccluster")
+  mkdir.remote(qsub$remote.logdir, remote="irccluster")
   
-  remote.outdir <- paste0(remote.dir, "/out")
-  ssh.utils::mkdir.remote(remote.outdir, remote="irccluster")
+  # save environment to RData and copy to remote
+  save(list=ls(environment()), file=qsub$src.rdata1, envir=environment())
+  save.image(qsub$src.rdata2)
+  cp.remote(remote.src="", path.src=qsub$src.rdata1, remote.dest="irccluster", path.dest=qsub$remote.rdata1)
+  cp.remote(remote.src="", path.src=qsub$src.rdata2, remote.dest="irccluster", path.dest=qsub$remote.rdata2)
   
-  src.rdata1 <- paste0(src.dir, "/data1.RData")
-  remote.rdata1 <- paste0(remote.dir, "/data1.RData")
-  src.rdata2 <- paste0(src.dir, "/data2.RData")
-  remote.rdata2 <- paste0(remote.dir, "/data2.RData")
-  
-  src.rfile <- paste0(src.dir, "/script.R")
-  remote.rfile <- paste0(remote.dir, "/script.R")
-  
-  src.shfile <- paste0(src.dir, "/script.sh")
-  remote.shfile <- paste0(remote.dir, "/script.sh")
-  
-  save(list=ls(environment()), file=src.rdata1, envir=environment())
-  save.image(src.rdata2)
-  
-  ssh.utils::cp.remote(remote.src="", path.src=src.rdata1, remote.dest="irccluster", path.dest=remote.rdata1)
-  ssh.utils::cp.remote(remote.src="", path.src=src.rdata2, remote.dest="irccluster", path.dest=remote.rdata2)
-  
+  # save R script and copy to remote
   rscript <- paste0(
-"setwd(\"", remote.dir, "\")
+"setwd(\"", qsub$remote.dir, "\")
 load(\"data1.RData\")
 load(\"data2.RData\")
 index <- as.integer(commandArgs(trailingOnly=T)[[1]])
 out <- FUN(X[[index]])
 save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))")
-  write(rscript, src.rfile)
-  ssh.utils::cp.remote(remote.src="", path.src=src.rfile, remote.dest="irccluster", path.dest=remote.rfile)
+  write(rscript, qsub$src.rfile)
+  cp.remote(remote.src="", path.src=qsub$src.rfile, remote.dest="irccluster", path.dest=qsub$remote.rfile)
   
+  # save bash script and copy to remote
   script <- paste0(
 "#!/bin/bash
 #$ -t ", 1, "-", length(X), "
@@ -110,36 +112,38 @@ module load R
 module unload gcc
 export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"
 Rscript script.R $SGE_TASK_ID")
-  write(script, src.shfile)
-  ssh.utils::cp.remote(remote.src="", path.src=src.shfile, remote.dest="irccluster", path.dest=remote.shfile)
+  write(script, qsub$src.shfile)
+  cp.remote(remote.src="", path.src=qsub$src.shfile, remote.dest="irccluster", path.dest=qsub$remote.shfile)
   
+  # start job remotely and read job.id
   command <- paste0(
 "ssh irccluster -T << HERE
 module load gridengine
 module load R
-cd ", remote.dir, "
+cd ", qsub$remote.dir, "
 qsub script.sh
 HERE")
+  command.out <- run.remote("cd ")
   command.out <- system(command, intern = T)
   
-  id <- gsub("Your job-array ([0-9]*).*", "\\1", command.out)
+  qsub$job.id <- gsub("Your job-array ([0-9]*).*", "\\1", command.out)
   
   check.command <- "echo qstat | ssh irccluster -T"
-  while (any(grepl(paste0("^ *", id, " "), system(check.command, intern = T)))) {
+  while (any(grepl(paste0("^ *", qsub$job.id, " "), system(check.command, intern = T)))) {
     Sys.sleep(1)
   }
   
-  my.cp.remote(remote.src="irccluster", path.src=remote.outdir, remote.dest="", path.dest=src.dir, recursively = T)
+  cp.remote(remote.src="irccluster", path.src=qsub$remote.outdir, remote.dest="", path.dest=qsub$src.dir, recursively = T)
   
   outs <- lapply(seq_along(X), function(i) {
     out <- NULL # satisfying r check
-    load(paste0(src.dir, "/out/out_", i, ".RData"))
+    load(paste0(qsub$src.dir, "/out/out_", i, ".RData"))
     out
   })
   
   if (qsub.remove.tmpdirs) {
-    system(paste0("rm -rf \"", src.dir, "\""))
-    ssh.utils::run.remote(paste0("rm -rf \"", remote.dir, "\""), remote="irccluster")
+    system(paste0("rm -rf \"", qsub$src.dir, "\""))
+    run.remote(paste0("rm -rf \"", qsub$remote.dir, "\""), remote="irccluster")
   }
   
   outs
