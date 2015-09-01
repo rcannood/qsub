@@ -69,7 +69,7 @@ run.withwarn <- function(expr) {
 #'        Generally, one should use that to capture STDERR output 
 #'        with \code{intern=TRUE}, but this should be set to \code{FALSE} 
 #'        if the command manages redirection on its own.
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #' @return \code{run.remote} returns 
 #' a list containing the results of the command execution, error codes and messages.
 #' \itemize{
@@ -125,9 +125,9 @@ run.remote <- function(cmd, remote, intern = T, stderr.redirect = T, verbose = F
   if (!is.null(remote) && nchar(remote) > 0) {
     command <- paste0("ssh -T ", remote, redir, " << 'LAMBORGHINIINTHESTREETSOFLONDON'\n", cmd, "\nLAMBORGHINIINTHESTREETSOFLONDON")
   } else {
-    command <- paste(cmd, redir)      
+    command <- paste(cmd, redir)
   }
-  if (verbose) print(command)    
+  if (verbose) cat("# ", gsub("\n", "\n# ", command), "\n", sep="")
   tm <- round(system.time(cmd.out <- run.withwarn(system(command, intern=intern)))[3], 3)
   attr(cmd.out, "elapsed.time") <- tm
   if (attr(cmd.out, "num.warnings") > 0) {
@@ -226,6 +226,7 @@ cp.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = FA
 #' @param file File path.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
+#' @param verbose If \code{TRUE} prints the command.
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
 #' @rdname file.exists.remote
 #' @examples 
@@ -234,9 +235,9 @@ cp.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = FA
 #' # [1] TRUE
 #' }
 #' @export
-file.exists.remote <- function(file, remote = "") {
+file.exists.remote <- function(file, remote = "", verbose=F) {
   cmd <- paste("if [ -e ", file, " ] ; then echo TRUE; else echo FALSE; fi ", sep="")
-  res <- run.remote(cmd, remote)
+  res <- run.remote(cmd, remote, verbose=verbose)
   if (res$cmd.error) {
     stop(paste("file.exists.remote: ERROR", res$cmd.out, res$warn.msg, sep="\n"))
   }
@@ -274,7 +275,7 @@ mem.usage <- function(pid = Sys.getpid()) {
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param permissions The group permissions on the directory. Default is '-'.
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #' @rdname mkdir.remote
 #' @note This may not work on Windows.
 #' @export
@@ -363,7 +364,7 @@ ps.grep.remote <- function(
 #' @param path Path of the file.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 cat.remote <- function(path, remote=NULL, verbose=F) {
@@ -376,7 +377,7 @@ cat.remote <- function(path, remote=NULL, verbose=F) {
 #' @param path Path of the file.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 write.remote <- function(x, path, remote, verbose=F) {
@@ -388,7 +389,7 @@ write.remote <- function(x, path, remote, verbose=F) {
 #' @param path Path of the directory.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 ls.remote <- function(path, remote=NULL, verbose=F) {
@@ -399,7 +400,7 @@ ls.remote <- function(path, remote=NULL, verbose=F) {
 #'
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not 
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose When \code{TRUE} prints the command.
+#' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 qstat.remote <- function(remote=NULL, verbose=F) {

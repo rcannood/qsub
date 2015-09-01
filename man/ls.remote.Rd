@@ -12,7 +12,7 @@ ls.remote(path, remote = NULL, verbose = F)
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
 
-\item{verbose}{When \code{TRUE} prints the command.}
+\item{verbose}{If \code{TRUE} prints the command.}
 }
 \description{
 View the contents of a directory remotely

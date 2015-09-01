@@ -27,7 +27,7 @@ Generally, one should use that to capture STDERR output
 with \code{intern=TRUE}, but this should be set to \code{FALSE}
 if the command manages redirection on its own.}
 
-\item{verbose}{When \code{TRUE} prints the command.}
+\item{verbose}{If \code{TRUE} prints the command.}
 }
 \value{
 \code{run.remote} returns

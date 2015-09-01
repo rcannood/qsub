@@ -18,7 +18,7 @@ require interactive password entry. For local execution, pass an empty string ""
 
 \item{permissions}{The group permissions on the directory. Default is '-'.}
 
-\item{verbose}{When \code{TRUE} prints the command.}
+\item{verbose}{If \code{TRUE} prints the command.}
 }
 \description{
 If the directory already exists, attempts to set the group ownership to the

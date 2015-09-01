@@ -4,13 +4,15 @@
 \alias{file.exists.remote}
 \title{Checks if a local or remote file exists.}
 \usage{
-file.exists.remote(file, remote = "")
+file.exists.remote(file, remote = "", verbose = F)
 }
 \arguments{
 \item{file}{File path.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
+
+\item{verbose}{If \code{TRUE} prints the command.}
 }
 \value{
 \code{TRUE} or \code{FALSE} indicating whether the file exists.
