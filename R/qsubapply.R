@@ -1,15 +1,3 @@
-cat.remote <- function(path, remote=NULL, verbose=F) {
-  run.remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
-}
-
-ls.remote <- function(path, remote=NULL, verbose=F) {
-  run.remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
-}
-
-qstat.remote <- function(remote=NULL, verbose=F) {
-  run.remote("qstat", remote, verbose=verbose)$cmd.out
-}
-
 create.qsub.object <- function(qsub.src.dir, qsub.remote.dir, qsub.tmp.foldername) {
   # folder paths
   src.dir <- paste0(qsub.src.dir, "/", qsub.tmp.foldername)
@@ -57,10 +45,11 @@ create.qsub.object <- function(qsub.src.dir, qsub.remote.dir, qsub.tmp.foldernam
 #' @import random
 #' @export
 #' @examples 
-#' # not run 
+#' \dontrun{
 #' # X=seq_len(100)
 #' # FUN=function(i) { Sys.sleep(1); i }
 #' # qsublapply(X, FUN, qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp")
+#' }
 qsublapply <- function(X, FUN, 
                        qsub.memory="1G",
                        qsub.src.dir="/tmp", 
