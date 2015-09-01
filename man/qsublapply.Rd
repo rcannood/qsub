@@ -28,9 +28,10 @@ qsublapply(X, FUN, qsub.memory = "1G", qsub.src.dir = "/tmp",
 Apply a Function over a List or Vector on PRISM!
 }
 \examples{
-# not run
+\dontrun{
 # X=seq_len(100)
 # FUN=function(i) { Sys.sleep(1); i }
 # qsublapply(X, FUN, qsub.remote.dir = "/scratch/irc/personal/robrechtc/tmp")
+}
 }
 

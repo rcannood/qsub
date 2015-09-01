@@ -1,4 +1,4 @@
-Package: qsubapply
+Package: PRISM
 Title: Running commands remotely on PRISM
 Version: 1.0
 Authors@R: c(
