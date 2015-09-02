@@ -198,7 +198,7 @@ qsub.retrieve <- function(qsub.config, wait=T) {
     }
     
     # copy results to local
-    cp.remote(remote.src=qsub.config$remote, path.src=qsub.config$remote.outdir, remote.dest="", path.dest=qsub.config$src.dir, recursively = T)
+    cp.remote(remote.src=qsub.config$remote, path.src=qsub.config$remote.outdir, remote.dest="", path.dest=qsub.config$src.outdir, recursively = T)
     
     # read RData files
     outs <- lapply(seq_len(qsub.config$num.tasks), function(i) {
