@@ -17,7 +17,7 @@
 #' @export
 qsub.configuration <- function(
   name="R2PRISM", num.cores=1, memory="1G", verbose=F, 
-  remote="prism", src.dir="/tmp", remote.dir="/scratch/irc/personal/robrechtc/tmp",
+  remote="prism", src.dir="/home/rcannood/Workspace/tmp", remote.dir="/scratch/irc/personal/robrechtc/tmp",
   tmp.foldername=paste0(name, "-", random::randomStrings(n=1, len=10)[1,]),
   wait=T, remove.tmpdirs=T, stop.on.error=T
 ) {
@@ -205,7 +205,7 @@ qsub.retrieve <- function(qsub.config, wait=T) {
       out <- NULL # satisfying r check
       file <- paste0(qsub.config$src.dir, "/out/out_", i, ".RData")
       if (file.exists(file)) {
-        load()
+        load(file)
         out
       } else if (qsub.config$stop.on.error) {
         stop("Could not load file \"", file, "\". Please check the error logs.")
