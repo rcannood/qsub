@@ -16,13 +16,13 @@
 #' @import random
 #' @export
 qsub.configuration <- function(
-  name="R2PRISM", num.cores=1, memory="1G", verbose=F, 
+  r.module="R", name="R2PRISM", num.cores=1, memory="1G", verbose=F, 
   remote="prism", src.dir="/home/rcannood/Workspace/tmp", remote.dir="/scratch/irc/personal/robrechtc/tmp",
   tmp.foldername=paste0(name, "-", random::randomStrings(n=1, len=10)[1,]),
   wait=T, remove.tmpdirs=T, stop.on.error=T
 ) {
   qsub <- list(
-    name=name, num.cores=num.cores, memory=memory, verbose=verbose, 
+    r.module=r.module, name=name, num.cores=num.cores, memory=memory, verbose=verbose, 
     remote=remote, wait=wait, remove.tmpdirs=remove.tmpdirs
   )
   
@@ -43,7 +43,7 @@ qsub.configuration <- function(
   qsub$remote.rdata2 <- paste0(remote.dir, "/data2.RData")
   qsub$remote.rfile <- paste0(remote.dir, "/script.R")
   qsub$remote.shfile <- paste0(remote.dir, "/script.sh")
-
+  
   class(qsub) <- "qsub_configuration"
   qsub
 }
@@ -89,8 +89,9 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
     "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
     "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
     "#$ -l h_vmem=", qsub.config$memory, "\n",
-    "module load R\n",
+    "module unload R\n",
     "module unload gcc\n",
+    "module load ", qsub.config$r.module, "\n",
     "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
     "Rscript script.R $SGE_TASK_ID\n"
   )
@@ -137,7 +138,7 @@ execute.job <- function(qsub.config) {
 qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration()) {
   qsub.config$num.tasks <- length(X)
   rcode <- "out <- FUN(X[[index]])\n"
-
+  
   setup.execution(qsub.config, environment(), .GlobalEnv, rcode)
   
   qsub.config$job.id <- execute.job(qsub.config)
