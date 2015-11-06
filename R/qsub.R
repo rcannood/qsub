@@ -23,7 +23,7 @@ qsub.configuration <- function(
 ) {
   src.dir <- paste0(src.dir, "/", tmp.foldername)
   remote.dir <- paste0(remote.dir, "/", tmp.foldername)
-
+  
   qsub <- list(
     r.module=r.module, 
     name=name, 
@@ -93,17 +93,17 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
     "#$ -N ", name, "\n",
     "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
     "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
-    ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n"),
-    "#$ -l h_vmem=", memory, "\n",
-    "module unload R\n",
-    "module unload gcc\n",
-    "module load ", r.module, "\n",
-    "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
-    "Rscript script.R $SGE_TASK_ID\n"
-  ))
-  write.remote(shscript, qsub.config$remote.shfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
-  
-  NULL
+    ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n")),
+           "#$ -l h_vmem=", memory, "\n",
+           "module unload R\n",
+           "module unload gcc\n",
+           "module load ", r.module, "\n",
+           "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
+           "Rscript script.R $SGE_TASK_ID\n"
+    ))
+    write.remote(shscript, qsub.config$remote.shfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
+    
+    NULL
 }
 
 execute.job <- function(qsub.config) {
