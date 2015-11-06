@@ -19,7 +19,7 @@ qsub.configuration <- function(
   r.module="R", name="R2PRISM", num.cores=1, memory="1G", verbose=F, 
   remote="prism", src.dir="/home/rcannood/Workspace/tmp", remote.dir="/scratch/irc/personal/robrechtc/tmp",
   tmp.foldername=paste0(name, "-", random::randomStrings(n=1, len=10)[1,]),
-  wait=T, remove.tmpdirs=T, stop.on.error=T, max.nodes=NULL
+  wait=T, remove.tmpdirs=T, stop.on.error=T, max.cores=NULL
 ) {
   src.dir <- paste0(src.dir, "/", tmp.foldername)
   remote.dir <- paste0(remote.dir, "/", tmp.foldername)
@@ -32,7 +32,7 @@ qsub.configuration <- function(
     verbose=verbose, 
     remote=remote, 
     wait=wait, 
-    max.nodes=max.nodes,
+    max.cores=max.cores,
     remove.tmpdirs=remove.tmpdirs, 
     stop.on.error=stop.on.error,
     src.dir=src.dir,
@@ -93,7 +93,7 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
     "#$ -N ", name, "\n",
     "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
     "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
-    ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n")),
+    ifelse(is.null(max.cores) || !is.integer(max.cores) || !is.finite(max.cores) || x != round(max.cores), "", paste0("#$ -tc ", max.cores, "\n")),
     "#$ -l h_vmem=", memory, "\n",
     "module unload R\n",
     "module unload gcc\n",
