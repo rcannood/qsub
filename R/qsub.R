@@ -34,7 +34,7 @@ qsub.configuration <- function(
     wait=wait, 
     max.nodes=max.nodes,
     remove.tmpdirs=remove.tmpdirs, 
-    stop.on.error=stop.on.error
+    stop.on.error=stop.on.error,
     src.dir=src.dir,
     remote.dir=remote.dir,
     src.outdir=paste0(src.dir, "/out"),
