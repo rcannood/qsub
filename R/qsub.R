@@ -21,28 +21,32 @@ qsub.configuration <- function(
   tmp.foldername=paste0(name, "-", random::randomStrings(n=1, len=10)[1,]),
   wait=T, remove.tmpdirs=T, stop.on.error=T
 ) {
-  qsub <- list(
-    r.module=r.module, name=name, num.cores=num.cores, memory=memory, verbose=verbose, 
-    remote=remote, wait=wait, remove.tmpdirs=remove.tmpdirs
-  )
-  
-  # folder paths
   src.dir <- paste0(src.dir, "/", tmp.foldername)
   remote.dir <- paste0(remote.dir, "/", tmp.foldername)
-  qsub$src.dir <- src.dir
-  qsub$remote.dir <- remote.dir
-  qsub$src.outdir <- paste0(src.dir, "/out")
-  qsub$remote.outdir <- paste0(remote.dir, "/out")
-  qsub$src.logdir <- paste0(src.dir, "/log")
-  qsub$remote.logdir <- paste0(remote.dir, "/log")
-  
-  # file paths
-  qsub$src.rdata1 <- paste0(src.dir, "/data1.RData")
-  qsub$src.rdata2 <- paste0(src.dir, "/data2.RData")
-  qsub$remote.rdata1 <- paste0(remote.dir, "/data1.RData")
-  qsub$remote.rdata2 <- paste0(remote.dir, "/data2.RData")
-  qsub$remote.rfile <- paste0(remote.dir, "/script.R")
-  qsub$remote.shfile <- paste0(remote.dir, "/script.sh")
+
+  qsub <- list(
+    r.module=r.module, 
+    name=name, 
+    num.cores=num.cores, 
+    memory=memory, 
+    verbose=verbose, 
+    remote=remote, 
+    wait=wait, 
+    remove.tmpdirs=remove.tmpdirs, 
+    stop.on.error=stop.on.error
+    src.dir=src.dir,
+    remote.dir=remote.dir,
+    src.outdir=paste0(src.dir, "/out"),
+    remote.outdir=paste0(remote.dir, "/out"),
+    src.logdir=paste0(src.dir, "/log"),
+    remote.logdir=paste0(remote.dir, "/log"),
+    src.rdata1=paste0(src.dir, "/data1.RData"),
+    src.rdata2=paste0(src.dir, "/data2.RData"),
+    remote.rdata1=paste0(remote.dir, "/data1.RData"),
+    remote.rdata2=paste0(remote.dir, "/data2.RData"),
+    remote.rfile=paste0(remote.dir, "/script.R"),
+    remote.shfile=paste0(remote.dir, "/script.sh")
+  )
   
   class(qsub) <- "qsub_configuration"
   qsub
