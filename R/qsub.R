@@ -19,7 +19,7 @@ qsub.configuration <- function(
   r.module="R", name="R2PRISM", num.cores=1, memory="1G", verbose=F, 
   remote="prism", src.dir="/home/rcannood/Workspace/tmp", remote.dir="/scratch/irc/personal/robrechtc/tmp",
   tmp.foldername=paste0(name, "-", random::randomStrings(n=1, len=10)[1,]),
-  wait=T, remove.tmpdirs=T, stop.on.error=T
+  wait=T, remove.tmpdirs=T, stop.on.error=T, max.nodes=NULL,
 ) {
   src.dir <- paste0(src.dir, "/", tmp.foldername)
   remote.dir <- paste0(remote.dir, "/", tmp.foldername)
@@ -32,6 +32,7 @@ qsub.configuration <- function(
     verbose=verbose, 
     remote=remote, 
     wait=wait, 
+    max.nodes=max.nodes,
     remove.tmpdirs=remove.tmpdirs, 
     stop.on.error=stop.on.error
     src.dir=src.dir,
@@ -85,20 +86,21 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
   write.remote(rscript, qsub.config$remote.rfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
   
   # save bash script and copy to remote
-  shscript <- paste0(
+  shscript <- with(qsub.config, paste0(
     "#!/bin/bash\n", 
-    ifelse(qsub.config$num.cores==1, "", paste0("#$ -pe serial ", qsub.config$num.cores, "\n")), 
-    "#$ -t 1-", qsub.config$num.tasks, "\n",
-    "#$ -N ", qsub.config$name, "\n",
+    ifelse(num.cores==1, "", paste0("#$ -pe serial ", num.cores, "\n")), 
+    "#$ -t 1-", num.tasks, "\n",
+    "#$ -N ", name, "\n",
     "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
     "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
-    "#$ -l h_vmem=", qsub.config$memory, "\n",
+    ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n"),
+    "#$ -l h_vmem=", memory, "\n",
     "module unload R\n",
     "module unload gcc\n",
-    "module load ", qsub.config$r.module, "\n",
+    "module load ", r.module, "\n",
     "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
     "Rscript script.R $SGE_TASK_ID\n"
-  )
+  ))
   write.remote(shscript, qsub.config$remote.shfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
   
   NULL
