@@ -122,9 +122,6 @@ setup.execution <- function(qsub.config, environment, rcode) {
   mkdir.remote(qsub.config$remote.logdir, remote=qsub.config$remote, verbose=qsub.config$verbose)
 
   # save environment to RData and copy to remote
-  cat("Saving these variables to RData: \n")
-  print(environment)
-  print(names(environment))
   save(list=names(environment), file=qsub.config$src.rdata, envir=environment)
   cp.remote(remote.src="", path.src=qsub.config$src.rdata, remote.dest=qsub.config$remote, path.dest=qsub.config$remote.rdata, verbose=qsub.config$verbose)
 
