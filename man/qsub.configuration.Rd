@@ -5,12 +5,14 @@
 \title{Create a qsub configuration object.}
 \usage{
 qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
-  memory = "1G", verbose = F, tmp.foldername = paste0(name, "-",
+  memory = "4G", verbose = F, tmp.foldername = paste0(name, "-",
   random::randomStrings(n = 1, len = 10)[1, ]), wait = T,
-  remove.tmpdirs = T, stop.on.error = T, max.cores = NULL,
+  remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
   server.config = server.config.from.file())
 }
 \arguments{
+\item{r.module}{The R module to use}
+
 \item{name}{The name of the execution}
 
 \item{num.cores}{The number of cores to allocate per task}
@@ -25,7 +27,11 @@ qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
 
 \item{remove.tmpdirs}{If \code{TRUE}, will remove everything that was created related to this execution at the end.}
 
-\item{server.config}{}
+\item{stop.on.error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
+
+\item{max.tasks}{The maximum number of tasks to spawn}
+
+\item{server.config}{A server configuration file}
 }
 \description{
 Create a qsub configuration object.

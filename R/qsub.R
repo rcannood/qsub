@@ -1,6 +1,4 @@
-
-
-#' Create a new server config
+#' Create a new server config file
 #'
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry.
@@ -8,7 +6,6 @@
 #' @param remote.dir A directory on the remote machine in which to store temporary files.
 #' @param file The default location to store the R2PRISM config file.
 #'
-#' @return
 #' @export
 #'
 #' @examples
@@ -60,17 +57,17 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 #' @param tmp.foldername A temporary name for this execution.
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove.tmpdirs If \code{TRUE}, will remove everything that was created related to this execution at the end.
-#' @param r.module
-#' @param stop.on.error
-#' @param max.cores
-#' @param server.config
+#' @param r.module The R module to use
+#' @param stop.on.error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
+#' @param max.tasks The maximum number of tasks to spawn
+#' @param server.config A server configuration file
 #'
 #' @import random
 #' @export
 qsub.configuration <- function(
-  r.module = "R", name = "R2PRISM", num.cores = 1, memory = "1G", verbose = F,
+  r.module = "R", name = "R2PRISM", num.cores = 1, memory = "4G", verbose = F,
   tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,]),
-  wait = T, remove.tmpdirs = T, stop.on.error = T, max.cores = NULL,
+  wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
   server.config = server.config.from.file()
 ) {
   if (!class(server.config) == "PRISM::serverconfig") {
@@ -88,7 +85,7 @@ qsub.configuration <- function(
     verbose=verbose,
     remote=remote,
     wait=wait,
-    max.cores=max.cores,
+    max.tasks=max.tasks,
     remove.tmpdirs=remove.tmpdirs,
     stop.on.error=stop.on.error,
     src.dir=src.dir,
@@ -149,8 +146,9 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
     "#$ -N ", name, "\n",
     "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
     "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
-    ifelse(is.null(max.cores) || !is.integer(max.cores) || !is.finite(max.cores) || x != round(max.cores), "", paste0("#$ -tc ", max.cores, "\n")),
+    ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n")),
     "#$ -l h_vmem=", memory, "\n",
+    "cd ", qsub.config$remote.dir, "\n",
     "module unload R\n",
     "module unload gcc\n",
     "module load ", r.module, "\n",

@@ -2,7 +2,7 @@
 % Please edit documentation in R/qsub.R
 \name{create.server.config}
 \alias{create.server.config}
-\title{Create a new server config}
+\title{Create a new server config file}
 \usage{
 create.server.config(remote, src.dir, remote.dir,
   file = "~/.local/share/R2PRISM/config")
@@ -18,7 +18,7 @@ require interactive password entry.}
 \item{file}{The default location to store the R2PRISM config file.}
 }
 \description{
-Create a new server config
+Create a new server config file
 }
 \examples{
 create.server.config("myservername", "~/tmpfolderlocal", "~/tmpfolder_remote")
