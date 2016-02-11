@@ -4,12 +4,17 @@ Version: 1.0
 Authors@R: c(
     person("Robrecht", "Cannoodt", email = "robrecht.cannoodt@gmail.com", role = c("cre", "aut"))
   )
-Description: This package allows you to easily perform a lapply using the PRISM cluster! Hooray!
-Depends: R (>= 3.2.2)
+Description: This package allows you to easily perform a lapply using the PRISM
+    cluster! Hooray!
+Depends:
+    R (>= 3.2.2)
 License: GPL (>= 2)
 LazyData: true
 Author: Robrecht Cannoodt
 Maintainer: 'Robrecht Cannoodt' <robrecht.cannoodt@gmail.com>
-Imports: random, stringr
+Imports:
+    random,
+    stringr
 URL: http://github.com/rcannood/qsubapply
 BugReports: https://github.com/rcannood/qsubapply/issues
+RoxygenNote: 5.0.1
