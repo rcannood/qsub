@@ -4,7 +4,8 @@
 \alias{qsub.lapply}
 \title{Apply a Function over a List or Vector on PRISM!}
 \usage{
-qsub.lapply(X, FUN, qsub.config = qsub.configuration())
+qsub.lapply(X, FUN, qsub.config = qsub.configuration(),
+  qsub.environment = NULL)
 }
 \arguments{
 \item{X}{A vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.}
@@ -12,6 +13,9 @@ qsub.lapply(X, FUN, qsub.config = qsub.configuration())
 \item{FUN}{The function to be applied to each element of X.}
 
 \item{qsub.config}{The configuration to use for this execution.}
+
+\item{qsub.environment}{\code{NULL}, a character vector or an environment.
+Specifies what data and functions will be uploaded to the server.}
 }
 \description{
 Apply a Function over a List or Vector on PRISM!

@@ -4,12 +4,15 @@
 \alias{qsub.run}
 \title{Calculate the results of a function on PRISM!}
 \usage{
-qsub.run(FUN, qsub.config = qsub.configuration())
+qsub.run(FUN, qsub.config = qsub.configuration(), qsub.environment = NULL)
 }
 \arguments{
 \item{FUN}{the function to be executed.}
 
 \item{qsub.config}{The configuration to use for this execution.}
+
+\item{qsub.environment}{\code{NULL}, a character vector or an environment.
+Specifies what data and functions will be uploaded to the server.}
 }
 \description{
 Calculate the results of a function on PRISM!

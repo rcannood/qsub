@@ -9,7 +9,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' create.server.config("myservername", "~/tmpfolderlocal", "~/tmpfolder_remote")
+#' }
 create.server.config <- function(remote, src.dir, remote.dir, file = "~/.local/share/R2PRISM/config") {
   df <- data.frame(remote, src.dir, remote.dir)
   dir.name <- sub("[^/]*$", "", file)
@@ -94,10 +96,8 @@ qsub.configuration <- function(
     remote.outdir=paste0(remote.dir, "/out"),
     src.logdir=paste0(src.dir, "/log"),
     remote.logdir=paste0(remote.dir, "/log"),
-    src.rdata1=paste0(src.dir, "/data1.RData"),
-    src.rdata2=paste0(src.dir, "/data2.RData"),
-    remote.rdata1=paste0(remote.dir, "/data1.RData"),
-    remote.rdata2=paste0(remote.dir, "/data2.RData"),
+    src.rdata=paste0(src.dir, "/data.RData"),
+    remote.rdata=paste0(remote.dir, "/data.RData"),
     remote.rfile=paste0(remote.dir, "/script.R"),
     remote.shfile=paste0(remote.dir, "/script.sh")
   )
@@ -106,7 +106,7 @@ qsub.configuration <- function(
   qsub
 }
 
-setup.execution <- function(qsub.config, environment1, environment2, rcode) {
+setup.execution <- function(qsub.config, environment, rcode) {
   # check folders existance
   if (file.exists.remote(qsub.config$src.dir, remote="", verbose=qsub.config$verbose)) {
     stop("The local temporary folder already exists!")
@@ -122,16 +122,16 @@ setup.execution <- function(qsub.config, environment1, environment2, rcode) {
   mkdir.remote(qsub.config$remote.logdir, remote=qsub.config$remote, verbose=qsub.config$verbose)
 
   # save environment to RData and copy to remote
-  save(list=names(environment1), file=qsub.config$src.rdata1, envir=environment1)
-  save(list=names(environment2), file=qsub.config$src.rdata2, envir=environment2)
-  cp.remote(remote.src="", path.src=qsub.config$src.rdata1, remote.dest=qsub.config$remote, path.dest=qsub.config$remote.rdata1, verbose=qsub.config$verbose)
-  cp.remote(remote.src="", path.src=qsub.config$src.rdata2, remote.dest=qsub.config$remote, path.dest=qsub.config$remote.rdata2, verbose=qsub.config$verbose)
+  cat("Saving these variables to RData: \n")
+  print(environment)
+  print(names(environment))
+  save(list=names(environment), file=qsub.config$src.rdata, envir=environment)
+  cp.remote(remote.src="", path.src=qsub.config$src.rdata, remote.dest=qsub.config$remote, path.dest=qsub.config$remote.rdata, verbose=qsub.config$verbose)
 
   # save R script and copy to remote
   rscript <- paste0(
     "setwd(\"", qsub.config$remote.dir, "\")\n",
-    "load(\"data1.RData\")\n",
-    "load(\"data2.RData\")\n",
+    "load(\"data.RData\")\n",
     "index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
     rcode, "\n",
     "save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))\n"
@@ -176,6 +176,8 @@ execute.job <- function(qsub.config) {
 #' @param X A vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.
 #' @param FUN The function to be applied to each element of X.
 #' @param qsub.config The configuration to use for this execution.
+#' @param qsub.environment \code{NULL}, a character vector or an environment.
+#' Specifies what data and functions will be uploaded to the server.
 #' @export
 #' @examples
 #' \dontrun{
@@ -195,11 +197,45 @@ execute.job <- function(qsub.config) {
 #' )
 #' qsub.retrieve(promise)
 #' }
-qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration()) {
+qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration(), qsub.environment = NULL) {
   qsub.config$num.tasks <- length(X)
-  rcode <- "out <- FUN(X[[index]])\n"
+  rcode <- "out <- PRISM_IN_THE_STREETS_OF_LONDON_FUN(PRISM_IN_THE_STREETS_OF_LONDON_X[[index]])\n"
 
-  setup.execution(qsub.config, environment(), .GlobalEnv, rcode)
+  if (is.character(qsub.environment)) {
+    environment.names <- qsub.environment
+    qsub.environment <- NULL
+  } else {
+    environment.names <- NULL
+  }
+
+  if (is.null(qsub.environment)) {
+    child <- new.env()
+    parent <- environment(FUN)
+    while(!is.null(parent)) {
+      params <- names(parent)[!names(parent) %in% names(child)]
+      if (!is.null(environment.names)) {
+        params <- params[params %in% environment.names]
+      }
+      for (p in params) {
+        assign(p, parent[[p]], child)
+      }
+
+      if (!identical(parent, globalenv())) {
+        parent <- parent.env(parent)
+      } else {
+        parent <- NULL
+      }
+    }
+  } else if (is.environment(qsub.environment)) {
+    child <- qsub.environment
+  } else {
+    stop(sQuote("qsub.environment"), " must be NULL, a character vector, or an environment")
+  }
+
+  child$PRISM_IN_THE_STREETS_OF_LONDON_X <- X
+  child$PRISM_IN_THE_STREETS_OF_LONDON_FUN <- FUN
+
+  setup.execution(qsub.config, child, rcode)
 
   qsub.config$job.id <- execute.job(qsub.config)
 
@@ -214,20 +250,11 @@ qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration()) {
 #'
 #' @param FUN the function to be executed.
 #' @param qsub.config The configuration to use for this execution.
+#' @param qsub.environment \code{NULL}, a character vector or an environment.
+#' Specifies what data and functions will be uploaded to the server.
 #' @export
-qsub.run <- function(FUN, qsub.config=qsub.configuration()) {
-  qsub.config$num.tasks <- 1
-  rcode <- "out <- FUN()\n"
-
-  setup.execution(qsub.config, environment(), .GlobalEnv, rcode)
-
-  qsub.config$job.id <- execute.job(qsub.config)
-
-  if (qsub.config$wait) {
-    qsub.retrieve(qsub.config)
-  } else {
-    qsub.config
-  }
+qsub.run <- function(FUN, qsub.config = qsub.configuration(), qsub.environment = NULL) {
+  qsub.lapply(X=1, FUN, qsub.config = qsub.config, qsub.environment = qsub.environment)
 }
 
 #' Check whether a job is running.

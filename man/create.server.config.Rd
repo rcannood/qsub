@@ -21,6 +21,8 @@ require interactive password entry.}
 Create a new server config file
 }
 \examples{
+\dontrun{
 create.server.config("myservername", "~/tmpfolderlocal", "~/tmpfolder_remote")
+}
 }
 
