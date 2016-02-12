@@ -10,13 +10,16 @@
 #'
 #' @examples
 #' \dontrun{
-#' create.server.config("myservername", "~/tmpfolderlocal", "~/tmpfolder_remote")
+#' create.server.config("myservername", "/home/myusername/tmpfolderlocal", "/home/myusername/tmpfolder_remote")
 #' }
 create.server.config <- function(remote, src.dir, remote.dir, file = "~/.local/share/R2PRISM/config") {
+  if (grepl("~", src.dir)) stop(sQuote("src.dir"), " should not contain a tilde ('~')")
+  if (grepl("~", remote.dir)) stop(sQuote("remote.dir"), " should not contain a tilde ('~')")
+
   df <- data.frame(remote, src.dir, remote.dir)
   dir.name <- sub("[^/]*$", "", file)
   if (!dir.exists(dir.name)) dir.create(dir.name, recursive = T)
-  write.table(df, file, sep="\t", col.names = T, row.names = F)
+  write.table(df, file, sep="\t", col.names = T, row.names = F, quote = T)
 }
 
 #' Read a server config from file
@@ -27,7 +30,7 @@ create.server.config <- function(remote, src.dir, remote.dir, file = "~/.local/s
 #' @export
 server.config.from.file <- function(file = "~/.local/share/R2PRISM/config") {
   if (file.exists(file)) {
-    l <- as.list(read.table(file, sep = "\t", header = T, stringsAsFactors = F, check.names = F))
+    l <- as.list(read.table(file, sep = "\t", header = T, stringsAsFactors = F, check.names = F, quote = ))
     class(l) <- "PRISM::serverconfig"
     l
   } else {
@@ -99,7 +102,10 @@ qsub.configuration <- function(
     src.rdata=paste0(src.dir, "/data.RData"),
     remote.rdata=paste0(remote.dir, "/data.RData"),
     remote.rfile=paste0(remote.dir, "/script.R"),
-    remote.shfile=paste0(remote.dir, "/script.sh")
+    remote.shfile=paste0(remote.dir, "/script.sh"),
+    src.rdata=paste0(src.dir, "/data.RData"),
+    src.rfile=paste0(src.dir, "/script.R"),
+    src.shfile=paste0(src.dir, "/script.sh")
   )
 
   class(qsub) <- "qsub_configuration"
@@ -116,16 +122,14 @@ setup.execution <- function(qsub.config, environment, rcode) {
   }
 
   # create folders
-  mkdir.remote(qsub.config$src.dir, "", verbose=qsub.config$verbose)
+  mkdir.remote(qsub.config$src.dir, remote="", verbose=qsub.config$verbose)
   mkdir.remote(qsub.config$remote.dir, remote=qsub.config$remote, verbose=qsub.config$verbose)
-  mkdir.remote(qsub.config$remote.outdir, remote=qsub.config$remote, verbose=qsub.config$verbose)
-  mkdir.remote(qsub.config$remote.logdir, remote=qsub.config$remote, verbose=qsub.config$verbose)
 
-  # save environment to RData and copy to remote
+  # make everything locally
+  mkdir.remote(qsub.config$src.outdir, remote="", verbose=qsub.config$verbose)
+  mkdir.remote(qsub.config$src.logdir, remote="", verbose=qsub.config$verbose)
   save(list=names(environment), file=qsub.config$src.rdata, envir=environment)
-  cp.remote(remote.src="", path.src=qsub.config$src.rdata, remote.dest=qsub.config$remote, path.dest=qsub.config$remote.rdata, verbose=qsub.config$verbose)
 
-  # save R script and copy to remote
   rscript <- paste0(
     "setwd(\"", qsub.config$remote.dir, "\")\n",
     "load(\"data.RData\")\n",
@@ -133,16 +137,15 @@ setup.execution <- function(qsub.config, environment, rcode) {
     rcode, "\n",
     "save(out, file=paste0(\"out/out_\", index, \".RData\", sep=\"\"))\n"
   )
-  write.remote(rscript, qsub.config$remote.rfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
+  write.remote(rscript, qsub.config$src.rfile, remote="", verbose=qsub.config$verbose)
 
-  # save bash script and copy to remote
   shscript <- with(qsub.config, paste0(
     "#!/bin/bash\n",
     ifelse(num.cores==1, "", paste0("#$ -pe serial ", num.cores, "\n")),
     "#$ -t 1-", num.tasks, "\n",
     "#$ -N ", name, "\n",
-    "#$ -e log/$JOB_NAME.$JOB_ID.$TASK_ID.e.txt\n",
-    "#$ -o log/$JOB_NAME.$JOB_ID.$TASK_ID.o.txt\n",
+    "#$ -e log/log.$TASK_ID.e.txt\n",
+    "#$ -o log/log.$TASK_ID.o.txt\n",
     ifelse(is.null(max.tasks) || !is.integer(max.tasks) || !is.finite(max.tasks) || x != round(max.tasks), "", paste0("#$ -tc ", max.tasks, "\n")),
     "#$ -l h_vmem=", memory, "\n",
     "cd ", qsub.config$remote.dir, "\n",
@@ -152,7 +155,14 @@ setup.execution <- function(qsub.config, environment, rcode) {
     "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
     "Rscript script.R $SGE_TASK_ID\n"
   ))
-  write.remote(shscript, qsub.config$remote.shfile, remote=qsub.config$remote, verbose=qsub.config$verbose)
+  write.remote(shscript, qsub.config$src.shfile, remote="", verbose=qsub.config$verbose)
+
+  with(qsub.config, rsync.remote(
+    remote.src = "",
+    path.src = paste0(src.dir, "/"),
+    remote.dest = remote,
+    path.dest = paste0(remote.dir, "/")
+  ))
 
   NULL
 }
@@ -272,7 +282,7 @@ is.job.running <- function(qsub.config) {
 #'
 #' @param qsub.config The qsub configuration of class \code{qsub_configuration}, as returned by any qsub execution
 #' @param wait If \code{TRUE}, wait until the execution has finished in order to return the results, else returns \code{NULL} if execution is not finished.
-#'
+#' @importFrom readr read_file
 #' @export
 qsub.retrieve <- function(qsub.config, wait=T) {
   if (!wait && is.job.running(qsub.config)) {
@@ -283,28 +293,46 @@ qsub.retrieve <- function(qsub.config, wait=T) {
     }
 
     # copy results to local
-    cp.remote(remote.src=qsub.config$remote, path.src=qsub.config$remote.outdir, remote.dest="", path.dest=qsub.config$src.outdir, recursively = T)
+    with(qsub.config, rsync.remote(
+      remote.src = remote,
+      path.src = paste0(remote.dir, "/"),
+      remote.dest = "",
+      path.dest = paste0(src.dir, "/")
+    ))
 
     # read RData files
-    outs <- lapply(seq_len(qsub.config$num.tasks), function(i) {
-      out <- NULL # satisfying r check
-      file <- paste0(qsub.config$src.dir, "/out/out_", i, ".RData")
-      if (file.exists(file)) {
-        load(file)
-        out
-      } else if (qsub.config$stop.on.error) {
-        stop("Could not load file \"", file, "\". Please check the error logs.")
-      } else {
-        warning("Could not load file \"", file, "\". Please check the error logs.")
-        NA
+    tryCatch({
+      outs <- lapply(seq_len(qsub.config$num.tasks), function(i) {
+        out <- NULL # satisfying r check
+        output.file <- paste0(qsub.config$src.dir, "/out/out_", i, ".RData")
+        error.file <- paste0(qsub.config$src.dir, "/log/log.", i, ".e.txt")
+        if (file.exists(output.file)) {
+          load(output.file)
+          out
+        } else {
+          if (file.exists(error.file)) {
+            msg <- sub("^[^\n]*\n", "", readr::read_file(error.file))
+            txt <- paste0("File: ", error.file, "\n", msg)
+          } else {
+            txt <- paste0("File: ", error.file, "\nNo output or log file found. Did the job run on PRISM at all?")
+          }
+          if (qsub.config$stop.on.error) {
+            stop(txt)
+          } else {
+            warning(txt)
+            NA
+          }
+        }
+      })
+    }, error = function(e) {
+      stop(e)
+    }, finally = {
+      # remove temporary folders afterwards
+      if (qsub.config$remove.tmpdirs) {
+        run.remote(paste0("rm -rf \"", qsub.config$remote.dir, "\""), remote=qsub.config$remote, verbose=qsub.config$verbose)
+        run.remote(paste0("rm -rf \"", qsub.config$src.dir, "\""), remote="", verbose=qsub.config$verbose)
       }
     })
-
-    # remove temporary folders afterwards
-    if (qsub.config$remove.tmpdirs) {
-      run.remote(paste0("rm -rf \"", qsub.config$remote.dir, "\""), remote=qsub.config$remote)
-      run.remote(paste0("rm -rf \"", qsub.config$src.dir, "\""), remote="")
-    }
 
     return(outs)
   }

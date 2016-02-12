@@ -25,7 +25,7 @@ cp.remote(remote.src, path.src, remote.dest, path.dest, verbose = FALSE,
 \item{recursively}{Copy a directory recursively?}
 }
 \description{
-A wrapper around the scp shell command that handles local/remote files and allows 
+A wrapper around the scp shell command that handles local/remote files and allows
 copying between remote hosts via the local machine.
 }
 \examples{
@@ -49,7 +49,7 @@ copying between remote hosts via the local machine.
 # 10,
 
 ## on local server in R:
-cp.remote(remote.src = "me@myserver", path.src = "~/myfile.csv", 
+cp.remote(remote.src = "me@myserver", path.src = "~/myfile.csv",
           remote.dest = "", path.dest = getwd(), verbose = TRUE)
 # [1] "Elapsed: 1.672 sec"
 df <- read.csv("myfile.csv")

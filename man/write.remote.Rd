@@ -11,7 +11,7 @@ write.remote(x, path, remote, verbose = F)
 
 \item{path}{Path of the file.}
 
-\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not 
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
 
 \item{verbose}{If \code{TRUE} prints the command.}

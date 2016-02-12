@@ -10,7 +10,7 @@ ps.grep.remote(grep.string, remote, stop.if.any = FALSE,
 \arguments{
 \item{grep.string}{String(s) to check for in \code{ps}. If a vector, runs a chain of piped grep commands for each string.}
 
-\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not 
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
 
 \item{stop.if.any}{Stop if any of \code{grep.string} is running}
@@ -22,7 +22,7 @@ require interactive password entry. For local execution, pass an empty string ""
 \item{ps.options}{Gives the ability to run different options to ps.}
 }
 \description{
-One of the use cases for this function is to ensure that an R process is 
+One of the use cases for this function is to ensure that an R process is
 already running and not start another one accidentally.
 }
 \note{

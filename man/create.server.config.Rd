@@ -22,7 +22,7 @@ Create a new server config file
 }
 \examples{
 \dontrun{
-create.server.config("myservername", "~/tmpfolderlocal", "~/tmpfolder_remote")
+create.server.config("myservername", "/home/myusername/tmpfolderlocal", "/home/myusername/tmpfolder_remote")
 }
 }
 

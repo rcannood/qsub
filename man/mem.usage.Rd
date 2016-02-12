@@ -13,7 +13,7 @@ mem.usage(pid = Sys.getpid())
 The resident memory usage in KB.
 }
 \description{
-Returns the memory usage in KB of a process with the specified process id. By 
+Returns the memory usage in KB of a process with the specified process id. By
 default, returns the memory usage of the current R process. This can be used
 to measure and log the memory usage of the R process during script execution.
 }
