@@ -139,6 +139,8 @@ setup.execution <- function(qsub.config, environment, rcode) {
   )
   write.remote(rscript, qsub.config$src.rfile, remote="", verbose=qsub.config$verbose)
 
+
+
   shscript <- with(qsub.config, paste0(
     "#!/bin/bash\n",
     ifelse(num.cores==1, "", paste0("#$ -pe serial ", num.cores, "\n")),
@@ -206,7 +208,7 @@ execute.job <- function(qsub.config) {
 #' }
 qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration(), qsub.environment = NULL) {
   qsub.config$num.tasks <- length(X)
-  rcode <- "out <- PRISM_IN_THE_STREETS_OF_LONDON_FUN(PRISM_IN_THE_STREETS_OF_LONDON_X[[index]])\n"
+  rcode <- "set.seed(PRISM_IN_THE_STREETS_OF_LONDON_SEEDS[[index]])\nout <- PRISM_IN_THE_STREETS_OF_LONDON_FUN(PRISM_IN_THE_STREETS_OF_LONDON_X[[index]])\n"
 
   if (is.character(qsub.environment)) {
     environment.names <- qsub.environment
@@ -239,6 +241,8 @@ qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration(), qsub.environme
     stop(sQuote("qsub.environment"), " must be NULL, a character vector, or an environment")
   }
 
+  seeds <- sample.int(length(X)*10, length(X), replace = F)
+  child$PRISM_IN_THE_STREETS_OF_LONDON_SEEDS <- seeds
   child$PRISM_IN_THE_STREETS_OF_LONDON_X <- X
   child$PRISM_IN_THE_STREETS_OF_LONDON_FUN <- FUN
 
