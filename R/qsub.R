@@ -65,6 +65,7 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 #' @param r.module The R module to use
 #' @param stop.on.error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
 #' @param max.tasks The maximum number of tasks to spawn
+#' @param exec.before Commands to execute in the shell before running R
 #' @param server.config A server configuration file
 #'
 #' @import random
@@ -72,7 +73,7 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 qsub.configuration <- function(
   r.module = "R", name = "R2PRISM", num.cores = 1, memory = "4G", verbose = F,
   tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,]),
-  wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
+  wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL, exec.before = NULL,
   server.config = server.config.from.file()
 ) {
   if (!class(server.config) == "PRISM::serverconfig") {
@@ -91,6 +92,7 @@ qsub.configuration <- function(
     remote=remote,
     wait=wait,
     max.tasks=max.tasks,
+    exec.before=exec.before,
     remove.tmpdirs=remove.tmpdirs,
     stop.on.error=stop.on.error,
     src.dir=src.dir,
@@ -153,6 +155,7 @@ setup.execution <- function(qsub.config, environment, rcode) {
     "cd ", qsub.config$remote.dir, "\n",
     "module unload R\n",
     "module unload gcc\n",
+    paste0(paste0(qsub.config$exec.before, collapse="\n"), "\n"),
     "module load ", r.module, "\n",
     "export LD_LIBRARY_PATH=\"/software/shared/apps/x86_64/gcc/4.8.0/lib/:/software/shared/apps/x86_64/gcc/4.8.0/lib64:$LD_LIBRARY_PATH\"\n",
     "Rscript script.R $SGE_TASK_ID\n"
