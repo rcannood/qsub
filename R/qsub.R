@@ -57,22 +57,30 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 #'
 #' @param name The name of the execution
 #' @param num.cores The number of cores to allocate per task
-#' @param memory The memory to allocate per core.
+#' @param limit concurrent array job task execution
+#' @param memory The memory to allocate per core
 #' @param verbose Print out any ssh commands
-#' @param tmp.foldername A temporary name for this execution.
+#' @param tmp.foldername A temporary name for this execution
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove.tmpdirs If \code{TRUE}, will remove everything that was created related to this execution at the end.
 #' @param r.module The R module to use
 #' @param stop.on.error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
 #' @param max.tasks The maximum number of tasks to spawn
 #' @param server.config A server configuration file
-#'
 #' @import random
 #' @export
 qsub.configuration <- function(
-  r.module = "R", name = "R2PRISM", num.cores = 1, memory = "4G", verbose = F,
+  r.module = "R",
+  name = "R2PRISM",
+  num.cores = 1,
+  max.running.tasks = NULL,
+  memory = "4G",
+  verbose = F,
   tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,]),
-  wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
+  wait = T,
+  remove.tmpdirs = T,
+  stop.on.error = T,
+  max.tasks = NULL,
   server.config = server.config.from.file()
 ) {
   if (!class(server.config) == "PRISM::serverconfig") {
@@ -86,6 +94,7 @@ qsub.configuration <- function(
     r.module=r.module,
     name=name,
     num.cores=num.cores,
+    max.running.tasks=max.running.tasks,
     memory=memory,
     verbose=verbose,
     remote=remote,
@@ -139,11 +148,10 @@ setup.execution <- function(qsub.config, environment, rcode) {
   )
   write.remote(rscript, qsub.config$src.rfile, remote="", verbose=qsub.config$verbose)
 
-
-
   shscript <- with(qsub.config, paste0(
     "#!/bin/bash\n",
     ifelse(num.cores==1, "", paste0("#$ -pe serial ", num.cores, "\n")),
+    ifelse(is.numeric(max.running.tasks), paste0("#$ -tc ", max.running.tasks, "\n"), ""),
     "#$ -t 1-", num.tasks, "\n",
     "#$ -N ", name, "\n",
     "#$ -e log/log.$TASK_ID.e.txt\n",
