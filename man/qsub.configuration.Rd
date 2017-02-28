@@ -8,7 +8,7 @@ qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
   max.running.tasks = NULL, memory = "4G", verbose = F,
   tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,
   ]), wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
-  server.config = server.config.from.file())
+  exec.before = NULL, server.config = server.config.from.file())
 }
 \arguments{
 \item{r.module}{The R module to use}
@@ -30,6 +30,8 @@ qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
 \item{stop.on.error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
 
 \item{max.tasks}{The maximum number of tasks to spawn}
+
+\item{exec.before}{Commands to execute in the shell before running R}
 
 \item{server.config}{A server configuration file}
 
