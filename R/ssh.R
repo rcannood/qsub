@@ -260,12 +260,13 @@ rsync.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose =
 #' }
 #' @export
 file.exists.remote <- function(file, remote = "", verbose=F) {
-  cmd <- paste("if [ -e ", file, " ] ; then echo \"ZINNGGGGG! MESSAGE FOR YOU SIR!\"; fi ", sep="")
+  secret <- "ZINNGGGGG! MESSAGE FOR YOU SIR!"
+  cmd <- paste("if [ -e ", file, " ] ; then echo \"", secret, "\"; fi ", sep="")
   res <- run.remote(cmd, remote, verbose=verbose)
   if (res$cmd.error) {
     stop(paste("file.exists.remote: ERROR", res$cmd.out, res$warn.msg, sep="\n"))
   }
-  any(res$cmd.out == "ZINNGGGGG! MESSAGE FOR YOU SIR!")
+  any(res$cmd.out == secret)
 }
 
 #' Measure the resident memory usage of a process.
