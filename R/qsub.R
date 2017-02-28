@@ -187,7 +187,7 @@ execute.job <- function(qsub.config) {
   output <- run.remote(submit.command, remote=qsub.config$remote, verbose=qsub.config$verbose)
 
   # retrieve job id
-  job.id <- gsub("Your job-array ([0-9]*).*", "\\1", output$cmd.out)
+  job.id <- gsub(".*Your job-array ([0-9]*) \(\"[^\n]*\"\) has been submitted.*", "\\1", paste(output$cmd.out, collapse = "\n"))
 
   as.character(job.id)
 }
