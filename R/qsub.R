@@ -26,12 +26,14 @@ create.server.config <- function(remote, src.dir, remote.dir, file = "~/.local/s
 #'
 #' @param file The default location to store the R2PRISM config file.
 #'
+#' @importFrom readr read_tsv cols
+#'
 #' @return A server configuration object
 #' @export
 server.config.from.file <- function(file = "~/.local/share/R2PRISM/config") {
   if (file.exists(file)) {
-    l <- as.list(read.table(file, sep = "\t", header = T, stringsAsFactors = F, check.names = F, quote = ))
-    class(l) <- "PRISM::serverconfig"
+    l <- as.list(readr::read_tsv(file, col_types = readr::cols()))
+    class(l) <- "PRISM::server_config"
     l
   } else {
     stop("Please run ", sQuote("create.server.config"), " first or set the server.config manually with ", sQuote("manual.server.config"))
@@ -48,8 +50,17 @@ server.config.from.file <- function(file = "~/.local/share/R2PRISM/config") {
 #' @export
 manual.server.config <- function(remote, src.dir, remote.dir) {
   l <- list(remote=remote, src.dir=src.dir, remote.dir=remote.dir)
-  class(l) <- "PRISM::serverconfig"
+  class(l) <- "PRISM::server_config"
   l
+}
+
+#' Outputs whether the object is a server configuration.
+#'
+#' @param config
+#'
+#' @export
+is.server.config <- function(config) {
+  class(config) == "PRISM::server_config"
 }
 
 
@@ -60,7 +71,6 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 #' @param limit concurrent array job task execution
 #' @param memory The memory to allocate per core
 #' @param verbose Print out any ssh commands
-#' @param tmp.foldername A temporary name for this execution
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove.tmpdirs If \code{TRUE}, will remove everything that was created related to this execution at the end.
 #' @param r.module The R module to use
@@ -68,7 +78,11 @@ manual.server.config <- function(remote, src.dir, remote.dir) {
 #' @param max.tasks The maximum number of tasks to spawn
 #' @param exec.before Commands to execute in the shell before running R
 #' @param server.config A server configuration file
+#'
 #' @import random
+#'
+#' @return A qsub configuration object.
+#'
 #' @export
 qsub.configuration <- function(
   r.module = "R",
@@ -77,7 +91,6 @@ qsub.configuration <- function(
   max.running.tasks = NULL,
   memory = "4G",
   verbose = F,
-  tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,]),
   wait = T,
   remove.tmpdirs = T,
   stop.on.error = T,
@@ -85,10 +98,11 @@ qsub.configuration <- function(
   exec.before = NULL,
   server.config = server.config.from.file()
 ) {
-  if (!class(server.config) == "PRISM::serverconfig") {
-    stop(sQuote("server.config"), " must be created from ", sQuote("manual.server.config"), or, sQuote("create.server.config"))
+  if (!is.server.config(server.config)) {
+    stop(sQuote("server.config"), " must be created from ", sQuote("manual.server.config"), " or ", sQuote("create.server.config"))
   }
   remote <- server.config$remote
+  tmp.foldername <- paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), "_", name, "_", random::randomStrings(n = 1, len = 10)[1,])
   src.dir <- paste0(server.config$src.dir, "/", tmp.foldername)
   remote.dir <- paste0(server.config$remote.dir, "/", tmp.foldername)
 
@@ -120,8 +134,36 @@ qsub.configuration <- function(
     src.shfile=paste0(src.dir, "/script.sh")
   )
 
-  class(qsub) <- "qsub_configuration"
+  class(qsub) <- "PRISM::qsub_config"
   qsub
+}
+
+#' Create a new qsub configuration object from an old qsub configuration.
+#'
+#' @param qsub.config The old qsub configuration to be modified.
+#' @param ... Any parameters to be overridden.
+#'
+#' @export
+#'
+#' @return A new qsub configuration object.
+override.qsub.config <- function(qsub.config, ...) {
+  new.values <- list(...)
+
+  fun.params <- names(formals(PRISM::qsub.configuration))
+
+  new.values <- new.values[names(new.values) %in% fun.params]
+  old.values <- qsub.config[names(qsub.config) %in% fun.params & !names(qsub.config) %in% names(new.values)]
+
+  do.call(qsub.configuration, c(new.values, old.values))
+}
+
+#' Outputs whether the object is a qsub configuration.
+#'
+#' @param config
+#'
+#' @export
+is.qsub.config <- function(config) {
+  class(config) == "PRISM::qsub_config"
 }
 
 setup.execution <- function(qsub.config, environment, rcode) {
@@ -219,6 +261,10 @@ execute.job <- function(qsub.config) {
 #' qsub.retrieve(promise)
 #' }
 qsub.lapply <- function(X, FUN, qsub.config=qsub.configuration(), qsub.environment = NULL) {
+  if (!is.qsub.config(qsub.config)) {
+    stop(sQuote("qsub.config"), " must be created from ", sQuote("qsub.configuration"), ".")
+  }
+
   qsub.config$num.tasks <- length(X)
   rcode <- "set.seed(PRISM_IN_THE_STREETS_OF_LONDON_SEEDS[[index]])\nout <- PRISM_IN_THE_STREETS_OF_LONDON_FUN(PRISM_IN_THE_STREETS_OF_LONDON_X[[index]])\n"
 

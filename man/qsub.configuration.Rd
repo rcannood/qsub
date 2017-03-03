@@ -5,9 +5,8 @@
 \title{Create a qsub configuration object.}
 \usage{
 qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
-  max.running.tasks = NULL, memory = "4G", verbose = F,
-  tmp.foldername = paste0(name, "-", random::randomStrings(n = 1, len = 10)[1,
-  ]), wait = T, remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
+  max.running.tasks = NULL, memory = "4G", verbose = F, wait = T,
+  remove.tmpdirs = T, stop.on.error = T, max.tasks = NULL,
   exec.before = NULL, server.config = server.config.from.file())
 }
 \arguments{
@@ -20,8 +19,6 @@ qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
 \item{memory}{The memory to allocate per core}
 
 \item{verbose}{Print out any ssh commands}
-
-\item{tmp.foldername}{A temporary name for this execution}
 
 \item{wait}{If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.}
 
@@ -36,6 +33,9 @@ qsub.configuration(r.module = "R", name = "R2PRISM", num.cores = 1,
 \item{server.config}{A server configuration file}
 
 \item{limit}{concurrent array job task execution}
+}
+\value{
+A qsub configuration object.
 }
 \description{
 Create a qsub configuration object.
