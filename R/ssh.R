@@ -18,20 +18,17 @@
 # limitations under the License.
 #-------------------------------------------------------------------------------
 
-#' \code{run.withwarn} - Evaluates the expression (e.g. a function call) and returns the
+#' \code{run_withwarn} - Evaluates the expression (e.g. a function call) and returns the
 #' result with additional atributes:
 #' \itemize{
 #' \item num.warnings - number of warnings occured during the evaluation
 #' \item last.message - the last warning message
 #' }
-#' Otherwise, \code{run.withwarn} is similar to \code{base::supressWarnings}
+#' Otherwise, \code{run_withwarn} is similar to \code{base::supressWarnings}
 #'
 #' @param expr Expression to be evaluated.
-#' @name run.remote
 #' @title Functions to run commands remotely via \code{ssh} and capture output.
-#' @rdname run.remote
-#' @export
-run.withwarn <- function(expr) {
+run_withwarn <- function(expr) {
   .number_of_warnings <- 0L
   .last_warning_msg <- NULL
   frame_number <- sys.nframe()
@@ -40,24 +37,24 @@ run.withwarn <- function(expr) {
     assign(".last_warning_msg", w$message, envir = sys.frame(frame_number))
     invokeRestart("muffleWarning")
   })
-  attr(ans, "num.warnings") <- .number_of_warnings
-  attr(ans, "last.message") <- .last_warning_msg
+  attr(ans, "num_warnings") <- .number_of_warnings
+  attr(ans, "last_message") <- .last_warning_msg
   ans
 }
 
-#' \code{run.remote} - Runs the command locally or remotely using ssh.
+#' \code{run_remote} - Runs the command locally or remotely using ssh.
 #'
-#' In \code{run.remote} the remote commands are enclosed in wrappers that allow to capture output.
+#' In \code{run_remote} the remote commands are enclosed in wrappers that allow to capture output.
 #' By default stderr is redirected to stdout.
 #' If there's a genuine error, e.g., the remote command does not exist, the output is not captured. In this case, one can
 #' see the output by setting \code{intern} to \code{FALSE}. However, when the command is run but exits with non-zero code,
-#' \code{run.remote} intercepts the generated warning and saves the output.
+#' \code{run_remote} intercepts the generated warning and saves the output.
 #'
 #' The remote command will be put inside double quotes twice, so all quotes in cmd must be escaped twice: \code{\\\"}.
 #' However, if the command is not remote, i.e., \code{remote} is \code{NULL} or empty string, quotes should be escaped
 #' only once.
 #'
-#' If the command itself redirects output, the \code{stderr.redirect} flag should be set to \code{FALSE}.
+#' If the command itself redirects output, the \code{stderr_redirect} flag should be set to \code{FALSE}.
 #' @param cmd Command to run. If run locally, quotes should be escaped once.
 #'        If run remotely, quotes should be escaped twice.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
@@ -65,12 +62,12 @@ run.withwarn <- function(expr) {
 #' @param intern Useful for debugging purposes: if there's an error in the command, the output of the remote
 #'        command is lost. Re-running with \code{intern=FALSE} causes the output to be printed to the console.
 #'        Normally, we want to capture output and return it.
-#' @param stderr.redirect When TRUE appends \code{2>&1} to the command.
+#' @param stderr_redirect When TRUE appends \code{2>&1} to the command.
 #'        Generally, one should use that to capture STDERR output
 #'        with \code{intern=TRUE}, but this should be set to \code{FALSE}
 #'        if the command manages redirection on its own.
 #' @param verbose If \code{TRUE} prints the command.
-#' @return \code{run.remote} returns
+#' @return \code{run_remote} returns
 #' a list containing the results of the command execution, error codes and messages.
 #' \itemize{
 #' \item \code{cmd.error} - flag indicating if a warning was issued because command exited with non-zero code
@@ -90,7 +87,7 @@ run.withwarn <- function(expr) {
 #' ## Error handling:
 #' remote = ""
 #' command = "ls /abcde"
-#' res <- run.remote(cmd=command, remote=remote)
+#' res <- run_remote(cmd=command, remote=remote)
 #' if (res$cmd.error) {
 #'    stop(paste(paste(res$cmd.out, collapse="\n"), res$warn.msg, sep="\n"))
 #' }
@@ -100,7 +97,7 @@ run.withwarn <- function(expr) {
 #' ## Fetching result of a command on a remote server
 #'
 #' # Get the file size in bytes
-#' res <- run.remote("ls -la myfile.csv | awk '{print \\$5;}'", remote = "me@@myserver")
+#' res <- run_remote("ls -la myfile.csv | awk '{print \\$5;}'", remote = "me@@myserver")
 #' res
 #' # $cmd.error
 #' # [1] FALSE
@@ -118,39 +115,35 @@ run.withwarn <- function(expr) {
 #'
 #' file.length <- as.integer(res$cmd.out)
 #' }
-#' @rdname run.remote
-#' @export
-run.remote <- function(cmd, remote, intern = T, stderr.redirect = T, verbose = F) {
-  redir <- ifelse(stderr.redirect, " 2>&1", "")
+run_remote <- function(cmd, remote, intern = T, stderr_redirect = T, verbose = F) {
+  redir <- ifelse(stderr_redirect, " 2>&1", "")
   if (!is.null(remote) && nchar(remote) > 0) {
     command <- paste0("ssh -T ", remote, redir, " << 'LAMBORGHINIINTHESTREETSOFLONDON'\n", cmd, "\nLAMBORGHINIINTHESTREETSOFLONDON")
   } else {
     command <- paste(cmd, redir)
   }
   if (verbose) cat("# ", gsub("\n", "\n# ", command), "\n", sep="")
-  tm <- round(system.time(cmd.out <- run.withwarn(system(command, intern=intern)))[3], 3)
-  attr(cmd.out, "elapsed.time") <- tm
-  if (attr(cmd.out, "num.warnings") > 0) {
-    return(list(cmd.error = TRUE, cmd.out = cmd.out, warn.msg = attr(cmd.out, "last.message")))
+  time1 <- Sys.time()
+  cmd_out <- run_withwarn(system(command, intern = intern))
+  time2 <- Sys.time()
+  attr(cmd_out, "elapsed_time") <- as.numeric(time2 - time1, units = "secs")
+  if (attr(cmd_out, "num_warnings") > 0) {
+    return(list(cmd_error = TRUE, cmd_out = cmd_out, warn.msg = attr(cmd_out, "last.message")))
   }
-  list(cmd.error = FALSE, cmd.out = cmd.out, warn.msg = NULL)
+  list(cmd_error = FALSE, cmd_out = cmd_out, warn.msg = NULL)
 }
 
 #' A wrapper around the scp shell command that handles local/remote files and allows
 #' copying between remote hosts via the local machine.
 #'
-#' @param remote.src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
-#' @param path.src Path of the source file.
-#' @param remote.dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
-#' @param path.dest Path for the source file; can be a directory.
+#' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
+#' @param path_src Path of the source file.
+#' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
+#' @param path_dest Path for the source file; can be a directory.
 #' @param verbose Prints elapsed time if TRUE
-#' @param via.local Copies the file via the local machine. Useful when two remote machines can't talk to each other directly.
-#' @param local.temp.dir When copying via local machine, the directory to use as scratch space.
+#' @param via_local Copies the file via the local machine. Useful when two remote machines can't talk to each other directly.
+#' @param local_temp_dir When copying via local machine, the directory to use as scratch space.
 #' @param recursively Copy a directory recursively?
-#' @name cp.remote
-#' @aliases cp.remote
-#' @rdname cp.remote
-#' @title scp wrapper
 #' @examples
 #' \dontrun{
 #' ## Copy file myfile.csv from the home directory on the remote server to
@@ -172,8 +165,8 @@ run.remote <- function(cmd, remote, intern = T, stderr.redirect = T, verbose = F
 #' # 10,
 #'
 #' ## on local server in R:
-#' cp.remote(remote.src = "me@@myserver", path.src = "~/myfile.csv",
-#'           remote.dest = "", path.dest = getwd(), verbose = TRUE)
+#' cp_remote(remote_src = "me@@myserver", path_src = "~/myfile.csv",
+#'           remote_dest = "", path_dest = getwd(), verbose = TRUE)
 #' # [1] "Elapsed: 1.672 sec"
 #' df <- read.csv("myfile.csv")
 #' df
@@ -189,58 +182,58 @@ run.remote <- function(cmd, remote, intern = T, stderr.redirect = T, verbose = F
 #' # 9    9 NA
 #' # 10  10 NA
 #' }
-#' @export
-cp.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = FALSE,
-                      via.local = FALSE, local.temp.dir = tempdir(), recursively = FALSE) {
-  #   if (remote.src == "" || is.na(remote.src)) remote.src = NULL
-  #   path.src <- paste(c(remote.src, path.src), collapse = ":")
-  #
-  #   if (remote.dest == "" || is.na(remote.dest)) remote.dest = NULL
-  #   path.dest <- paste(c(remote.dest, path.dest), collapse = ":")
-  if (remote.src != "" && !is.na(remote.src) && !is.null(remote.src)) {
-    path.src <- paste0(remote.src, ":", path.src)
+cp_remote <- function(remote_src, path_src, remote_dest, path_dest, verbose = FALSE,
+                      via_local = FALSE, local_temp_dir = tempdir(), recursively = FALSE) {
+  if (remote_src != "" && !is.na(remote_src) && !is.null(remote_src)) {
+    path_src <- paste0(remote_src, ":", path_src)
   }
-  if (remote.dest != "" && !is.na(remote.dest) && !is.null(remote.dest)) {
-    path.dest <- paste0(remote.dest, ":", path.dest)
+  if (remote_dest != "" && !is.na(remote_dest) && !is.null(remote_dest)) {
+    path_dest <- paste0(remote_dest, ":", path_dest)
   }
 
-  scp.command <- ifelse(recursively, "scp -r", "scp")
+  scp_command <- ifelse(recursively, "scp -r", "scp")
 
-  if (via.local) {
-    path.tmp <- tempfile(pattern = "tmp_scp_", tmpdir = local.temp.dir)
-    res <- run.remote(paste(scp.command, path.src, path.tmp), remote="")
-    if (res$cmd.error) {
-      stop(paste("scp failed:", res$warn.msg))
+  if (via_local) {
+    path_tmp <- tempfile(pattern = "tmp_scp_", tmpdir = local_temp_dir)
+    res <- run_remote(paste(scp_command, path_src, path_tmp), remote = "")
+    if (res$cmd_error) {
+      stop(paste("scp failed:", res$warn_msg))
     }
-    if (verbose) print(paste("Elapsed:", attr(res$cmd.out, "elapsed.time"), "sec"))
-    path.src <- path.tmp
+    if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed_time"), "sec"))
+    path_src <- path_tmp
   }
 
-  res <- run.remote(paste(scp.command, path.src, path.dest), remote="")
-  if (res$cmd.error) {
-    stop(paste("scp failed:", res$warn.msg))
+  res <- run_remote(paste(scp_command, path_src, path_dest), remote="")
+  if (res$cmd_error) {
+    stop(paste("scp failed:", res$warn_msg))
   }
-  if (verbose) print(paste("Elapsed:", attr(res$cmd.out, "elapsed.time"), "sec"))
+  if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed_time"), "sec"))
 
-  if (via.local) run.remote(paste("rm -f", path.tmp), remote="")
+  if (via_local) run_remote(paste("rm -f", path_tmp), remote="")
 }
 
-
-rsync.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose = F) {
-  if (remote.src != "" && !is.na(remote.src) && !is.null(remote.src)) {
-    path.src <- paste0("-e ssh ", remote.src, ":", path.src)
+#' A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
+#'
+#' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
+#' @param path_src Path of the source file.
+#' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
+#' @param path_dest Path for the source file; can be a directory.
+#' @param verbose Prints elapsed time if TRUE
+rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, verbose = F) {
+  if (remote_src != "" && !is.na(remote_src) && !is.null(remote_src)) {
+    path_src <- paste0("-e ssh ", remote_src, ":", path_src)
   }
-  if (remote.dest != "" && !is.na(remote.dest) && !is.null(remote.dest)) {
-    path.dest <- paste0("-e ssh ", remote.dest, ":", path.dest)
+  if (remote_dest != "" && !is.na(remote_dest) && !is.null(remote_dest)) {
+    path_dest <- paste0("-e ssh ", remote_dest, ":", path_dest)
   }
 
-  command <- paste0("rsync -avz ", path.src, " ", path.dest)
-  res <- run.remote(command, remote = "", verbose = verbose)
-  if (res$cmd.error) {
-    stop(paste("rsync failed:", res$warn.msg))
+  command <- paste0("rsync -avz ", path_src, " ", path_dest)
+  res <- run_remote(command, remote = "", verbose = verbose)
+  if (res$cmd_error) {
+    stop(paste("rsync failed:", res$warn_msg))
   }
 
-  if (verbose) print(paste("Elapsed:", attr(res$cmd.out, "elapsed.time"), "sec"))
+  if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed.time"), "sec"))
 }
 
 
@@ -252,136 +245,44 @@ rsync.remote <- function(remote.src, path.src, remote.dest, path.dest, verbose =
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
-#' @rdname file.exists.remote
 #' @examples
 #' \dontrun{
-#' file.exists.remote("~/myfile.csv", remote = "me@@myserver")
+#' file_exists_remote("~/myfile.csv", remote = "me@@myserver")
 #' # [1] TRUE
 #' }
-#' @export
-file.exists.remote <- function(file, remote = "", verbose=F) {
+file_exists_remote <- function(file, remote = "", verbose=F) {
   secret <- "ZINNGGGGG! MESSAGE FOR YOU SIR!"
   cmd <- paste("if [ -e ", file, " ] ; then echo \"", secret, "\"; fi ", sep="")
-  res <- run.remote(cmd, remote, verbose=verbose)
-  if (res$cmd.error) {
-    stop(paste("file.exists.remote: ERROR", res$cmd.out, res$warn.msg, sep="\n"))
+  res <- run_remote(cmd, remote, verbose = verbose)
+  if (res$cmd_error) {
+    stop(paste("file_exists_remote: ERROR", res$cmd_out, res$warn_msg, sep="\n"))
   }
-  any(res$cmd.out == secret)
-}
-
-#' Measure the resident memory usage of a process.
-#'
-#' Returns the memory usage in KB of a process with the specified process id. By
-#' default, returns the memory usage of the current R process. This can be used
-#' to measure and log the memory usage of the R process during script execution.
-#' @param pid Process ID (default is the current process id).
-#' @return The resident memory usage in KB.
-#' @examples
-#' \dontrun{
-#' mem.usage()
-#' # [1] 37268
-#' }
-#' @rdname mem.usage
-#' @export
-mem.usage <- function(pid = Sys.getpid()) {
-  df <- read.delim(pipe("ps axo pid,rss"), sep = "");
-  df[df$PID == pid, "RSS"]
+  any(res$cmd_out == secret)
 }
 
 #' Creates a remote directory with the specified group ownership and permissions.
 #'
 #' If the directory already exists, attempts to set the group ownership to the
-#' \code{user.group}. The allowed group permissions are one of
+#' \code{user_group}. The allowed group permissions are one of
 #' \code{c("g+rwx", "g+rx", "go-w", "go-rwx")}, or \code{"-"}. The value
 #' \code{"-"} means "don't change permissions".
 #' @param path Directory path. If using \code{remote}, this should be a full path or
 #'             a path relative to the user's home directory.
-#' @param user.group The user group. If NULL, the default group is used.
+#' @param user_group The user group. If NULL, the default group is used.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param permissions The group permissions on the directory. Default is '-'.
 #' @param verbose If \code{TRUE} prints the command.
-#' @rdname mkdir.remote
-#' @note This may not work on Windows.
-#' @export
-mkdir.remote <- function(path, remote = "", user.group = NULL, permissions = "-", verbose = F) {
-  if (!file.exists.remote(path, remote)) {
-    run.remote(paste("mkdir -p", path), remote=remote, verbose=verbose)
+mkdir_remote <- function(path, remote = "", user_group = NULL, permissions = "-", verbose = F) {
+  if (!file_exists_remote(path, remote)) {
+    run_remote(paste("mkdir -p", path), remote=remote, verbose=verbose)
   }
-  if (!is.null(user.group)) {
-    run.remote(paste("chgrp -R", user.group, path), remote=remote, verbose=verbose)
+  if (!is.null(user_group)) {
+    run_remote(paste("chgrp -R", user_group, path), remote=remote, verbose=verbose)
   }
   if (permissions != "-") {
-    run.remote(paste0("chmod ", permissions, " ", path), remote=remote, verbose=verbose)
+    run_remote(paste0("chmod ", permissions, " ", path), remote=remote, verbose=verbose)
   }
-}
-
-#' Checks for processes running on a local or remote machine.
-#'
-#' One of the use cases for this function is to ensure that an R process is
-#' already running and not start another one accidentally.
-#' @param grep.string  String(s) to check for in \code{ps}. If a vector, runs a chain of piped grep commands for each string.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param stop.if.any  Stop if any of \code{grep.string} is running
-#' @param stop.if.none Stop if none of \code{grep.string} is running
-#' @param count.self When \code{FALSE}, excludes the calling process name from the count, if it gets matched.
-#' @param ps.options   Gives the ability to run different options to ps.
-#' @seealso \code{run.remote}
-#' @rdname ps.grep.remote
-#' @note This may not work on Windows.
-#' @importFrom stringr str_detect
-#' @examples
-#' \dontrun{
-#' # Check if Eclipse is running.
-#' ps.grep.remote("Eclipse", remote = "")
-#' # [1] TRUE
-#' }
-#' @export
-ps.grep.remote <- function(
-  grep.string,           # string(s) to check for in 'ps'
-  remote,                # remote location to look for script
-  stop.if.any = FALSE,   # stop if any of 'grep.string' running
-  stop.if.none = FALSE,  # stop if none of 'grep.string' running
-  count.self = FALSE,    # if TRUE, will count all processes including itself; could be useful if remote is different
-  ps.options = "aux"
-) {
-  if (length(grep.string) == 0) stop("ps.grep.remote: grep.string is empty")
-
-  # Assemble command
-  greps <- unlist(lapply(grep.string, function(s) { paste("egrep '", s, "'", sep = "") } ))
-  pipes <- paste(greps, collapse = " | ")
-  cmd <- paste("ps ", ps.options, " | ", pipes, " | grep -v 'egrep'", sep = "")
-
-  # Execute ps remotely
-  res <- run.remote(cmd, remote = remote)$cmd.out
-
-  # Filter again for grep.string
-  res <- res[str_detect(res, grep.string)]
-
-  # Check number of rows
-  running <- length(res) > 0
-
-  if (running && !count.self) {
-    # check if what's running is the process that called this function (self)
-    script.call <- paste(commandArgs(), collapse=" ")
-    res.match <- sapply(res, function(s) length(grep(script.call, s, ignore.case = T, perl = T, value = T)) > 0)
-    # either we didn't match (e.g. on remote host) or we matched more than one
-    running <- !(sum(res.match) == 1)
-  }
-
-  # Stop if the 'grep.string' is running
-  if (stop.if.any && running) {
-    stop(paste0("Found ", grep.string, " in ps aux on remote server '", remote, "'; stopping\n\n",
-               paste(res, collapse = "\n")))
-  }
-
-  # Stop if the 'grep.string' is not running
-  if (stop.if.none && !running) {
-    stop(paste0("Did not find ", grep.string, " in ps aux on remote server '", remote, "'; stopping"))
-  }
-
-  return(running)
 }
 
 #' Read from a file remotely
@@ -390,10 +291,8 @@ ps.grep.remote <- function(
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
-#'
-#' @export
-cat.remote <- function(path, remote=NULL, verbose=F) {
-  run.remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
+cat_remote <- function(path, remote=NULL, verbose=F) {
+  run_remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
 }
 
 #' Write to a file remotely
@@ -403,10 +302,8 @@ cat.remote <- function(path, remote=NULL, verbose=F) {
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
-#'
-#' @export
-write.remote <- function(x, path, remote, verbose=F) {
-  run.remote(paste0("cat > ", path, " << 'FLEMISHPLANTSFORSALE'\n", paste(x, collapse="\n"), "FLEMISHPLANTSFORSALE\n"), remote, verbose=verbose)
+write_remote <- function(x, path, remote, verbose=F) {
+  run_remote(paste0("cat > ", path, " << 'FLEMISHPLANTSFORSALE'\n", paste(x, collapse="\n"), "FLEMISHPLANTSFORSALE\n"), remote, verbose=verbose)
 }
 
 #' View the contents of a directory remotely
@@ -415,10 +312,8 @@ write.remote <- function(x, path, remote, verbose=F) {
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
-#'
-#' @export
-ls.remote <- function(path, remote=NULL, verbose=F) {
-  run.remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
+ls_remote <- function(path, remote=NULL, verbose=F) {
+  run_remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
 }
 
 #' Show the status of Grid Engine jobs and queues
@@ -428,7 +323,7 @@ ls.remote <- function(path, remote=NULL, verbose=F) {
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
-qstat.remote <- function(remote=NULL, verbose=F) {
-  run.remote("qstat", remote, verbose=verbose)$cmd.out
+qstat_remote <- function(remote=NULL, verbose=F) {
+  run_remote("qstat", remote, verbose=verbose)$cmd.out
 }
 
