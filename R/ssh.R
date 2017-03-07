@@ -70,17 +70,17 @@ run_withwarn <- function(expr) {
 #' @return \code{run_remote} returns
 #' a list containing the results of the command execution, error codes and messages.
 #' \itemize{
-#' \item \code{cmd.error} - flag indicating if a warning was issued because command exited with non-zero code
-#' \item \code{cmd.out} - the result of the command execution. If there was no error, this contains the output
+#' \item \code{cmd_error} - flag indicating if a warning was issued because command exited with non-zero code
+#' \item \code{cmd_out} - the result of the command execution. If there was no error, this contains the output
 #'                        as a character array, one value per line, see \code{\link{system}}. If there was
-#'                        an error (as indicated by \code{cmd.error}), this most likely contains the error message
-#'                        from the command itself. The \code{elapsed.time} attribute contains the elapsed
+#'                        an error (as indicated by \code{cmd_error}), this most likely contains the error message
+#'                        from the command itself. The \code{elapsed_time} attribute contains the elapsed
 #'                        time for the command in seconds.
-#' \item \code{warn.msg} - the warning message when \code{cmd.error} is TRUE.
+#' \item \code{warn_msg} - the warning message when \code{cmd_error} is TRUE.
 #' }
 #' Warnings are really errors here so the error flag is set if there are warnings.
 #'
-#' Additionally, \code{cmd.out} has the \code{elapsed.time}, \code{num.warnings} and, if
+#' Additionally, \code{cmd_out} has the \code{elapsed_time}, \code{num.warnings} and, if
 #' the number of warnings is greater than zero, \code{last.warning} attributes.
 #' @examples
 #' \dontrun{
@@ -88,8 +88,8 @@ run_withwarn <- function(expr) {
 #' remote = ""
 #' command = "ls /abcde"
 #' res <- run_remote(cmd=command, remote=remote)
-#' if (res$cmd.error) {
-#'    stop(paste(paste(res$cmd.out, collapse="\n"), res$warn.msg, sep="\n"))
+#' if (res$cmd_error) {
+#'    stop(paste(paste(res$cmd_out, collapse="\n"), res$warn_msg, sep="\n"))
 #' }
 #' # Error: ls: /abcde: No such file or directory
 #' # running command 'ls /abcde  2>&1 ' had status 1
@@ -99,21 +99,21 @@ run_withwarn <- function(expr) {
 #' # Get the file size in bytes
 #' res <- run_remote("ls -la myfile.csv | awk '{print \\$5;}'", remote = "me@@myserver")
 #' res
-#' # $cmd.error
+#' # $cmd_error
 #' # [1] FALSE
 #' #
-#' # $cmd.out
+#' # $cmd_out
 #' # [1] "42"
 #' # attr(,"num.warnings")
 #' # [1] 0
-#' # attr(,"elapsed.time")
+#' # attr(,"elapsed_time")
 #' # elapsed
 #' # 1.063
 #' #
-#' # $warn.msg
+#' # $warn_msg
 #' # NULL
 #'
-#' file.length <- as.integer(res$cmd.out)
+#' file.length <- as.integer(res$cmd_out)
 #' }
 run_remote <- function(cmd, remote, intern = T, stderr_redirect = T, verbose = F) {
   redir <- ifelse(stderr_redirect, " 2>&1", "")
@@ -128,9 +128,9 @@ run_remote <- function(cmd, remote, intern = T, stderr_redirect = T, verbose = F
   time2 <- Sys.time()
   attr(cmd_out, "elapsed_time") <- as.numeric(time2 - time1, units = "secs")
   if (attr(cmd_out, "num_warnings") > 0) {
-    return(list(cmd_error = TRUE, cmd_out = cmd_out, warn.msg = attr(cmd_out, "last.message")))
+    return(list(cmd_error = TRUE, cmd_out = cmd_out, warn_msg = attr(cmd_out, "last.message")))
   }
-  list(cmd_error = FALSE, cmd_out = cmd_out, warn.msg = NULL)
+  list(cmd_error = FALSE, cmd_out = cmd_out, warn_msg = NULL)
 }
 
 #' A wrapper around the scp shell command that handles local/remote files and allows
@@ -233,7 +233,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, verbose =
     stop(paste("rsync failed:", res$warn_msg))
   }
 
-  if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed.time"), "sec"))
+  if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed_time"), "sec"))
 }
 
 
@@ -292,7 +292,7 @@ mkdir_remote <- function(path, remote = "", user_group = NULL, permissions = "-"
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
 cat_remote <- function(path, remote=NULL, verbose=F) {
-  run_remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd.out
+  run_remote(paste0("cat \"", path, "\""), remote, verbose=verbose)$cmd_out
 }
 
 #' Write to a file remotely
@@ -313,7 +313,7 @@ write_remote <- function(x, path, remote, verbose=F) {
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
 ls_remote <- function(path, remote=NULL, verbose=F) {
-  run_remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd.out
+  run_remote(paste0("ls -1 \"", path, "\""), remote, verbose=verbose)$cmd_out
 }
 
 #' Show the status of Grid Engine jobs and queues
@@ -324,6 +324,6 @@ ls_remote <- function(path, remote=NULL, verbose=F) {
 #'
 #' @export
 qstat_remote <- function(remote=NULL, verbose=F) {
-  run_remote("qstat", remote, verbose=verbose)$cmd.out
+  run_remote("qstat", remote, verbose=verbose)$cmd_out
 }
 
