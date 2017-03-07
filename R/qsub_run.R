@@ -183,6 +183,8 @@ setup_execution <- function(qsub_config, qsub_environment) {
 }
 
 execute_job <- function(qsub_config) {
+  list2env(qsub_config, environment())
+
   # start job remotely and read job_id
   submit_command <- paste0("cd ", remote_dir, "; qsub script.sh")
   output <- run_remote(submit_command, remote = remote, verbose = verbose)
@@ -214,6 +216,7 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 #'
 #' @export
 is_job_running <- function(qsub_config) {
+  list2env(qsub_config, environment())
   if (!is.null(job_id)) {
     qstat_out <- run_remote("qstat", remote)$cmd_out
     any(grepl(paste0("^ *", job_id, " "), qstat_out))
@@ -232,55 +235,54 @@ qsub_retrieve <- function(qsub_config, wait=T) {
   if (!wait && is_job_running(qsub_config)) {
     return(NULL)
   } else {
+    list2env(qsub_config, environment())
+
     while (is_job_running(qsub_config)) {
       Sys.sleep(1)
     }
 
     # copy results to local
-    with(qsub_config, {
-      rsync_remote(
-        remote_src = remote,
-        path_src = paste0(remote_dir, "/"),
-        remote_dest = "",
-        path_dest = paste0(src_dir, "/")
-      )
+    rsync_remote(
+      remote_src = remote,
+      path_src = paste0(remote_dir, "/"),
+      remote_dest = "",
+      path_dest = paste0(src_dir, "/")
+    )
 
 
-      # read RData files
-      tryCatch({
-        outs <- lapply(seq_len(num_tasks), function(i) {
-          out <- NULL # satisfying r check
-          output_file <- paste0(src_dir, "/out/out_", i, ".rds")
-          error_file <- paste0(src_dir, "/log/log.", i, ".e.txt")
-          if (file.exists(output_file)) {
-            out <- readRDS(output_file)
+    # read RData files
+    tryCatch({
+      outs <- lapply(seq_len(num_tasks), function(i) {
+        out <- NULL # satisfying r check
+        output_file <- paste0(src_dir, "/out/out_", i, ".rds")
+        error_file <- paste0(src_dir, "/log/log.", i, ".e.txt")
+        if (file.exists(output_file)) {
+          out <- readRDS(output_file)
+        } else {
+          if (file.exists(error_file)) {
+            msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
+            txt <- paste0("File: ", error_file, "\n", msg)
           } else {
-            if (file.exists(error_file)) {
-              msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
-              txt <- paste0("File: ", error_file, "\n", msg)
-            } else {
-              txt <- paste0("File: ", error_file, "\nNo output or log file found. Did the job run on PRISM at all?")
-            }
-            if (stop_on_error) {
-              stop(txt)
-            } else {
-              warning(txt)
-              NA
-            }
+            txt <- paste0("File: ", error_file, "\nNo output or log file found. Did the job run on PRISM at all?")
           }
-        })
-      }, error = function(e) {
-        stop(e)
-      }, finally = {
-        # remove temporary folders afterwards
-        if (remove_tmpdirs) {
-          run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
-          run_remote(paste0("rm -rf \"", src_dir, "\""), remote = "", verbose = verbose)
+          if (stop_on_error) {
+            stop(txt)
+          } else {
+            warning(txt)
+            NA
+          }
         }
       })
-
-      return(outs)
+    }, error = function(e) {
+      stop(e)
+    }, finally = {
+      # remove temporary folders afterwards
+      if (remove_tmp_folder) {
+        run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
+        run_remote(paste0("rm -rf \"", src_dir, "\""), remote = "", verbose = verbose)
+      }
     })
 
+    return(outs)
   }
 }

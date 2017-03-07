@@ -105,7 +105,7 @@ set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file =
     }
   } else {
     test_qsub_config(qsub_config)
-    .default_qsub_config <- qsub_config
+    .default_qsub_config <<- qsub_config
     if (permanent) {
       saveRDS(qsub_config, permanent_file)
     }
