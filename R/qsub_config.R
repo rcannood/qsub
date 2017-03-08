@@ -205,7 +205,7 @@ override_qsub_config <- function(qsub_config = NULL, ...) {
 
   new_values <- list(...)
   new_values <- new_values[names(new_values) %in% qsub_config_param_names]
-  old_values <- old_values[names(old_values) %in% param_names & !names(qsub_config) %in% names(new_values)]
+  old_values <- old_values[names(old_values) %in% qsub_config_param_names & !names(old_values) %in% names(new_values)]
 
   do.call(create_qsub_config, c(new_values, old_values))
 }
