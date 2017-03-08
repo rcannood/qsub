@@ -197,9 +197,10 @@ instantiate_qsub_config <- function(qsub_config) {
 #' }
 override_qsub_config <- function(qsub_config = NULL, ...) {
   if (is.null(qsub_config)) {
-    old_values <- get_default_qsub_config()
+    qsub_config <- get_default_qsub_config()
   }
-  test_qsub_config(old_values)
+  test_qsub_config(qsub_config)
+  old_values <- qsub_config
 
   qsub_config_param_names <- names(formals(PRISM::create_qsub_config))
 
