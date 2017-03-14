@@ -1,20 +1,50 @@
 #' Create a qsub configuration object.
 #'
+#' @usage
+#' create_qsub_config(
+#'   # server settings
+#'   remote,
+#'   local_tmp_path,
+#'   remote_tmp_path,
+#'
+#'   # execution parameters
+#'   name = "R2PRISM",
+#'   num_cores = 1,
+#'   memory = "4G",
+#'   max_running_tasks = NULL,
+#'   priority = 0,
+#'
+#'   # pre-execution parameters
+#'   r_module = "R",
+#'   execute_before = NULL,
+#'   verbose = F,
+#'
+#'   # post-execution parameters
+#'   wait = T,
+#'   remove_tmp_folder = T,
+#'   stop_on_error = T
+#' )
+#'
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
 #'   that does not require interactive password entry.
 #' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
 #' @param remote_tmp_path A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').
-#' @param name The name of the execution
-#' @param num_cores The number of cores to allocate per task
-#' @param max_running_tasks öimit concurrent array job task execution
-#' @param memory The memory to allocate per core
-#' @param verbose Print out any ssh commands
+#'
+#' @param name The name of the execution.
+#' @param num_cores The number of cores to allocate per task.
+#' @param memory The memory to allocate per core.
+#' @param max_running_tasks limit concurrent array job task execution.
+#' @param priority Defines or redefines the priority of the job relative to other jobs.
+#'   Priority is an integer in the range -1023 to 1024. The default priority value for jobs is 0.
+#'   Users may only decrease the priority of their jobs.
+#'
+#' @param r_module The R module to use.
+#' @param execute_before Commands to execute in the shell before running R.
+#' @param verbose Print out any ssh commands.
+#'
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove_tmp_folder If \code{TRUE}, will remove everything that was created related to this execution at the end.
-#' @param r_module The R module to use
 #' @param stop_on_error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
-#' @param max_tasks The maximum number of tasks to spawn
-#' @param execute_before Commands to execute in the shell before running R
 #'
 #' @importFrom random randomStrings
 #'
@@ -37,20 +67,27 @@
 #' qsub_lapply(1:10, function(x) x + 1)
 #' }
 create_qsub_config <- function(
+  # server settings
   remote,
   local_tmp_path,
   remote_tmp_path,
-  r_module = "R",
+
+  # execution parameters
   name = "R2PRISM",
   num_cores = 1,
-  max_running_tasks = NULL,
   memory = "4G",
+  max_running_tasks = NULL,
+  priority = 0,
+
+  # pre-execution parameters
+  r_module = "R",
+  execute_before = NULL,
   verbose = F,
+
+  # post-execution parameters
   wait = T,
   remove_tmp_folder = T,
-  stop_on_error = T,
-  max_tasks = NULL,
-  execute_before = NULL
+  stop_on_error = T
 ) {
   qsub_conf <- formals(create_qsub_config)
   new_values <- as.list(match.call())[-1]
@@ -60,6 +97,11 @@ create_qsub_config <- function(
   qsub_conf
 }
 
+#' Returns whether the passed object is a qsub_config object.
+#'
+#' @param object The object to be tested
+#'
+#' @export
 is_qsub_config <- function(object) {
   class(object) == "PRISM::qsub_config"
 }
@@ -123,7 +165,7 @@ set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file =
 #'
 #' @param permanent_file The file in which a permanent default config is stored.
 #'
-#' ## @export # you should typically not require to call this function manually.
+#' @export
 get_default_qsub_config <- function(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds") {
   if (".default_qsub_config" %in% ls(all.names = T)) {
     .default_qsub_config
@@ -172,10 +214,53 @@ instantiate_qsub_config <- function(qsub_config) {
 #' Create a new qsub configuration object from an old qsub configuration.
 #'
 #' @usage
-#' override_qsub_config(qsub_config = NULL, ...)
+#' override_qsub_config(
+#'   qsub_config = NULL,
+#'
+#'   # server settings
+#'   remote,
+#'   local_tmp_path,
+#'   remote_tmp_path,
+#'
+#'   # execution parameters
+#'   name = "R2PRISM",
+#'   num_cores = 1,
+#'   memory = "4G",
+#'   max_running_tasks = NULL,
+#'   priority = 0,
+#'
+#'   # pre-execution parameters
+#'   r_module = "R",
+#'   execute_before = NULL,
+#'   verbose = F,
+#'
+#'   # post-execution parameters
+#'   wait = T,
+#'   remove_tmp_folder = T,
+#'   stop_on_error = T
+#' )
 #'
 #' @param qsub_config The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.
-#' @param ... Any parameters to be overridden.
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
+#'   that does not require interactive password entry.
+#' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
+#' @param remote_tmp_path A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').
+#'
+#' @param name The name of the execution.
+#' @param num_cores The number of cores to allocate per task.
+#' @param memory The memory to allocate per core.
+#' @param max_running_tasks limit concurrent array job task execution.
+#' @param priority Defines or redefines the priority of the job relative to other jobs.
+#'   Priority is an integer in the range -1023 to 1024. The default priority value for jobs is 0.
+#'   Users may only decrease the priority of their jobs.
+#'
+#' @param r_module The R module to use.
+#' @param execute_before Commands to execute in the shell before running R.
+#' @param verbose Print out any ssh commands.
+#'
+#' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
+#' @param remove_tmp_folder If \code{TRUE}, will remove everything that was created related to this execution at the end.
+#' @param stop_on_error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
 #'
 #' @export
 #'
@@ -195,16 +280,37 @@ instantiate_qsub_config <- function(qsub_config) {
 #' qsub_config2 <- override_qsub_config(qsub_config, remote = "yourserver")
 #' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
 #' }
-override_qsub_config <- function(qsub_config = NULL, ...) {
-  if (is.null(qsub_config)) {
-    qsub_config <- get_default_qsub_config()
-  }
+override_qsub_config <- function(
+  qsub_config = get_default_qsub_config(),
+
+  # server settings
+  remote = qsub_config$remote,
+  local_tmp_path = qsub_config$local_tmp_path,
+  remote_tmp_path = qsub_config$remote_tmp_path,
+
+  # execution parameters
+  name = "R2PRISM",
+  num_cores = 1,
+  memory = "4G",
+  max_running_tasks = NULL,
+  priority = 0,
+
+  # pre-execution parameters
+  r_module = "R",
+  execute_before = NULL,
+  verbose = F,
+
+  # post-execution parameters
+  wait = T,
+  remove_tmp_folder = T,
+  stop_on_error = T) {
+
   test_qsub_config(qsub_config)
   old_values <- qsub_config
 
   qsub_config_param_names <- names(formals(PRISM::create_qsub_config))
 
-  new_values <- list(...)
+  new_values <- as.list(match.call())[-1]
   new_values <- new_values[names(new_values) %in% qsub_config_param_names]
   old_values <- old_values[names(old_values) %in% qsub_config_param_names & !names(old_values) %in% names(new_values)]
 

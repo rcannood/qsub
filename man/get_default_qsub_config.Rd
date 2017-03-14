@@ -7,9 +7,7 @@
 get_default_qsub_config(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
 }
 \arguments{
-\item{permanent_file}{The file in which a permanent default config is stored.
-
-## @export # you should typically not require to call this function manually.}
+\item{permanent_file}{The file in which a permanent default config is stored.}
 }
 \description{
 Will prefer the temporary default over the permanent default.

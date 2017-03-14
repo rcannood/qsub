@@ -4,12 +4,65 @@
 \alias{override_qsub_config}
 \title{Create a new qsub configuration object from an old qsub configuration.}
 \usage{
-override_qsub_config(qsub_config = NULL, ...)
+override_qsub_config(
+  qsub_config = NULL,
+
+  # server settings
+  remote,
+  local_tmp_path,
+  remote_tmp_path,
+
+  # execution parameters
+  name = "R2PRISM",
+  num_cores = 1,
+  memory = "4G",
+  max_running_tasks = NULL,
+  priority = 0,
+
+  # pre-execution parameters
+  r_module = "R",
+  execute_before = NULL,
+  verbose = F,
+
+  # post-execution parameters
+  wait = T,
+  remove_tmp_folder = T,
+  stop_on_error = T
+)
 }
 \arguments{
 \item{qsub_config}{The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.}
 
-\item{...}{Any parameters to be overridden.}
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server}
+that does not require interactive password entry.}
+
+\item{local_tmp_path}{A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').}
+
+\item{remote_tmp_path}{A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').}
+
+\item{name}{The name of the execution.}
+
+\item{num_cores}{The number of cores to allocate per task.}
+
+\item{memory}{The memory to allocate per core.}
+
+\item{max_running_tasks}{limit concurrent array job task execution.}
+
+\item{priority}{Defines or redefines the priority of the job relative to other jobs.
+Priority is an integer in the range -1023 to 1024. The default priority value for jobs is 0.
+Users may only decrease the priority of their jobs.}
+
+\item{r_module}{The R module to use.}
+
+\item{execute_before}{Commands to execute in the shell before running R.}
+
+\item{verbose}{Print out any ssh commands.}
+
+\item{wait}{If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.}
+
+\item{remove_tmp_folder}{If \code{TRUE}, will remove everything that was created related to this execution at the end.}
+
+\item{stop_on_error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
 }
 \value{
 A new qsub_config object.

@@ -4,10 +4,29 @@
 \alias{create_qsub_config}
 \title{Create a qsub configuration object.}
 \usage{
-create_qsub_config(remote, local_tmp_path, remote_tmp_path, r_module = "R",
-  name = "R2PRISM", num_cores = 1, max_running_tasks = NULL,
-  memory = "4G", verbose = F, wait = T, remove_tmp_folder = T,
-  stop_on_error = T, max_tasks = NULL, execute_before = NULL)
+create_qsub_config(
+  # server settings
+  remote,
+  local_tmp_path,
+  remote_tmp_path,
+
+  # execution parameters
+  name = "R2PRISM",
+  num_cores = 1,
+  memory = "4G",
+  max_running_tasks = NULL,
+  priority = 0,
+
+  # pre-execution parameters
+  r_module = "R",
+  execute_before = NULL,
+  verbose = F,
+
+  # post-execution parameters
+  wait = T,
+  remove_tmp_folder = T,
+  stop_on_error = T
+)
 }
 \arguments{
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server}
@@ -17,27 +36,29 @@ that does not require interactive password entry.}
 
 \item{remote_tmp_path}{A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').}
 
-\item{r_module}{The R module to use}
+\item{name}{The name of the execution.}
 
-\item{name}{The name of the execution}
+\item{num_cores}{The number of cores to allocate per task.}
 
-\item{num_cores}{The number of cores to allocate per task}
+\item{memory}{The memory to allocate per core.}
 
-\item{max_running_tasks}{öimit concurrent array job task execution}
+\item{max_running_tasks}{limit concurrent array job task execution.}
 
-\item{memory}{The memory to allocate per core}
+\item{priority}{Defines or redefines the priority of the job relative to other jobs.
+Priority is an integer in the range -1023 to 1024. The default priority value for jobs is 0.
+Users may only decrease the priority of their jobs.}
 
-\item{verbose}{Print out any ssh commands}
+\item{r_module}{The R module to use.}
+
+\item{execute_before}{Commands to execute in the shell before running R.}
+
+\item{verbose}{Print out any ssh commands.}
 
 \item{wait}{If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.}
 
 \item{remove_tmp_folder}{If \code{TRUE}, will remove everything that was created related to this execution at the end.}
 
 \item{stop_on_error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
-
-\item{max_tasks}{The maximum number of tasks to spawn}
-
-\item{execute_before}{Commands to execute in the shell before running R}
 }
 \value{
 A qsub configuration object.
