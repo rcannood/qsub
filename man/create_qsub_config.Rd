@@ -44,10 +44,6 @@ that does not require interactive password entry.}
 
 \item{max_running_tasks}{limit concurrent array job task execution.}
 
-\item{priority}{Defines or redefines the priority of the job relative to other jobs.
-Priority is an integer in the range -1023 to 1024. The default priority value for jobs is 0.
-Users may only decrease the priority of their jobs.}
-
 \item{r_module}{The R module to use.}
 
 \item{execute_before}{Commands to execute in the shell before running R.}
