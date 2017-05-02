@@ -17,4 +17,3 @@ require interactive password entry. For local execution, pass an empty string ""
 \description{
 View the contents of a directory remotely
 }
-

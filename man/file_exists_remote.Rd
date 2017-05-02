@@ -26,4 +26,3 @@ file_exists_remote("~/myfile.csv", remote = "me@myserver")
 # [1] TRUE
 }
 }
-

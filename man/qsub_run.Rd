@@ -22,4 +22,3 @@ Calculate the results of a function on PRISM!
 \seealso{
 \code{\link{create_qsub_config}}, \code{\link{set_default_qsub_config}}
 }
-

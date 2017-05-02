@@ -15,4 +15,3 @@ require interactive password entry. For local execution, pass an empty string ""
 \description{
 Show the status of Grid Engine jobs and queues
 }
-

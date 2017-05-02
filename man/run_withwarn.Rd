@@ -18,4 +18,3 @@ result with additional atributes:
 }
 Otherwise, \code{run_withwarn} is similar to \code{base::supressWarnings}
 }
-

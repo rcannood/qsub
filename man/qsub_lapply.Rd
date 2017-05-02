@@ -55,4 +55,3 @@ qsub_retrieve(handle)
 \seealso{
 \code{\link{create_qsub_config}}, \code{\link{set_default_qsub_config}}
 }
-

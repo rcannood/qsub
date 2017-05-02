@@ -13,4 +13,3 @@ get_default_qsub_config(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds
 Will prefer the temporary default over the permanent default.
 You should typically not require this function.
 }
-

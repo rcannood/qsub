@@ -12,4 +12,3 @@ is_qsub_config(object)
 \description{
 Returns whether the passed object is a qsub_config object.
 }
-

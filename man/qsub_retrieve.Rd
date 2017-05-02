@@ -14,4 +14,3 @@ qsub_retrieve(qsub_config, wait = T)
 \description{
 Retrieve the results of a qsub execution.
 }
-

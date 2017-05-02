@@ -19,4 +19,3 @@ require interactive password entry. For local execution, pass an empty string ""
 \description{
 Write to a file remotely
 }
-

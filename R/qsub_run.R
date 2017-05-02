@@ -164,6 +164,7 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "#$ -e log/log.$TASK_ID.e.txt\n",
       "#$ -o log/log.$TASK_ID.o.txt\n",
       "#$ -l h_vmem=", memory, "\n",
+      "#$ -l h_rt=", max_wall_time, "\n",
       "cd ", remote_dir, "\n",
       "module unload R\n",
       "module load ", r_module, "\n",

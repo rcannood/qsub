@@ -18,4 +18,4 @@ Imports:
     readr
 URL: http://github.com/rcannood/qsubapply
 BugReports: https://github.com/rcannood/qsubapply/issues
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

@@ -32,4 +32,3 @@ qsub_lapply(1:10, function(x) x + 1)
 \seealso{
 \code{\link{qsub_lapply}}, \code{\link{create_qsub_config}}
 }
-

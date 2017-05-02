@@ -15,7 +15,7 @@ create_qsub_config(
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
-  priority = 0,
+  max_wall_time = "01:00:00",
 
   # pre-execution parameters
   r_module = "R",
@@ -43,6 +43,8 @@ that does not require interactive password entry.}
 \item{memory}{The memory to allocate per core.}
 
 \item{max_running_tasks}{limit concurrent array job task execution.}
+
+\item{max_wall_time}{the maximum time each task is allowed to run.}
 
 \item{r_module}{The R module to use.}
 
@@ -78,4 +80,3 @@ qsub_lapply(1:10, function(x) x + 1)
 \seealso{
 \code{\link{qsub_lapply}}, \code{\link{set_default_qsub_config}}
 }
-

@@ -12,4 +12,3 @@ is_job_running(qsub_config)
 \description{
 Check whether a job is running.
 }
-

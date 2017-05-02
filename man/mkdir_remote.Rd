@@ -26,4 +26,3 @@ If the directory already exists, attempts to set the group ownership to the
 \code{c("g+rwx", "g+rx", "go-w", "go-rwx")}, or \code{"-"}. The value
 \code{"-"} means "don't change permissions".
 }
-

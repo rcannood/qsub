@@ -20,4 +20,3 @@ rsync_remote(remote_src, path_src, remote_dest, path_dest, verbose = F)
 \description{
 A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
 }
-

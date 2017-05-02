@@ -14,4 +14,3 @@ instantiate_qsub_config(qsub_config)
 \description{
 This function generates the paths for the temporary files.
 }
-

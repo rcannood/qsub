@@ -12,7 +12,7 @@
 #'   num_cores = 1,
 #'   memory = "4G",
 #'   max_running_tasks = NULL,
-#'   priority = 0,
+#'   max_wall_time = "01:00:00",
 #'
 #'   # pre-execution parameters
 #'   r_module = "R",
@@ -34,6 +34,7 @@
 #' @param num_cores The number of cores to allocate per task.
 #' @param memory The memory to allocate per core.
 #' @param max_running_tasks limit concurrent array job task execution.
+#' @param max_wall_time the maximum time each task is allowed to run.
 #'
 #' @param r_module The R module to use.
 #' @param execute_before Commands to execute in the shell before running R.
@@ -74,6 +75,7 @@ create_qsub_config <- function(
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
+  max_wall_time = "01:00:00",
 
   # pre-execution parameters
   r_module = "R",
@@ -223,7 +225,7 @@ instantiate_qsub_config <- function(qsub_config) {
 #'   num_cores = 1,
 #'   memory = "4G",
 #'   max_running_tasks = NULL,
-#'   priority = 0,
+#'   max_wall_time = "01:00:00",
 #'
 #'   # pre-execution parameters
 #'   r_module = "R",
@@ -246,6 +248,7 @@ instantiate_qsub_config <- function(qsub_config) {
 #' @param num_cores The number of cores to allocate per task.
 #' @param memory The memory to allocate per core.
 #' @param max_running_tasks limit concurrent array job task execution.
+#' @param max_wall_time the maximum time each task is allowed to run.
 #'
 #' @param r_module The R module to use.
 #' @param execute_before Commands to execute in the shell before running R.
@@ -286,6 +289,7 @@ override_qsub_config <- function(
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
+  max_wall_time = "01:00:00",
 
   # pre-execution parameters
   r_module = "R",
