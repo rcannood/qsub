@@ -143,13 +143,13 @@ setup_execution <- function(qsub_config, qsub_environment) {
     r_script <- paste0(
       "setwd(\"", remote_dir, "\")\n",
       "load(\"data.RData\")\n",
-      "index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
-      "file_out <- paste0(\"out/out_\", index, \".rds\", sep=\"\")\n",
-      "if (!file.exists(file_out)) {\n",
-      "  params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
-      "  set.seed(params$SEEDS[[index]])\n",
-      "  out <- do.call(params$FUN, c(list(params$X[[index]]), params$DOTPARAMS))\n",
-      "  saveRDS(out, file=file_out)\n",
+      "pitsol_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
+      "pitsol_file_out <- paste0(\"out/out_\", pitsol_index, \".rds\", sep=\"\")\n",
+      "if (!file.exists(pitsol_file_out)) {\n",
+      "  pitsol_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
+      "  set.seed(pitsol_params$SEEDS[[pitsol_index]])\n",
+      "  pitsol_out <- do.call(pitsol_params$FUN, c(list(pitsol_params$X[[index]]), pitsol_params$DOTPARAMS))\n",
+      "  saveRDS(pitsol_out, file=file_out)\n",
       "}\n"
     )
     write_remote(r_script, src_rfile, remote = "", verbose = verbose)
