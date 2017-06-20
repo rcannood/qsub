@@ -148,7 +148,7 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "if (!file.exists(PitSoL_file_out)) {\n",
       "  PitSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
       "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
-      "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[index]]), PitSoL_params$DOTPARAMS))\n",
+      "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS))\n",
       "  saveRDS(PitSoL_out, file=file_out)\n",
       "}\n"
     )
