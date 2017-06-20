@@ -149,7 +149,7 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "  PitSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
       "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
       "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS))\n",
-      "  saveRDS(PitSoL_out, file=file_out)\n",
+      "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
       "}\n"
     )
     write_remote(r_script, src_rfile, remote = "", verbose = verbose)
