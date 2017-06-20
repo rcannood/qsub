@@ -143,13 +143,13 @@ setup_execution <- function(qsub_config, qsub_environment) {
     r_script <- paste0(
       "setwd(\"", remote_dir, "\")\n",
       "load(\"data.RData\")\n",
-      "PItSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
-      "PItSoL_file_out <- paste0(\"out/out_\", PItSoL_index, \".rds\", sep=\"\")\n",
-      "if (!file.exists(PItSoL_file_out)) {\n",
-      "  PItSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
-      "  set.seed(PItSoL_params$SEEDS[[PItSoL_index]])\n",
-      "  PItSoL_out <- do.call(PItSoL_params$FUN, c(list(PItSoL_params$X[[index]]), PItSoL_params$DOTPARAMS))\n",
-      "  saveRDS(PItSoL_out, file=file_out)\n",
+      "PitSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
+      "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
+      "if (!file.exists(PitSoL_file_out)) {\n",
+      "  PitSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
+      "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
+      "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[index]]), PitSoL_params$DOTPARAMS))\n",
+      "  saveRDS(PitSoL_out, file=file_out)\n",
       "}\n"
     )
     write_remote(r_script, src_rfile, remote = "", verbose = verbose)
