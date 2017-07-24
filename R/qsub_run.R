@@ -210,7 +210,7 @@ execute_job <- function(qsub_config) {
 #'
 #' @export
 qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
-  qsub_lapply(X = 1, FUN, qsub_config = qsub_config, qsub_environment = qsub_environment, ...)
+  qsub_lapply(X = 1, function(i) FUN(), qsub_config = qsub_config, qsub_environment = qsub_environment, ...)
 }
 
 #' Check whether a job is running.
