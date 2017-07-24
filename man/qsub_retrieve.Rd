@@ -4,12 +4,14 @@
 \alias{qsub_retrieve}
 \title{Retrieve the results of a qsub execution.}
 \usage{
-qsub_retrieve(qsub_config, wait = T)
+qsub_retrieve(qsub_config, wait = T, post_fun = NULL)
 }
 \arguments{
 \item{qsub_config}{The qsub configuration of class \code{qsub_configuration}, as returned by any qsub execution}
 
 \item{wait}{If \code{TRUE}, wait until the execution has finished in order to return the results, else returns \code{NULL} if execution is not finished.}
+
+\item{post_fun}{Apply a function to the output after execution. Interface: \code{function(index, output)}}
 }
 \description{
 Retrieve the results of a qsub execution.

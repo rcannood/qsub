@@ -232,9 +232,10 @@ is_job_running <- function(qsub_config) {
 #'
 #' @param qsub_config The qsub configuration of class \code{qsub_configuration}, as returned by any qsub execution
 #' @param wait If \code{TRUE}, wait until the execution has finished in order to return the results, else returns \code{NULL} if execution is not finished.
+#' @param post_fun Apply a function to the output after execution. Interface: \code{function(index, output)}
 #' @importFrom readr read_file
 #' @export
-qsub_retrieve <- function(qsub_config, wait=T) {
+qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
   if (!wait && is_job_running(qsub_config)) {
     return(NULL)
   } else {
@@ -261,6 +262,10 @@ qsub_retrieve <- function(qsub_config, wait=T) {
         error_file <- paste0(src_dir, "/log/log.", i, ".e.txt")
         if (file.exists(output_file)) {
           out <- readRDS(output_file)
+
+          if (!is.null(post_fun)) {
+            out <- post_fun(i, out)
+          }
         } else {
           if (file.exists(error_file)) {
             msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
