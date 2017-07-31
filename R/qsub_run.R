@@ -256,15 +256,15 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
 
     # read RData files
     tryCatch({
-      outs <- lapply(seq_len(num_tasks), function(i) {
-        output_file <- paste0(src_dir, "/out/out_", i, ".rds")
-        error_file <- paste0(src_dir, "/log/log.", i, ".e.txt")
+      outs <- lapply(seq_len(num_tasks), function(rds_i) {
+        output_file <- paste0(src_dir, "/out/out_", rds_i, ".rds")
+        error_file <- paste0(src_dir, "/log/log.", rds_i, ".e.txt")
         if (file.exists(output_file)) {
-          out <- readRDS(output_file)
+          out_rds <- readRDS(output_file)
           if (!is.null(post_fun)) {
-            out <- post_fun(i, out)
+            out_rds <- post_fun(rds_i, out_rds)
           }
-          out
+          out_rds
         } else {
           if (file.exists(error_file)) {
             msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
