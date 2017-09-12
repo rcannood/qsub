@@ -4,6 +4,7 @@
 #' @param FUN The function to be applied to each element of X.
 #' @param qsub_config The configuration to use for this execution.
 #' @param qsub_environment \code{NULL}, a character vector or an environment. Specifies what data and functions will be uploaded to the server.
+#' @param qsub_packages The packages to be loaded on the cluster.
 #' @param ... optional arguments to FUN.
 #'
 #' @export
@@ -41,7 +42,7 @@
 #' # Retrieve results
 #' qsub_retrieve(handle)
 #' }
-qsub_lapply <- function(X, FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
+qsub_lapply <- function(X, FUN, qsub_config = NULL, qsub_environment = NULL, qsub_packages = NULL, ...) {
   dot_params <- list(...)
 
   # get default config
@@ -75,7 +76,8 @@ qsub_lapply <- function(X, FUN, qsub_config = NULL, qsub_environment = NULL, ...
     SEEDS = seeds,
     X = X,
     FUN = FUN,
-    DOTPARAMS = dot_params
+    DOTPARAMS = dot_params,
+    PACKAGES = qsub_packages
   )
 
   # generate folder names
@@ -147,6 +149,9 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
       "if (!file.exists(PitSoL_file_out)) {\n",
       "  PitSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
+      "  for (pack in PitSoL_params$PACKAGES) {\n",
+      "    suppressMessages(library(pack, character.only = T))\n",
+      "  }\n",
       "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
       "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS))\n",
       "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
