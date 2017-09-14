@@ -304,9 +304,9 @@ override_qsub_config <- function(
   test_qsub_config(qsub_config)
   old_values <- qsub_config
 
-  qsub_config_param_names <- names(formals(PRISM::create_qsub_config))
+  qsub_config_param_names <- formalArgs(create_qsub_config)
 
-  new_values <- as.list(match.call())[-1]
+  new_values <- as.list(environment())
   new_values <- new_values[names(new_values) %in% qsub_config_param_names]
   old_values <- old_values[names(old_values) %in% qsub_config_param_names & !names(old_values) %in% names(new_values)]
 
