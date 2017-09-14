@@ -44,7 +44,7 @@ that does not require interactive password entry.}
 
 \item{max_running_tasks}{limit concurrent array job task execution.}
 
-\item{max_wall_time}{the maximum time each task is allowed to run.}
+\item{max_wall_time}{The maximum time each task is allowed to run.}
 
 \item{r_module}{The R module to use.}
 

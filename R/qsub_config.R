@@ -34,7 +34,7 @@
 #' @param num_cores The number of cores to allocate per task.
 #' @param memory The memory to allocate per core.
 #' @param max_running_tasks limit concurrent array job task execution.
-#' @param max_wall_time the maximum time each task is allowed to run.
+#' @param max_wall_time The maximum time each task is allowed to run.
 #'
 #' @param r_module The R module to use.
 #' @param execute_before Commands to execute in the shell before running R.
@@ -239,24 +239,7 @@ instantiate_qsub_config <- function(qsub_config) {
 #' )
 #'
 #' @param qsub_config The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
-#'   that does not require interactive password entry.
-#' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
-#' @param remote_tmp_path A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').
-#'
-#' @param name The name of the execution.
-#' @param num_cores The number of cores to allocate per task.
-#' @param memory The memory to allocate per core.
-#' @param max_running_tasks limit concurrent array job task execution.
-#' @param max_wall_time the maximum time each task is allowed to run.
-#'
-#' @param r_module The R module to use.
-#' @param execute_before Commands to execute in the shell before running R.
-#' @param verbose Print out any ssh commands.
-#'
-#' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
-#' @param remove_tmp_folder If \code{TRUE}, will remove everything that was created related to this execution at the end.
-#' @param stop_on_error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
+#' @inheritParams create_qsub_config
 #'
 #' @export
 #'
