@@ -88,7 +88,7 @@ create_qsub_config <- function(
   stop_on_error = T
 ) {
   qsub_conf <- formals(create_qsub_config)
-  new_values <- as.list(match.call())[-1]
+  new_values <- as.list(environment())
   qsub_conf[names(new_values)] <- new_values
   qsub_conf <- lapply(qsub_conf, eval)
   class(qsub_conf) <- "PRISM::qsub_config"
