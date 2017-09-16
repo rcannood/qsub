@@ -274,14 +274,18 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
             msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
             txt <- paste0("File: ", error_file, "\n", msg)
           } else {
-            txt <- paste0("File: ", error_file, "\nNo output or log file found. Did the job run on PRISM at all?")
+            txt <- paste0(
+              "File: ", error_file, "\n",
+              "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
+              "Check 'qacct -j ", job_id, "' for more info."
+            )
           }
           if (stop_on_error) {
             stop(txt)
           } else {
-            x <- NA
-            attr(x, "qsub_error") <- txt
-            x
+            out_rds <- NA
+            attr(out_rds, "qsub_error") <- txt
+            out_rds
           }
         }
       })
