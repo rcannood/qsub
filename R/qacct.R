@@ -14,7 +14,7 @@ qacct_remote <- function(qsub_config) {
 
   remote <- qsub_config$remote
 
-  qacct_direct(remote, job_id)
+  qacct_direct_remote(remote, job_id)
 }
 
 #' Run qacct on remote
