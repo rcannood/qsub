@@ -3,7 +3,7 @@
 #' @param qsub_config The config
 #'
 #' @export
-qacct_remote <- function(qsub_config) {
+qacct <- function(qsub_config) {
   if (!"job_id" %in% names(qsub_config)) {
     stop(sQuote("qsub_config"), " is not a qsub handle.")
   }
@@ -14,7 +14,7 @@ qacct_remote <- function(qsub_config) {
 
   remote <- qsub_config$remote
 
-  qacct_direct_remote(remote, job_id)
+  qacct_remote(remote, job_id)
 }
 
 #' Run qacct on remote
@@ -24,7 +24,7 @@ qacct_remote <- function(qsub_config) {
 #'
 #' @importFrom stringr str_sub
 #' @export
-qacct_direct_remote <- function(remote, job_id) {
+qacct_remote <- function(remote, job_id) {
   out <- run_remote(paste0("qacct -j ", job_id), remote)$cmd_out
   if (grepl("job id \\d* not found", out)[[1]]) {
     NULL

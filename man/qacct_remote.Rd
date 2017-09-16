@@ -4,10 +4,12 @@
 \alias{qacct_remote}
 \title{Run qacct on remote}
 \usage{
-qacct_remote(qsub_config)
+qacct_remote(remote, job_id)
 }
 \arguments{
-\item{qsub_config}{The config}
+\item{remote}{The remote}
+
+\item{job_id}{The job_id of the job}
 }
 \description{
 Run qacct on remote
