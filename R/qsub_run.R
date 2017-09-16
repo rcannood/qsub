@@ -258,7 +258,6 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
       path_dest = paste0(src_dir, "/")
     )
 
-
     # read RData files
     tryCatch({
       outs <- lapply(seq_len(num_tasks), function(rds_i) {
@@ -280,8 +279,9 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
           if (stop_on_error) {
             stop(txt)
           } else {
-            warning(txt)
-            NA
+            x <- NA
+            attr(x, "qsub_error") <- txt
+            x
           }
         }
       })
