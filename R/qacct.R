@@ -1,0 +1,40 @@
+#' Run qacct on remote
+#'
+#' @param qsub_config The config
+#'
+#' @exprt
+qacct <- function(qsub_config) {
+  if (!"job_id" %in% names(qsub_config)) {
+    stop(sQuote("qsub_config"), " is not a qsub handle.")
+  }
+  job_id <- qsub_config$job_id
+  if (is_job_running(qsub_config)) {
+    stop("job ", job_id, " is still running.")
+  }
+
+  remote <- qsub_config$remote
+
+  qacct_direct(remote, job_id)
+}
+
+#' Run qacct on remote
+#'
+#' @param remote The remote
+#' @param job_id The job_id of the job
+#'
+#' @importFrom stringr str_sub
+#' @export
+qacct_direct <- function(remote, job_id) {
+  out <- un_remote(paste0("qacct -j ", job_id), remote)$cmd_out
+  if (grepl("job id \\d* not found", out)[[1]]) {
+    NULL
+  } else {
+    breaks <- c(which(grepl("======", out)), length(out)+1)
+    bind_rows(lapply(seq_len(length(breaks)-1), function(i) {
+      strs <- out[seq(breaks[[i]]+1, breaks[[i+1]]-1)]
+      names <- gsub(" *$", "", stringr::str_sub(strs, 1, 12))
+      values <- gsub(" *$", "", stringr::str_sub(strs, 14, -1))
+      data_frame(job_id, task_id = i, name = names, value = values)
+    })) %>% spread(name, value)
+  }
+}
