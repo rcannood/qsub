@@ -17,12 +17,12 @@
 #'   # pre-execution parameters
 #'   r_module = "R",
 #'   execute_before = NULL,
-#'   verbose = F,
+#'   verbose = FALSE,
 #'
 #'   # post-execution parameters
-#'   wait = T,
-#'   remove_tmp_folder = T,
-#'   stop_on_error = T
+#'   wait = TRUE,
+#'   remove_tmp_folder = TRUE,
+#'   stop_on_error = TRUE
 #' )
 #'
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
@@ -80,18 +80,17 @@ create_qsub_config <- function(
   # pre-execution parameters
   r_module = "R",
   execute_before = NULL,
-  verbose = F,
+  verbose = FALSE,
 
   # post-execution parameters
-  wait = T,
-  remove_tmp_folder = T,
-  stop_on_error = T
+  wait = TRUE,
+  remove_tmp_folder = TRUE,
+  stop_on_error = TRUE
 ) {
-  qsub_conf <- formals(create_qsub_config)
-  new_values <- as.list(environment())
-  qsub_conf[names(new_values)] <- new_values
-  qsub_conf <- lapply(qsub_conf, eval)
-  class(qsub_conf) <- "PRISM::qsub_config"
+  test <- c(remote, local_tmp_path, remote_tmp_path)
+  qsub_conf <- as.list(environment())
+  qsub_conf <- qsub_conf[intersect(names(qsub_conf), formalArgs(create_qsub_config))]
+  class(qsub_conf) <- c(class(qsub_conf), "PRISM::qsub_config")
   qsub_conf
 }
 
@@ -101,9 +100,14 @@ create_qsub_config <- function(
 #'
 #' @export
 is_qsub_config <- function(object) {
-  class(object) == "PRISM::qsub_config"
+  "PRISM::qsub_config" %in% class(object)
 }
 
+#' Tests whether the passed object is a qsub_config object.
+#'
+#' @param object The object to be tested
+#'
+#' @export
 test_qsub_config <- function(object) {
   if (!is_qsub_config(object)) {
     stop(sQuote("qsub_config"), " needs to be a valid qsub_config object. See ", sQuote("create_qsub_config"), " for more details.")
@@ -230,12 +234,12 @@ instantiate_qsub_config <- function(qsub_config) {
 #'   # pre-execution parameters
 #'   r_module = "R",
 #'   execute_before = NULL,
-#'   verbose = F,
+#'   verbose = FALSE,
 #'
 #'   # post-execution parameters
-#'   wait = T,
-#'   remove_tmp_folder = T,
-#'   stop_on_error = T
+#'   wait = TRUE,
+#'   remove_tmp_folder = TRUE,
+#'   stop_on_error = TRUE
 #' )
 #'
 #' @param qsub_config The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.
@@ -268,30 +272,30 @@ override_qsub_config <- function(
   remote_tmp_path = qsub_config$remote_tmp_path,
 
   # execution parameters
-  name = "R2PRISM",
-  num_cores = 1,
-  memory = "4G",
-  max_running_tasks = NULL,
-  max_wall_time = "01:00:00",
+  name = qsub_config$name,
+  num_cores = qsub_config$num_cores,
+  memory = qsub_config$memory,
+  max_running_tasks = qsub_config$max_running_tasks,
+  max_wall_time = qsub_config$max_wall_time,
 
   # pre-execution parameters
-  r_module = "R",
-  execute_before = NULL,
-  verbose = F,
+  r_module = qsub_config$r_module,
+  execute_before = qsub_config$execute_before,
+  verbose = qsub_config$verbose,
 
   # post-execution parameters
-  wait = T,
-  remove_tmp_folder = T,
-  stop_on_error = T) {
-
+  wait = qsub_config$wait,
+  remove_tmp_folder = qsub_config$remove_tmp_folder,
+  stop_on_error = qsub_config$stop_on_error
+) {
   test_qsub_config(qsub_config)
   old_values <- qsub_config
 
   qsub_config_param_names <- formalArgs(create_qsub_config)
 
   new_values <- as.list(environment())
-  new_values <- new_values[names(new_values) %in% qsub_config_param_names]
-  old_values <- old_values[names(old_values) %in% qsub_config_param_names & !names(old_values) %in% names(new_values)]
+  new_values <- new_values[intersect(names(new_values), qsub_config_param_names)]
+  old_values <- old_values[setdiff(intersect(names(old_values), qsub_config_param_names), names(new_values))]
 
   do.call(create_qsub_config, c(new_values, old_values))
 }

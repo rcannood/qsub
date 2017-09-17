@@ -22,12 +22,12 @@ override_qsub_config(
   # pre-execution parameters
   r_module = "R",
   execute_before = NULL,
-  verbose = F,
+  verbose = FALSE,
 
   # post-execution parameters
-  wait = T,
-  remove_tmp_folder = T,
-  stop_on_error = T
+  wait = TRUE,
+  remove_tmp_folder = TRUE,
+  stop_on_error = TRUE
 )
 }
 \arguments{
