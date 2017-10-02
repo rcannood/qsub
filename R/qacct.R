@@ -9,7 +9,7 @@ qacct <- function(qsub_config) {
   }
   job_id <- qsub_config$job_id
   if (is_job_running(qsub_config)) {
-    stop("job ", job_id, " is still running.")
+    warning("job ", job_id, " is still running.")
   }
 
   remote <- qsub_config$remote
@@ -44,13 +44,13 @@ qacct_remote <- function(remote, job_id) {
 #' @param qsub_config The config
 #'
 #' @export
-qstat <- function(qsub_config) {
+qstat_j <- function(qsub_config) {
   if (!"job_id" %in% names(qsub_config)) {
     stop(sQuote("qsub_config"), " is not a qsub handle.")
   }
   job_id <- qsub_config$job_id
   if (!is_job_running(qsub_config)) {
-    stop("job ", job_id, " is not running.")
+    warning("job ", job_id, " is not running.")
   }
 
   remote <- qsub_config$remote
@@ -65,7 +65,7 @@ qstat <- function(qsub_config) {
 #'
 #' @importFrom stringr str_sub
 #' @export
-qstat_remote <- function(remote, job_id) {
+qstat_j_remote <- function(remote, job_id) {
   out <- run_remote(paste0("qstat -j ", job_id), remote)$cmd_out
 
   if (grepl("Following jobs do not exist:", out)[[1]]) {

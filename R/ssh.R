@@ -115,7 +115,7 @@ run_withwarn <- function(expr) {
 #'
 #' file.length <- as.integer(res$cmd_out)
 #' }
-run_remote <- function(cmd, remote, intern = T, stderr_redirect = T, verbose = F) {
+run_remote <- function(cmd, remote, intern = TRUE, stderr_redirect = TRUE, verbose = FALSE) {
   redir <- ifelse(stderr_redirect, " 2>&1", "")
   if (!is.null(remote) && nchar(remote) > 0) {
     command <- paste0("ssh -T ", remote, redir, " << 'LAMBORGHINIINTHESTREETSOFLONDON'\n", cmd, "\nLAMBORGHINIINTHESTREETSOFLONDON")

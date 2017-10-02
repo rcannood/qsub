@@ -4,7 +4,8 @@
 \alias{run_remote}
 \title{\code{run_remote} - Runs the command locally or remotely using ssh.}
 \usage{
-run_remote(cmd, remote, intern = T, stderr_redirect = T, verbose = F)
+run_remote(cmd, remote, intern = TRUE, stderr_redirect = TRUE,
+  verbose = FALSE)
 }
 \arguments{
 \item{cmd}{Command to run. If run locally, quotes should be escaped once.
