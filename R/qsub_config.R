@@ -81,6 +81,7 @@ create_qsub_config <- function(
   r_module = "R",
   execute_before = NULL,
   verbose = FALSE,
+  # use_cpulimit = TRUE,
 
   # post-execution parameters
   wait = TRUE,
@@ -282,6 +283,7 @@ override_qsub_config <- function(
   r_module = qsub_config$r_module,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
+  # use_cpulimit = qsub_config$use_cpulimit,
 
   # post-execution parameters
   wait = qsub_config$wait,

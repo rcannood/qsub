@@ -174,6 +174,7 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "module unload R\n",
       "module load ", r_module, "\n",
       paste0(paste0(execute_before, collapse="\n"), "\n"),
+      # ifelse(use_cpulimit, paste0("cpulimit -i --limit=", num_cores*100, " "), ""),
       "Rscript --default-packages=methods,stats,utils,graphics,grDevices script.R $SGE_TASK_ID\n"
     ))
     write_remote(sh_script, src_shfile, remote = "", verbose = verbose)
