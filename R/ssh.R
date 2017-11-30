@@ -235,7 +235,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     exclude_str <- NULL
   }
 
-  command <- glue("rsync -avz {path_src} {path_dest} {excluse_str}")
+  command <- glue("rsync -avz {path_src} {path_dest} {exclude_str}")
   res <- run_remote(command, remote = "", verbose = verbose)
   if (res$cmd_error) {
     stop(glue("rsync failed: {res$warn_msg}"))
