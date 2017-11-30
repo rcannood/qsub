@@ -232,7 +232,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
   if (!is.null(exclude)) {
     exclude_str <- paste(glue(" --exclude={exclude} "), collapse = "")
   } else {
-    exclude_str <- NULL
+    exclude_str <- ""
   }
 
   command <- glue("rsync -avz {path_src} {path_dest} {exclude_str}")
