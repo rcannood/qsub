@@ -4,7 +4,8 @@
 \alias{rsync_remote}
 \title{A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.}
 \usage{
-rsync_remote(remote_src, path_src, remote_dest, path_dest, verbose = F)
+rsync_remote(remote_src, path_src, remote_dest, path_dest, exclude = NULL,
+  verbose = FALSE)
 }
 \arguments{
 \item{remote_src}{Remote machine for the source file in the format \code{user@machine} or an empty string for local.}
@@ -16,6 +17,8 @@ rsync_remote(remote_src, path_src, remote_dest, path_dest, verbose = F)
 \item{path_dest}{Path for the source file; can be a directory.}
 
 \item{verbose}{Prints elapsed time if TRUE}
+
+\item{excluse}{A vector of files / regexs to be excluded}
 }
 \description{
 A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.

@@ -218,19 +218,27 @@ cp_remote <- function(remote_src, path_src, remote_dest, path_dest, verbose = FA
 #' @param path_src Path of the source file.
 #' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
 #' @param path_dest Path for the source file; can be a directory.
+#' @param excluse A vector of files / regexs to be excluded
 #' @param verbose Prints elapsed time if TRUE
-rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, verbose = F) {
+#'
+#' @importFrom glue glue
+rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
   if (remote_src != "" && !is.na(remote_src) && !is.null(remote_src)) {
-    path_src <- paste0("-e ssh ", remote_src, ":", path_src)
+    path_src <- glue("-e ssh {remote_src}:{path_src}")
   }
   if (remote_dest != "" && !is.na(remote_dest) && !is.null(remote_dest)) {
-    path_dest <- paste0("-e ssh ", remote_dest, ":", path_dest)
+    path_dest <- glue("-e ssh {remote_dest}:{path_dest}")
+  }
+  if (!is.null(exclude)) {
+    exclude_str <- paste(glue(" --exclude={exclude} "), collapse = "")
+  } else {
+    exclude_str <- NULL
   }
 
-  command <- paste0("rsync -avz ", path_src, " ", path_dest)
+  command <- glue("rsync -avz {path_src} {path_dest} {excluse_str}")
   res <- run_remote(command, remote = "", verbose = verbose)
   if (res$cmd_error) {
-    stop(paste("rsync failed:", res$warn_msg))
+    stop(glue("rsync failed: {res$warn_msg}"))
   }
 
   if (verbose) print(paste("Elapsed:", attr(res$cmd_out, "elapsed_time"), "sec"))

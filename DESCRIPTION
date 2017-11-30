@@ -13,6 +13,7 @@ LazyData: true
 Author: Robrecht Cannoodt
 Maintainer: 'Robrecht Cannoodt' <robrecht.cannoodt@gmail.com>
 Imports:
+    glue,
     random,
     stringr,
     readr
