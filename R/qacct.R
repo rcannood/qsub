@@ -76,7 +76,7 @@ qstat_j_remote <- function(remote, job_id) {
       strs <- out[seq(breaks[[i]]+1, breaks[[i+1]]-1)]
       names <- gsub(": *$", "", stringr::str_sub(strs, 1, 27))
       values <- gsub(" *$", "", stringr::str_sub(strs, 29, -1))
-      data_frame(job_id, task_id = i, name = names, value = values)
+      data_frame(job_id, task_id = i, name = names, value = values) %>% filter(!grepl("^ *$", name))
     })) %>% spread(name, value)
   }
 }
