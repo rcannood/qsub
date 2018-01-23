@@ -241,64 +241,66 @@ is_job_running <- function(qsub_config) {
 #' @importFrom readr read_file
 #' @export
 qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
-  if (!wait && is_job_running(qsub_config)) {
+  if (is.numeric(wait) && !wait && is_job_running(qsub_config)) {
     return(NULL)
-  } else {
-    list2env(qsub_config, environment())
+  }
 
+  if (!is.character(wait) || wait != "just_do_it") {
     while (is_job_running(qsub_config)) {
       Sys.sleep(1)
     }
+  }
 
-    # copy results to local
-    rsync_remote(
-      remote_src = remote,
-      path_src = paste0(remote_dir, "/"),
-      remote_dest = "",
-      path_dest = paste0(src_dir, "/")
-    )
+  list2env(qsub_config, environment())
 
-    # read RData files
-    tryCatch({
-      outs <- lapply(seq_len(num_tasks), function(rds_i) {
-        output_file <- paste0(src_dir, "/out/out_", rds_i, ".rds")
-        error_file <- paste0(src_dir, "/log/log.", rds_i, ".e.txt")
-        if (file.exists(output_file)) {
-          out_rds <- readRDS(output_file)
-          if (!is.null(post_fun)) {
-            out_rds <- post_fun(rds_i, out_rds)
-          }
-          out_rds
-        } else {
-          if (file.exists(error_file)) {
-            msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
-            txt <- paste0("File: ", error_file, "\n", msg)
-          } else {
-            txt <- paste0(
-              "File: ", error_file, "\n",
-              "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
-              "Check 'qacct -j ", job_id, "' for more info."
-            )
-          }
-          if (stop_on_error) {
-            stop(txt)
-          } else {
-            out_rds <- NA
-            attr(out_rds, "qsub_error") <- txt
-            out_rds
-          }
+  # copy results to local
+  rsync_remote(
+    remote_src = remote,
+    path_src = paste0(remote_dir, "/"),
+    remote_dest = "",
+    path_dest = paste0(src_dir, "/")
+  )
+
+  # read RData files
+  tryCatch({
+    outs <- lapply(seq_len(num_tasks), function(rds_i) {
+      output_file <- paste0(src_dir, "/out/out_", rds_i, ".rds")
+      error_file <- paste0(src_dir, "/log/log.", rds_i, ".e.txt")
+      if (file.exists(output_file)) {
+        out_rds <- readRDS(output_file)
+        if (!is.null(post_fun)) {
+          out_rds <- post_fun(rds_i, out_rds)
         }
-      })
-    }, error = function(e) {
-      stop(e)
-    }, finally = {
-      # remove temporary folders afterwards
-      if (remove_tmp_folder) {
-        run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
-        run_remote(paste0("rm -rf \"", src_dir, "\""), remote = "", verbose = verbose)
+        out_rds
+      } else {
+        if (file.exists(error_file)) {
+          msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
+          txt <- paste0("File: ", error_file, "\n", msg)
+        } else {
+          txt <- paste0(
+            "File: ", error_file, "\n",
+            "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
+            "Check 'qacct -j ", job_id, "' for more info."
+          )
+        }
+        if (stop_on_error) {
+          stop(txt)
+        } else {
+          out_rds <- NA
+          attr(out_rds, "qsub_error") <- txt
+          out_rds
+        }
       }
     })
+  }, error = function(e) {
+    stop(e)
+  }, finally = {
+    # remove temporary folders afterwards
+    if (remove_tmp_folder) {
+      run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
+      run_remote(paste0("rm -rf \"", src_dir, "\""), remote = "", verbose = verbose)
+    }
+  })
 
-    return(outs)
-  }
+  return(outs)
 }
