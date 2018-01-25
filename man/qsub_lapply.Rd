@@ -4,13 +4,15 @@
 \alias{qsub_lapply}
 \title{Apply a Function over a List or Vector on a gridengine system!}
 \usage{
-qsub_lapply(X, FUN, qsub_config = NULL, qsub_environment = NULL,
-  qsub_packages = NULL, ...)
+qsub_lapply(X, FUN, object_envir = environment(FUN), qsub_config = NULL,
+  qsub_environment = NULL, qsub_packages = NULL, ...)
 }
 \arguments{
 \item{X}{A vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.}
 
 \item{FUN}{The function to be applied to each element of X.}
+
+\item{object_envir}{The environment in which to go looking for the qsub_environment variables, if these are characters.}
 
 \item{qsub_config}{The configuration to use for this execution.}
 
