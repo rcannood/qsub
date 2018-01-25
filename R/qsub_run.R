@@ -241,7 +241,7 @@ is_job_running <- function(qsub_config) {
 #' @importFrom readr read_file
 #' @export
 qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
-  if (is.numeric(wait) && !wait && is_job_running(qsub_config)) {
+  if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
     return(NULL)
   }
 
