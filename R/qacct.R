@@ -36,8 +36,7 @@ qacct_remote <- function(remote, job_id) {
       values <- gsub(" *$", "", stringr::str_sub(strs, 14, -1))
       data_frame(job_id, row_number_i = i, name = names, value = values)
     })) %>%
-      spread(name, value) %>%
-      select(-row_number_i)
+      spread(name, value)
   }
 }
 
