@@ -202,13 +202,15 @@ instantiate_qsub_config <- function(qsub_config) {
     src_dir = src_dir,
     src_outdir = paste0(src_dir, "/out"),
     src_logdir = paste0(src_dir, "/log"),
-    src_rdata = paste0(src_dir, "/data.RData"),
+    src_qsub_rds = paste0(src_dir, "/data_qsub.rds"),
+    src_prism_rds = paste0(src_dir, "/data_prism.rds"),
     src_rfile = paste0(src_dir, "/script.R"),
     src_shfile = paste0(src_dir, "/script.sh"),
     remote_dir = remote_dir,
     remote_outdir = paste0(remote_dir, "/out"),
     remote_logdir = paste0(remote_dir, "/log"),
-    remote_rdata = paste0(remote_dir, "/data.RData"),
+    remote_qsub_rds = paste0(remote_dir, "/data_qsub.rds"),
+    remote_prism_rds = paste0(remote_dir, "/data_prism.rds"),
     remote_rfile = paste0(remote_dir, "/script.R"),
     remote_shfile = paste0(remote_dir, "/script.sh")
   ))
@@ -283,7 +285,6 @@ override_qsub_config <- function(
   r_module = qsub_config$r_module,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
-  # use_cpulimit = qsub_config$use_cpulimit,
 
   # post-execution parameters
   wait = qsub_config$wait,

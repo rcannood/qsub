@@ -65,6 +65,7 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
     qsub_environment <- collect_environment_recursively(object_envir, environment_names)
   }
 
+  # check qsub_environment
   if (!is.environment(qsub_environment)) {
     stop(sQuote("qsub_environment"), " must be NULL, a character vector, or an environment")
   }
@@ -73,7 +74,7 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
   seeds <- sample.int(length(X)*10, length(X), replace = F)
 
   # collect arguments
-  qsub_environment$PRISM_IN_THE_STREETS_OF_LONDON_PARAMS <- list(
+  prism_environment <- list(
     SEEDS = seeds,
     X = X,
     FUN = FUN,
@@ -88,7 +89,11 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
   qsub_instance$num_tasks <- length(X)
 
   # upload all files to the remote
-  setup_execution(qsub_instance, qsub_environment)
+  setup_execution(
+    qsub_config = qsub_instance,
+    qsub_environment = qsub_environment,
+    prism_environment = prism_environment
+  )
 
   # submit and retrieve job_id
   qsub_instance$job_id <- execute_job(qsub_instance)
@@ -121,7 +126,11 @@ collect_environment_recursively <- function(parent, environment_names) {
   child
 }
 
-setup_execution <- function(qsub_config, qsub_environment) {
+setup_execution <- function(
+  qsub_config,
+  qsub_environment,
+  prism_environment
+) {
   with(qsub_config, {
     # check whether folders exist
     if (file_exists_remote(src_dir, remote = "", verbose = verbose)) {
@@ -140,7 +149,9 @@ setup_execution <- function(qsub_config, qsub_environment) {
     mkdir_remote(src_logdir, remote = "", verbose = verbose)
 
     # save environment
-    save(list = names(qsub_environment), file = src_rdata, envir = qsub_environment)
+    saveRDS(object = qsub_environment, file = src_qsub_rds)
+    saveRDS(object = prism_environment, file = src_prism_rds)
+    # save(list = names(qsub_environment), file = src_rdata, envir = qsub_environment)
 
     # write r script
     r_script <- paste0(
@@ -149,12 +160,13 @@ setup_execution <- function(qsub_config, qsub_environment) {
       "PitSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
       "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
       "if (!file.exists(PitSoL_file_out)) {\n",
-      "  PitSoL_params <- PRISM_IN_THE_STREETS_OF_LONDON_PARAMS\n",
+      "  PitSoL_params <- readRDS(\"data_prism.rds\")\n",
       "  for (pack in PitSoL_params$PACKAGES) {\n",
       "    suppressMessages(library(pack, character.only = T))\n",
       "  }\n",
       "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
-      "  PitSoL_out <- do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS))\n",
+      "  PitSoL_envdata <- readRDS(\"data_qsub.rds\")\n",
+      "  PitSoL_out <- with(PitSoL_envdata, do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS)))\n",
       "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
       "}\n"
     )
