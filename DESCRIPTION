@@ -2,7 +2,13 @@ Package: PRISM
 Title: Running commands remotely on PRISM
 Version: 1.0
 Authors@R: c(
-    person("Robrecht", "Cannoodt", email = "rcannood@gmail.com", role = c("cre", "aut"))
+    person(
+      "Robrecht", 
+      "Cannoodt", 
+      email = "rcannood@gmail.com", 
+      role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0003-3641-729X", github = "rcannood")
+    )
   )
 Description: This package allows you to easily perform a lapply using the PRISM
     cluster! Hooray!
@@ -10,8 +16,6 @@ Depends:
     R (>= 3.0)
 License: GPL (>= 2)
 LazyData: true
-Author: Robrecht Cannoodt
-Maintainer: 'Robrecht Cannoodt' <rcannood@gmail.com>
 Imports:
     glue,
     random,
