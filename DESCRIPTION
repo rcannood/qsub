@@ -26,3 +26,4 @@ Imports:
 URL: http://github.com/rcannood/PRISM
 BugReports: https://github.com/rcannood/PRISM/issues
 RoxygenNote: 6.0.1
+Suggests: testthat
