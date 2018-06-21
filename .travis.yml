@@ -3,6 +3,10 @@ sudo: required
 dist: trusty
 cache: packages
 r_check_args: "--as-cran"
+addons:
+  apt:
+    sources:
+    - libssh-dev
 r_packages:
   - covr
   - devtools
