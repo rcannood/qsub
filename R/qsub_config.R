@@ -123,22 +123,23 @@ test_qsub_config <- function(object) {
   }
 }
 
+config_file_location <- function() {
+  if (.Platform$OS.type == "unix") {
+    "~/.local/share/R2PRISM/qsub_config.rds"
+  } else if (.Platform$OS.type == "windows") {
+    "%localappdata%\\R2PRISM/qsub_config.rds"
+  }
+}
+
 #' Set a default qsub_config.
 #'
 #' @description
 #' If permanent, the qsub_config will be written to the specified path.
 #' Otherwise, it will be saved in the current environment.
 #'
-#' @usage
-#' set_default_qsub_config(
-#'   qsub_config,
-#'   permanent = TRUE,
-#'   permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
-#' )
-#'
 #' @param qsub_config The qsub_config to use as default.
 #' @param permanent Whether or not to make this the default qsub_config.
-#' @param permanent_file The location to which to save the permanent qsub_config.
+#' @param config_file The location to which to save the permanent qsub_config.
 #'
 #' @export
 #'
@@ -157,18 +158,18 @@ test_qsub_config <- function(object) {
 set_default_qsub_config <- function(
   qsub_config,
   permanent = TRUE,
-  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+  config_file = config_file_location()
 ) {
   if (is.null(qsub_config)) {
     rm(.default_qsub_config)
     if (permanent) {
-      file.remove(permanent_file)
+      file.remove(config_file)
     }
   } else {
     test_qsub_config(qsub_config)
     .default_qsub_config <<- qsub_config
     if (permanent) {
-      saveRDS(qsub_config, permanent_file)
+      saveRDS(qsub_config, config_file)
     }
   }
 }
@@ -179,21 +180,16 @@ set_default_qsub_config <- function(
 #' Will prefer the temporary default over the permanent default.
 #' You should typically not require this function.
 #'
-#' @usage
-#' get_default_qsub_config(
-#'   permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
-#' )
-#'
-#' @param permanent_file The file in which a permanent default config is stored.
+#' @param config_file The file in which a permanent default config is stored.
 #'
 #' @export
 get_default_qsub_config <- function(
-  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+  config_file = config_file_location()
 ) {
   if (".default_qsub_config" %in% ls(all.names = TRUE)) {
     .default_qsub_config
-  } else if (file.exists(permanent_file)) {
-    readRDS(permanent_file)
+  } else if (file.exists(config_file)) {
+    readRDS(config_file)
   } else {
     stop("No default qsub_config could be found. Did you run ", sQuote("set_default_qsub_config"), " yet?")
   }
