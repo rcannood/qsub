@@ -157,7 +157,7 @@ cp_remote <- function(
 #' @param path_src Path of the source file.
 #' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
 #' @param path_dest Path for the source file; can be a directory.
-#' @param excluse A vector of files / regexs to be excluded
+#' @param exclude A vector of files / regexs to be excluded
 #' @param verbose Prints elapsed time if TRUE
 #'
 #' @importFrom glue glue

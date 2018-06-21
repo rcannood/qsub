@@ -16,9 +16,9 @@ rsync_remote(remote_src, path_src, remote_dest, path_dest, exclude = NULL,
 
 \item{path_dest}{Path for the source file; can be a directory.}
 
-\item{verbose}{Prints elapsed time if TRUE}
+\item{exclude}{A vector of files / regexs to be excluded}
 
-\item{excluse}{A vector of files / regexs to be excluded}
+\item{verbose}{Prints elapsed time if TRUE}
 }
 \description{
 A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
