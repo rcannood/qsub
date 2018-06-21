@@ -45,7 +45,15 @@
 #' # Retrieve results
 #' qsub_retrieve(handle)
 #' }
-qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = NULL, qsub_environment = NULL, qsub_packages = NULL, ...) {
+qsub_lapply <- function(
+  X,
+  FUN,
+  object_envir = environment(FUN),
+  qsub_config = NULL,
+  qsub_environment = NULL,
+  qsub_packages = NULL,
+  ...
+) {
   dot_params <- list(...)
 
   # get default config
@@ -89,8 +97,10 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
 
   # commence SSH connection
   if (is.character(qsub_instance$remote)) {
+    remote_bup <- qsub_config$remote
     qsub_instance$remote <- ssh::ssh_connect(qsub_config$remote)
-    on.exit(ssh::ssh_disconnect(qsub_instance$remote))
+    ssh_bup <- qsub_instance$remote
+    on.exit(ssh::ssh_disconnect(ssh_bup))
   }
 
   # set number of tasks
@@ -110,6 +120,7 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
   if (qsub_instance$wait) {
     qsub_retrieve(qsub_instance)
   } else {
+    qsub_instance$remote <- remote_bup
     qsub_instance
   }
 }
@@ -134,6 +145,7 @@ collect_environment_recursively <- function(parent, environment_names) {
   child
 }
 
+#' @importFrom readr write_lines write_rds
 setup_execution <- function(
   qsub_config,
   qsub_environment,
@@ -155,14 +167,12 @@ setup_execution <- function(
     dir.create(src_logdir)
 
     # save environment
-    saveRDS(object = qsub_environment, file = src_qsub_rds)
-    saveRDS(object = prism_environment, file = src_prism_rds)
-    # save(list = names(qsub_environment), file = src_rdata, envir = qsub_environment)
+    readr::write_rds(qsub_environment, src_qsub_rds)
+    readr::write_rds(prism_environment, src_prism_rds)
 
     # write r script
     r_script <- paste0(
       "setwd(\"", remote_dir, "\")\n",
-      "load(\"data.RData\")\n",
       "PitSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
       "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
       "if (!file.exists(PitSoL_file_out)) {\n",
@@ -176,7 +186,7 @@ setup_execution <- function(
       "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
       "}\n"
     )
-    write_remote(r_script, src_rfile, remote = "", verbose = verbose)
+    readr::write_lines(r_script, src_rfile)
 
     # write sh script
     sh_script <- with(qsub_config, paste0(
@@ -195,26 +205,24 @@ setup_execution <- function(
       paste0(paste0(execute_before, collapse="\n"), "\n"),
       "Rscript --default-packages=methods,stats,utils,graphics,grDevices script.R $SGE_TASK_ID\n"
     ))
-    write_remote(sh_script, src_shfile, remote = "", verbose = verbose)
+    readr::write_lines(sh_script, src_shfile)
 
     # rsync local with remote
     cp_remote(
       remote_src = "",
       path_src = paste0(src_dir, "/"),
       remote_dest = remote,
-      path_dest = paste0(remote_dir, "/")
+      path_dest = paste0(remote_tmp_path, "/")
     )
 
-    NULL
+    invisible(NULL)
   })
 }
 
 execute_job <- function(qsub_config) {
-  list2env(qsub_config, environment())
-
   # start job remotely and read job_id
-  submit_command <- paste0("cd ", remote_dir, "; qsub script.sh")
-  output <- run_remote(submit_command, remote = remote, verbose = verbose)
+  cmd <- glue::glue("cd {qsub_config$remote_dir}; qsub script.sh")
+  output <- run_remote(cmd, remote = qsub_config$remote, verbose = qsub_config$verbose)
 
   # retrieve job id
   job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$stdout, collapse = "\n"))
@@ -243,10 +251,9 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 #'
 #' @export
 is_job_running <- function(qsub_config) {
-  list2env(qsub_config, environment())
-  if (!is.null(job_id)) {
-    qstat_out <- run_remote("qstat", remote)$stdout
-    any(grepl(paste0("^ *", job_id, " "), qstat_out))
+  if (!is.null(qsub_config$job_id)) {
+    qstat_out <- run_remote("qstat", qsub_config$remote)$stdout
+    any(grepl(paste0("^ *", qsub_config$job_id, " "), qstat_out))
   } else {
     FALSE
   }
@@ -271,6 +278,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
 
   if (!is.character(wait) || wait != "just_do_it") {
     while (is_job_running(qsub_config)) {
+      if (qsub_config$verbose) cat("Waiting for job ", qsub_config$job_id, " to finish\n", sep = "")
       Sys.sleep(1)
     }
   }
@@ -278,20 +286,27 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   list2env(qsub_config, environment())
 
   # copy results to local
+  # unfortunately, we can't be using rsync to remain compatible with windows platforms
+  if (qsub_config$verbose) cat("Cleaning up local dirs\n", sep = "")
+  unlink(src_logdir, recursive = TRUE)
+  unlink(src_outdir, recursive = TRUE)
+
+  if (qsub_config$verbose) cat("Downloading logs and outs\n", sep = "")
   cp_remote(
     remote_src = remote,
-    path_src = paste0(remote_dir, "/log"),
+    path_src = remote_logdir,
     remote_dest = "",
-    path_dest = paste0(src_dir, "/log")
+    path_dest = src_dir
   )
   cp_remote(
     remote_src = remote,
-    path_src = paste0(remote_dir, "/out"),
+    path_src = remote_outdir,
     remote_dest = "",
-    path_dest = paste0(src_dir, "/out")
+    path_dest = src_dir
   )
 
-  # read RData files
+  # read rds files
+  if (qsub_config$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
     outs <- lapply(seq_len(num_tasks), function(rds_i) {
       output_file <- paste0(src_dir, "/out/out_", rds_i, ".rds")

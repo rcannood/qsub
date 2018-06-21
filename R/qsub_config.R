@@ -226,6 +226,8 @@ instantiate_qsub_config <- function(qsub_config) {
     remote_rfile = paste0(remote_dir, "/script.R"),
     remote_shfile = paste0(remote_dir, "/script.sh")
   ))
+
+  qsub_conf
 }
 
 #' Create a new qsub configuration object from an old qsub configuration.

@@ -25,9 +25,10 @@
 #' }
 #' Warnings are really errors here so the error flag is set if there are warnings.
 #'
-#'
 #' @importFrom ssh ssh_exec_internal ssh_connect ssh_disconnect
 #' @importFrom processx run
+#'
+#' @export
 run_remote <- function(cmd, remote, verbose = FALSE) {
   if (verbose) cat("# ", gsub("\n", "\n# ", cmd), "\n", sep="")
 
@@ -39,9 +40,10 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   }
 
   if (is(remote, "ssh_session")) {
-    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd, error = FALSE)
-    cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% sub("\n$", "", .)
-    cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% sub("\n$", "", .)
+    cmd2 <- paste0("source /etc/profile.d/modules.sh; source /etc/profile.d/sge.sh; ", cmd)
+    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
+    cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% .[[1]]
+    cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% .[[1]]
   } else {
     cmd_out <- processx::run(
       command = sub(" .*$", "", cmd),
@@ -66,6 +68,9 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
 #' @param path_dest Path for the source file; can be a directory.
 #' @param verbose Prints elapsed time if TRUE
 #' @param recursively Copy a directory recursively?
+#'
+#' @export
+#'
 #' @examples
 #' \dontrun{
 #' ## Copy file myfile.csv from the home directory on the remote server to
@@ -112,7 +117,7 @@ cp_remote <- function(
   verbose = FALSE,
   recursively = FALSE
 ) {
-  if (!is_remote_local(remremote_srcote) && !is(remote_src, "ssh_session")) {
+  if (!is_remote_local(remote_src) && !is(remote_src, "ssh_session")) {
     remote_src <- ssh::ssh_connect(remote_src)
     on.exit(ssh::ssh_disconnect(remote_src))
   }
@@ -146,38 +151,56 @@ cp_remote <- function(
 
 }
 
-# rsync is deprecated as it is incompatible with Windows :(
-# #' A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
-# #'
-# #' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
-# #' @param path_src Path of the source file.
-# #' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
-# #' @param path_dest Path for the source file; can be a directory.
-# #' @param excluse A vector of files / regexs to be excluded
-# #' @param verbose Prints elapsed time if TRUE
-# #'
-# #' @importFrom glue glue
-# rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
-#   if (!is_remote_local(remote_src)) {
-#     path_src <- glue("-e ssh {remote_src}:{path_src}")
-#   }
-#   if (!is_remote_local(remote_dest)) {
-#     path_dest <- glue("-e ssh {remote_dest}:{path_dest}")
-#   }
-#   if (!is.null(exclude)) {
-#     exclude_str <- paste(glue(" --exclude={exclude} "), collapse = "")
-#   } else {
-#     exclude_str <- ""
-#   }
-#
-#   command <- glue("rsync -avz {path_src} {path_dest} {exclude_str}")
-#   res <- run_remote(command, remote = "", verbose = verbose)
-#   if (res$cmd_error) {
-#     stop(glue("rsync failed: {res$warn_msg}"))
-#   }
-#
-#   if (verbose) print(paste("Elapsed:", res$elapsed_time, "sec"))
-# }
+#' A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
+#'
+#' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
+#' @param path_src Path of the source file.
+#' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
+#' @param path_dest Path for the source file; can be a directory.
+#' @param excluse A vector of files / regexs to be excluded
+#' @param verbose Prints elapsed time if TRUE
+#'
+#' @importFrom glue glue
+#'
+#' @export
+rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
+  if (.Platform$OS.type == "windows") {
+    stop("rsync_remote is not implemented for Windows systems")
+  }
+
+  if (!is_remote_local(remote_src)) {
+    path_src <- glue("-e ssh {remote_src}:{path_src}")
+
+    if (!is(remote_src, "ssh_session")) {
+      remote_src <- ssh::ssh_connect(remote_src)
+      on.exit(ssh::ssh_disconnect(remote_src))
+    }
+  }
+  if (!is_remote_local(remote_dest)) {
+    path_dest <- glue("-e ssh {remote_dest}:{path_dest}")
+
+    if (!is(remote_dest, "ssh_session")) {
+      remote_dest <- ssh::ssh_connect(remote_dest)
+      on.exit(ssh::ssh_disconnect(remote_dest))
+    }
+  }
+
+  if (!is.null(exclude)) {
+    exclude_str <- paste(glue(" --exclude={exclude} "), collapse = "")
+  } else {
+    exclude_str <- ""
+  }
+
+  command <- glue("rsync -avz {path_src} {path_dest} {exclude_str}")
+
+  res <- run_remote(command, remote = "", verbose = verbose)
+
+  if (res$stderr) {
+    stop(glue("rsync failed: {res$stderr}"))
+  }
+
+  if (verbose) print(paste("Elapsed:", res$elapsed_time, "sec"))
+}
 
 #' Checks if a local or remote file exists.
 #'
@@ -191,6 +214,8 @@ cp_remote <- function(
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
 #'
 #' @importFrom glue glue
+#'
+#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -208,15 +233,13 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
 
 #' Creates a remote directory with the specified group ownership and permissions.
 #'
-#' If the directory already exists, attempts to set the group ownership to the
-#' \code{user_group}. The allowed group permissions are one of
-#' \code{c("g+rwx", "g+rx", "go-w", "go-rwx")}, or \code{"-"}. The value
-#' \code{"-"} means "don't change permissions".
 #' @param path Directory path. If using \code{remote}, this should be a full path or
 #'             a path relative to the user's home directory.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
+#'
+#' @export
 mkdir_remote <- function(path, remote = "", verbose = FALSE) {
   if (is_remote_local(remote)) {
     if (!file_exists_remote(path, remote)) {
@@ -237,6 +260,8 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @importFrom readr read_file
+#'
+#' @export
 cat_remote <- function(path, remote = NULL, verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::read_file(path)
@@ -254,6 +279,8 @@ cat_remote <- function(path, remote = NULL, verbose = FALSE) {
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @importFrom readr write_lines
+#'
+#' @export
 write_remote <- function(x, path, remote, verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
@@ -282,6 +309,8 @@ write_remote <- function(x, path, remote, verbose = FALSE) {
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
+#'
+#' @export
 ls_remote <- function(path, remote = NULL, verbose = FALSE) {
   if (is_remote_local(remote)) {
     list.files(path)
@@ -305,5 +334,5 @@ qstat_remote <- function(remote = NULL, verbose = FALSE) {
 #'
 #' @param remote A putative remote machine. This function will return true if \code{remote} is \code{NULL}, \code{NA}, or \code{""}.
 is_remote_local <- function(remote) {
-  (is.character(remote) && nchar(remote) == 0) || is.null(remote) || is.na(remote)
+  !is(remote, "ssh_session") && ((is.character(remote) && nchar(remote) == 0) || is.null(remote) || is.na(remote))
 }

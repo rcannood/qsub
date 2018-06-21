@@ -16,8 +16,5 @@ require interactive password entry. For local execution, pass an empty string ""
 \item{verbose}{If \code{TRUE} prints the command.}
 }
 \description{
-If the directory already exists, attempts to set the group ownership to the
-\code{user_group}. The allowed group permissions are one of
-\code{c("g+rwx", "g+rx", "go-w", "go-rwx")}, or \code{"-"}. The value
-\code{"-"} means "don't change permissions".
+Creates a remote directory with the specified group ownership and permissions.
 }
