@@ -122,7 +122,11 @@ test_qsub_config <- function(object) {
 #' Otherwise, it will be saved in the current environment.
 #'
 #' @usage
-#' set_default_qsub_config(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
+#' set_default_qsub_config(
+#'   qsub_config,
+#'   permanent = TRUE,
+#'   permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+#' )
 #'
 #' @param qsub_config The qsub_config to use as default.
 #' @param permanent Whether or not to make this the default qsub_config.
@@ -142,7 +146,11 @@ test_qsub_config <- function(object) {
 #' }
 #'
 #' @seealso \code{\link{qsub_lapply}}, \code{\link{create_qsub_config}}
-set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds") {
+set_default_qsub_config <- function(
+  qsub_config,
+  permanent = TRUE,
+  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+) {
   if (is.null(qsub_config)) {
     rm(.default_qsub_config)
     if (permanent) {
@@ -164,13 +172,17 @@ set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file =
 #' You should typically not require this function.
 #'
 #' @usage
-#' get_default_qsub_config(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
+#' get_default_qsub_config(
+#'   permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+#' )
 #'
 #' @param permanent_file The file in which a permanent default config is stored.
 #'
 #' @export
-get_default_qsub_config <- function(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds") {
-  if (".default_qsub_config" %in% ls(all.names = T)) {
+get_default_qsub_config <- function(
+  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+) {
+  if (".default_qsub_config" %in% ls(all.names = TRUE)) {
     .default_qsub_config
   } else if (file.exists(permanent_file)) {
     readRDS(permanent_file)

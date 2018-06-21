@@ -7,7 +7,7 @@ Authors@R: c(
 Description: This package allows you to easily perform a lapply using the PRISM
     cluster! Hooray!
 Depends:
-    R (>= 3.2.2)
+    R (>= 3.0)
 License: GPL (>= 2)
 LazyData: true
 Author: Robrecht Cannoodt
@@ -16,7 +16,12 @@ Imports:
     glue,
     random,
     stringr,
-    readr
-URL: http://github.com/rcannood/qsubapply
-BugReports: https://github.com/rcannood/qsubapply/issues
+    readr,
+    ssh,
+    processx,
+    purrr,
+    dplyr,
+    tidyr
+URL: http://github.com/rcannood/PRISM
+BugReports: https://github.com/rcannood/PRISM/issues
 RoxygenNote: 6.0.1

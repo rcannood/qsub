@@ -4,7 +4,7 @@
 \alias{file_exists_remote}
 \title{Checks if a local or remote file exists.}
 \usage{
-file_exists_remote(file, remote = "", verbose = F)
+file_exists_remote(file, remote = "", verbose = FALSE)
 }
 \arguments{
 \item{file}{File path.}

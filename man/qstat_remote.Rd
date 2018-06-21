@@ -4,7 +4,7 @@
 \alias{qstat_remote}
 \title{Show the status of Grid Engine jobs and queues}
 \usage{
-qstat_remote(remote = NULL, verbose = F)
+qstat_remote(remote = NULL, verbose = FALSE)
 }
 \arguments{
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not

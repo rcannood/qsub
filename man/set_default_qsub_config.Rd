@@ -4,7 +4,11 @@
 \alias{set_default_qsub_config}
 \title{Set a default qsub_config.}
 \usage{
-set_default_qsub_config(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
+set_default_qsub_config(
+  qsub_config,
+  permanent = TRUE,
+  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+)
 }
 \arguments{
 \item{qsub_config}{The qsub_config to use as default.}

@@ -4,7 +4,9 @@
 \alias{get_default_qsub_config}
 \title{Retrieve a default qsub_config.}
 \usage{
-get_default_qsub_config(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
+get_default_qsub_config(
+  permanent_file = "~/.local/share/R2PRISM/qsub_config.rds"
+)
 }
 \arguments{
 \item{permanent_file}{The file in which a permanent default config is stored.}

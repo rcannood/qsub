@@ -12,6 +12,8 @@
 #'
 #' @seealso \code{\link{create_qsub_config}}, \code{\link{set_default_qsub_config}}
 #'
+#' @importFrom ssh ssh_connect ssh_disconnect
+#'
 #' @examples
 #' \dontrun{
 #' # Initial configuration and execution
@@ -85,6 +87,12 @@ qsub_lapply <- function(X, FUN, object_envir = environment(FUN), qsub_config = N
   # generate folder names
   qsub_instance <- instantiate_qsub_config(qsub_config)
 
+  # commence SSH connection
+  if (is.character(qsub_instance$remote)) {
+    qsub_instance$remote <- ssh::ssh_connect(qsub_config$remote)
+    on.exit(ssh::ssh_disconnect(qsub_instance$remote))
+  }
+
   # set number of tasks
   qsub_instance$num_tasks <- length(X)
 
@@ -131,6 +139,7 @@ setup_execution <- function(
   qsub_environment,
   prism_environment
 ) {
+
   with(qsub_config, {
     # check whether folders exist
     if (file_exists_remote(src_dir, remote = "", verbose = verbose)) {
@@ -141,12 +150,9 @@ setup_execution <- function(
     }
 
     # create folders
-    mkdir_remote(src_dir, remote = "", verbose = verbose)
-    mkdir_remote(remote_dir, remote = remote, verbose = verbose)
-
-    # create log and output files
-    mkdir_remote(src_outdir, remote = "", verbose = verbose)
-    mkdir_remote(src_logdir, remote = "", verbose = verbose)
+    dir.create(src_dir)
+    dir.create(src_outdir)
+    dir.create(src_logdir)
 
     # save environment
     saveRDS(object = qsub_environment, file = src_qsub_rds)
@@ -192,7 +198,7 @@ setup_execution <- function(
     write_remote(sh_script, src_shfile, remote = "", verbose = verbose)
 
     # rsync local with remote
-    rsync_remote(
+    cp_remote(
       remote_src = "",
       path_src = paste0(src_dir, "/"),
       remote_dest = remote,
@@ -211,7 +217,7 @@ execute_job <- function(qsub_config) {
   output <- run_remote(submit_command, remote = remote, verbose = verbose)
 
   # retrieve job id
-  job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$cmd_out, collapse = "\n"))
+  job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$stdout, collapse = "\n"))
 
   as.character(job_id)
 }
@@ -228,7 +234,7 @@ execute_job <- function(qsub_config) {
 #'
 #' @export
 qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
-  qsub_lapply(X = 1, function(i) FUN(), qsub_config = qsub_config, qsub_environment = qsub_environment, ...)
+  qsub_lapply(X = 1, function(i) FUN(), qsub_config = qsub_config, qsub_environment = qsub_environment, ...)[[1]]
 }
 
 #' Check whether a job is running.
@@ -239,10 +245,10 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 is_job_running <- function(qsub_config) {
   list2env(qsub_config, environment())
   if (!is.null(job_id)) {
-    qstat_out <- run_remote("qstat", remote)$cmd_out
+    qstat_out <- run_remote("qstat", remote)$stdout
     any(grepl(paste0("^ *", job_id, " "), qstat_out))
   } else {
-    F
+    FALSE
   }
 }
 
@@ -253,7 +259,12 @@ is_job_running <- function(qsub_config) {
 #' @param post_fun Apply a function to the output after execution. Interface: \code{function(index, output)}
 #' @importFrom readr read_file
 #' @export
-qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
+qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
+  if (is.character(qsub_config$remote)) {
+    qsub_config$remote <- ssh::ssh_connect(qsub_config$remote)
+    on.exit(ssh::ssh_disconnect(qsub_config$remote))
+  }
+
   if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
     return(NULL)
   }
@@ -267,11 +278,17 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
   list2env(qsub_config, environment())
 
   # copy results to local
-  rsync_remote(
+  cp_remote(
     remote_src = remote,
-    path_src = paste0(remote_dir, "/"),
+    path_src = paste0(remote_dir, "/log"),
     remote_dest = "",
-    path_dest = paste0(src_dir, "/")
+    path_dest = paste0(src_dir, "/log")
+  )
+  cp_remote(
+    remote_src = remote,
+    path_src = paste0(remote_dir, "/out"),
+    remote_dest = "",
+    path_dest = paste0(src_dir, "/out")
   )
 
   # read RData files
@@ -311,7 +328,7 @@ qsub_retrieve <- function(qsub_config, wait = T, post_fun = NULL) {
     # remove temporary folders afterwards
     if (remove_tmp_folder) {
       run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
-      run_remote(paste0("rm -rf \"", src_dir, "\""), remote = "", verbose = verbose)
+      unlink(src_dir, recursive = TRUE, force = TRUE)
     }
   })
 

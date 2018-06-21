@@ -25,7 +25,7 @@ qacct <- function(qsub_config) {
 #' @importFrom stringr str_sub
 #' @export
 qacct_remote <- function(remote, job_id) {
-  out <- run_remote(paste0("qacct -j ", job_id), remote)$cmd_out
+  out <- run_remote(paste0("qacct -j ", job_id), remote)$stdout
   if (grepl("job id \\d* not found", out)[[1]]) {
     NULL
   } else {
@@ -67,7 +67,7 @@ qstat_j <- function(qsub_config) {
 #' @importFrom stringr str_sub
 #' @export
 qstat_j_remote <- function(remote, job_id) {
-  out <- run_remote(paste0("qstat -j ", job_id), remote)$cmd_out
+  out <- run_remote(paste0("qstat -j ", job_id), remote)$stdout
 
   if (grepl("Following jobs do not exist:", out)[[1]]) {
     NULL
