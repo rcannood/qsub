@@ -2,6 +2,7 @@
 % Please edit documentation in R/qsub_config.R
 \name{create_qsub_config}
 \alias{create_qsub_config}
+\alias{override_qsub_config}
 \title{Create a qsub configuration object.}
 \usage{
 create_qsub_config(
@@ -26,6 +27,32 @@ create_qsub_config(
   wait = TRUE,
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
+)
+
+override_qsub_config(
+  qsub_config = get_default_qsub_config(),
+
+  # server settings
+  remote = qsub_config$remote,
+  local_tmp_path = qsub_config$local_tmp_path,
+  remote_tmp_path = qsub_config$remote_tmp_path,
+
+  # execution parameters
+  name = qsub_config$name,
+  num_cores = qsub_config$num_cores,
+  memory = qsub_config$memory,
+  max_running_tasks = qsub_config$max_running_tasks,
+  max_wall_time = qsub_config$max_wall_time,
+
+  # pre-execution parameters
+  r_module = qsub_config$r_module,
+  execute_before = qsub_config$execute_before,
+  verbose = qsub_config$verbose,
+
+  # post-execution parameters
+  wait = qsub_config$wait,
+  remove_tmp_folder = qsub_config$remove_tmp_folder,
+  stop_on_error = qsub_config$stop_on_error
 )
 }
 \arguments{
@@ -57,6 +84,8 @@ that does not require interactive password entry.}
 \item{remove_tmp_folder}{If \code{TRUE}, will remove everything that was created related to this execution at the end.}
 
 \item{stop_on_error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
+
+\item{qsub_config}{A qsub_config to be overridden}
 }
 \value{
 A qsub configuration object.
@@ -67,14 +96,20 @@ Create a qsub configuration object.
 \examples{
 \dontrun{
 qsub_config <- create_qsub_config(
-  remote = "myserver",
+  remote = "myuser@myserver.mylocation.com:22",
   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
   remote_tmp_path = "/scratch/myuser/.r2gridengine"
 )
 qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
 
-set_default_qsub_config(qsub_config, permanent = T)
+set_default_qsub_config(qsub_config, permanent = TRUE)
 qsub_lapply(1:10, function(x) x + 1)
+
+qsub_lapply(
+  X = 1:10,
+  FUN = function(x) x + 1,
+  qsub_config = override_qsub_config(verbose = TRUE)
+)
 }
 }
 \seealso{

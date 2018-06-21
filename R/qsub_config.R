@@ -52,17 +52,25 @@
 #'
 #' @seealso \code{\link{qsub_lapply}}, \code{\link{set_default_qsub_config}}
 #'
+#' @rdname create_qsub_config
+#'
 #' @examples
 #' \dontrun{
 #' qsub_config <- create_qsub_config(
-#'   remote = "myserver",
+#'   remote = "myuser@myserver.mylocation.com:22",
 #'   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
 #'   remote_tmp_path = "/scratch/myuser/.r2gridengine"
 #' )
 #' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
 #'
-#' set_default_qsub_config(qsub_config, permanent = T)
+#' set_default_qsub_config(qsub_config, permanent = TRUE)
 #' qsub_lapply(1:10, function(x) x + 1)
+#'
+#' qsub_lapply(
+#'   X = 1:10,
+#'   FUN = function(x) x + 1,
+#'   qsub_config = override_qsub_config(verbose = TRUE)
+#' )
 #' }
 create_qsub_config <- function(
   # server settings
@@ -230,56 +238,36 @@ instantiate_qsub_config <- function(qsub_config) {
   qsub_conf
 }
 
-#' Create a new qsub configuration object from an old qsub configuration.
+#' @rdname create_qsub_config
+#'
+#' @param qsub_config A qsub_config to be overridden
 #'
 #' @usage
 #' override_qsub_config(
-#'   qsub_config = NULL,
+#'   qsub_config = get_default_qsub_config(),
 #'
 #'   # server settings
-#'   remote,
-#'   local_tmp_path,
-#'   remote_tmp_path,
+#'   remote = qsub_config$remote,
+#'   local_tmp_path = qsub_config$local_tmp_path,
+#'   remote_tmp_path = qsub_config$remote_tmp_path,
 #'
 #'   # execution parameters
-#'   name = "R2PRISM",
-#'   num_cores = 1,
-#'   memory = "4G",
-#'   max_running_tasks = NULL,
-#'   max_wall_time = "01:00:00",
+#'   name = qsub_config$name,
+#'   num_cores = qsub_config$num_cores,
+#'   memory = qsub_config$memory,
+#'   max_running_tasks = qsub_config$max_running_tasks,
+#'   max_wall_time = qsub_config$max_wall_time,
 #'
 #'   # pre-execution parameters
-#'   r_module = "R",
-#'   execute_before = NULL,
-#'   verbose = FALSE,
+#'   r_module = qsub_config$r_module,
+#'   execute_before = qsub_config$execute_before,
+#'   verbose = qsub_config$verbose,
 #'
 #'   # post-execution parameters
-#'   wait = TRUE,
-#'   remove_tmp_folder = TRUE,
-#'   stop_on_error = TRUE
+#'   wait = qsub_config$wait,
+#'   remove_tmp_folder = qsub_config$remove_tmp_folder,
+#'   stop_on_error = qsub_config$stop_on_error
 #' )
-#'
-#' @param qsub_config The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.
-#' @inheritParams create_qsub_config
-#'
-#' @export
-#'
-#' @return A new qsub_config object.
-#'
-#' @seealso \code{\link{set_default_qsub_config}}
-#'
-#' @examples
-#' \dontrun{
-#' qsub_config <- create_qsub_config(
-#'   remote = "myserver",
-#'   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
-#'   remote_tmp_path = "/scratch/myuser/.r2gridengine"
-#' )
-#' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
-#'
-#' qsub_config2 <- override_qsub_config(qsub_config, remote = "yourserver")
-#' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
-#' }
 override_qsub_config <- function(
   qsub_config = get_default_qsub_config(),
 
