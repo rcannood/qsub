@@ -45,6 +45,7 @@
 #' @param stop_on_error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
 #'
 #' @importFrom random randomStrings
+#' @importFrom methods formalArgs
 #'
 #' @return A qsub configuration object.
 #'
@@ -98,7 +99,7 @@ create_qsub_config <- function(
 ) {
   test <- c(remote, local_tmp_path, remote_tmp_path)
   qsub_conf <- as.list(environment())
-  qsub_conf <- qsub_conf[intersect(names(qsub_conf), formalArgs(create_qsub_config))]
+  qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
   class(qsub_conf) <- c(class(qsub_conf), "PRISM::qsub_config")
   qsub_conf
 }
@@ -238,6 +239,8 @@ instantiate_qsub_config <- function(qsub_config) {
 #'
 #' @param qsub_config A qsub_config to be overridden
 #'
+#' @importFrom methods formalArgs
+#'
 #' @usage
 #' override_qsub_config(
 #'   qsub_config = get_default_qsub_config(),
@@ -292,7 +295,7 @@ override_qsub_config <- function(
   test_qsub_config(qsub_config)
   old_values <- qsub_config
 
-  qsub_config_param_names <- formalArgs(create_qsub_config)
+  qsub_config_param_names <- methods::formalArgs(create_qsub_config)
 
   new_values <- as.list(environment())
   new_values <- new_values[intersect(names(new_values), qsub_config_param_names)]

@@ -21,7 +21,8 @@ Imports:
     processx,
     purrr,
     dplyr,
-    tidyr
+    tidyr,
+    methods
 URL: http://github.com/rcannood/PRISM
 BugReports: https://github.com/rcannood/PRISM/issues
 RoxygenNote: 6.0.1
