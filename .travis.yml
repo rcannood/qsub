@@ -5,8 +5,8 @@ cache: packages
 r_check_args: "--as-cran"
 addons:
   apt:
-    sources:
-    - libssh-dev
+    packages:
+      - libssh-dev
 r_packages:
   - covr
   - devtools
