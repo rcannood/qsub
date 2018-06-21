@@ -134,7 +134,6 @@ config_file_location <- function() {
 
 #' Set a default qsub_config.
 #'
-#' @description
 #' If permanent, the qsub_config will be written to the specified path.
 #' Otherwise, it will be saved in the current environment.
 #'
