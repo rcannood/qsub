@@ -254,6 +254,8 @@ instantiate_qsub_config <- function(qsub_config) {
 #'
 #' @importFrom methods formalArgs
 #'
+#' @export
+#'
 #' @usage
 #' override_qsub_config(
 #'   qsub_config = get_default_qsub_config(),
