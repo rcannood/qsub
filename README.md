@@ -56,9 +56,8 @@ listening on port `1234`. This cluster is henceforth called the
 in (e.g. `/scratch/personal/myuser/r2gridengine`).
 
 After installation of the PRISM package, first try out whether you can
-connect to this server. If you have not yet [set up an SSH
-key](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)
-and uploaded it to the remote, you will be asked for password.
+connect to the remote. If you have not yet set up an SSH key and
+uploaded it to the remote, you will be asked for password.
 
     qsub_config <- create_qsub_config(
       remote = "myuser@mycluster.address.org:1234",
@@ -76,10 +75,39 @@ configuration of the qsub config as follows:
 
     set_default_qsub_config(qsub_config, permanent = TRUE)
 
-If you were asked for a password in the previous step, it would be
-useful to [set up an SSH
-key](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)
-and uploaded it to the remote.
+Setting up an SSH key
+---------------------
+
+If you regularly submit jobs to the remote, it will be extremely useful
+to set up an SSH key configuration. This way, you don't need to enter
+your password every time you execute `qsub_lapply`.
+
+On Windows, you will first need to install [Git
+bash](https://gitforwindows.org/).
+
+The first step will be to open bash and create a file which contains the
+following content, and save it to `.ssh/config`.
+
+    Host myhost
+      HostName mycluster.address.org
+      Port 1234
+      User myuser
+
+Secondly, generate an SSH key. You don't need to enter a password. If
+you do, though, you will be asked for this password every time you use
+your SSH key.
+
+    ssh-keygen -t rsa
+
+Finally, copy the public key (`id_rsa.pub`) to the remote. Never share
+your private key (`id_rsa`)!
+
+    ssh-copy-id myhost
+
+Alternatively, if you do not have `ssh-copy-id` installed, you can run
+the following:
+
+    cat ~/.ssh/id_rsa.pub | ssh myhost "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >>  ~/.ssh/authorized_keys"
 
 Customisation of individual runs
 --------------------------------
@@ -167,7 +195,7 @@ reading out the log files if no output was produced.
       }
     )
 
-    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20180622_070421_R2PRISM_q7BpVahOe6/log/log.2.e.txt
+    ## Error in FUN(X[[i]], ...): File: C:/r2gridengine/20180622_081450_R2PRISM_DCcySsnp62/log/log.2.e.txt
     ## by .GlobalEnv when processing object ‘’
     ## Error in (function (i)  : Something went wrong!
     ## Calls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>
@@ -194,7 +222,7 @@ returned as an attribute.
     ## [[2]]
     ## [1] NA
     ## attr(,"qsub_error")
-    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20180622_070428_R2PRISM_EiIsczBl6Q/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
+    ## [1] "File: C:/r2gridengine/20180622_081458_R2PRISM_BxsZzBXYxc/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
     ## 
     ## [[3]]
     ## [1] 4
