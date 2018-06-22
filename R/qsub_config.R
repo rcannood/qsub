@@ -25,20 +25,25 @@
 #'   stop_on_error = TRUE
 #' )
 #'
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server:port}
 #'   that does not require interactive password entry.
 #' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
 #' @param remote_tmp_path A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').
 #'
-#' @param name The name of the execution.
-#' @param num_cores The number of cores to allocate per task.
-#' @param memory The memory to allocate per core.
-#' @param max_running_tasks limit concurrent array job task execution.
-#' @param max_wall_time The maximum time each task is allowed to run.
+#' @param name The name of the execution. This will show up, for instance, in \code{qstat}.
+#' @param num_cores The number of cores to allocate per element in \code{X} in a \code{\link{qsub_lapply}} (default: \code{1}).
+#' @param memory The memory to allocate per core (default: \code{"4G"}).
+#'   If this is set too high without it being required, you might not be able to make optimal use of the remote cluster.
+#' @param max_running_tasks limit concurrent array job task execution (default: \code{NULL}, infinite).
+#'   If you have long jobs and there are many other users on the cluster,
+#'   it is recommended you set this value to a reasonable number, such as 1/4th the total number of nodes * number of cores per node.
+#' @param max_wall_time The maximum time each task is allowed to run (default: \code{"01:00:00"}, 1 hour).
+#'   If set to \code{NULL}, the job will be allowed to run indefinitely.
+#'   Mind you, this might annoy other users of the cluster.
 #'
-#' @param r_module The R module to use.
-#' @param execute_before Commands to execute in the shell before running R.
-#' @param verbose Print out any ssh commands.
+#' @param r_module The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
+#' @param execute_before Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.
+#' @param verbose Whether or not to print out any ssh commands.
 #'
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove_tmp_folder If \code{TRUE}, will remove everything that was created related to this execution at the end.
