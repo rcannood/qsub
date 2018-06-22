@@ -1,3 +1,54 @@
+fetch_hostname_from_config <- function(host, location = "~/.ssh/config") {
+  ssh_config <- readr::read_lines(location)
+
+  hostname <- NULL
+  username <- NULL
+  port <- NULL
+
+  hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
+  if (length(hostname_match) == 1) {
+    end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% head(1)
+    if (length(end) == 0) {
+      end <- length(ssh_config) + 1
+    }
+
+    rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
+
+    rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
+    if (length(rel_hostname) == 1) {
+      hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
+    }
+
+    rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
+    if (length(rel_hostname) == 1) {
+      username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
+    }
+
+    rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
+    if (length(rel_hostname) == 1) {
+      port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
+    }
+
+  }
+
+  lst(hostname, username, port)
+}
+
+create_ssh_connection <- function(remote) {
+  hostname <- remote %>% sub(".*@", "", .) %>% sub(":.*", "", .)
+  port <- "22"
+
+  config_data <- fetch_hostname_from_config(hostname)
+  if (!is.null(config_data$hostname)) hostname <- config_data$hostname
+  if (!is.null(config_data$username)) username <- config_data$username
+  if (!is.null(config_data$port)) port <- config_data$port
+
+  if (grepl("@", remote)) username <- sub("@.*", "", remote)
+  if (grepl(":", remote)) port <- sub(".*:", "", remote)
+
+  create_ssh_connection(remote)
+}
+
 #' \code{run_remote} - Runs the command locally or remotely using ssh.
 #'
 #' In \code{run_remote} the remote commands are enclosed in wrappers that allow to capture output.
@@ -35,7 +86,7 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   time1 <- Sys.time()
 
   if (!is_remote_local(remote) && !is(remote, "ssh_session")) {
-    remote <- ssh::ssh_connect(remote)
+    remote <- create_ssh_connection(remote)
     on.exit(ssh::ssh_disconnect(remote))
   }
 
@@ -118,12 +169,12 @@ cp_remote <- function(
   recursively = FALSE
 ) {
   if (!is_remote_local(remote_src) && !is(remote_src, "ssh_session")) {
-    remote_src <- ssh::ssh_connect(remote_src)
+    remote_src <- create_ssh_connection(remote_src)
     on.exit(ssh::ssh_disconnect(remote_src))
   }
 
   if (!is_remote_local(remote_dest) && !is(remote_dest, "ssh_session")) {
-    remote_dest <- ssh::ssh_connect(remote_dest)
+    remote_dest <- create_ssh_connection(remote_dest)
     on.exit(ssh::ssh_disconnect(remote_dest))
   }
 
@@ -172,7 +223,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     path_src <- glue("-e ssh {remote_src}:{path_src}")
 
     if (!is(remote_src, "ssh_session")) {
-      remote_src <- ssh::ssh_connect(remote_src)
+      remote_src <- create_ssh_connection(remote_src)
       on.exit(ssh::ssh_disconnect(remote_src))
     }
   }
@@ -180,7 +231,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     path_dest <- glue("-e ssh {remote_dest}:{path_dest}")
 
     if (!is(remote_dest, "ssh_session")) {
-      remote_dest <- ssh::ssh_connect(remote_dest)
+      remote_dest <- create_ssh_connection(remote_dest)
       on.exit(ssh::ssh_disconnect(remote_dest))
     }
   }
@@ -289,7 +340,7 @@ write_remote <- function(x, path, remote, verbose = FALSE) {
     readr::write_lines(x, tmpfile)
 
     if (!is(remote, "ssh_session")) {
-      remote <- ssh::ssh_connect(remote)
+      remote <- create_ssh_connection(remote)
       on.exit(ssh::ssh_disconnect(remote))
     }
 

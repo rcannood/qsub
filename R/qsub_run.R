@@ -98,7 +98,7 @@ qsub_lapply <- function(
   # commence SSH connection
   if (is.character(qsub_instance$remote)) {
     remote_bup <- qsub_config$remote
-    qsub_instance$remote <- ssh::ssh_connect(qsub_config$remote)
+    qsub_instance$remote <- create_ssh_connection(qsub_config$remote)
     ssh_bup <- qsub_instance$remote
     on.exit(ssh::ssh_disconnect(ssh_bup))
   }
@@ -273,7 +273,7 @@ is_job_running <- function(qsub_config) {
 #' @export
 qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   if (is.character(qsub_config$remote)) {
-    qsub_config$remote <- ssh::ssh_connect(qsub_config$remote)
+    qsub_config$remote <- create_ssh_connection(qsub_config$remote)
     on.exit(ssh::ssh_disconnect(qsub_config$remote))
   }
 
