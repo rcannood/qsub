@@ -34,10 +34,12 @@ on a cluster supporting gridengine is as easy as:
 Installation
 ------------
 
-On unix-based systems, you will first have to install libssh. \* deb:
-`apt-get install libssh-dev` (Debian, Ubuntu, etc) \* rpm:
-`dnf install libssh-devel` (Fedora, EPEL) (if `dnf` is not install, try
-`yum`) \* brew: `brew install libssh` (OSX)
+On unix-based systems, you will first have to install libssh.
+
+-   deb: `apt-get install libssh-dev` (Debian, Ubuntu, etc)
+-   rpm: `dnf install libssh-devel` (Fedora, EPEL) (if `dnf` is not
+    install, try `yum`)
+-   brew: `brew install libssh` (OSX)
 
 You can install PRISM with devtools as follows:
 
@@ -165,7 +167,7 @@ reading out the log files if no output was produced.
       }
     )
 
-    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20180622_065252_R2PRISM_ZZd4r6IPF2/log/log.2.e.txt
+    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20180622_070421_R2PRISM_q7BpVahOe6/log/log.2.e.txt
     ## by .GlobalEnv when processing object ‘’
     ## Error in (function (i)  : Something went wrong!
     ## Calls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>
@@ -192,7 +194,7 @@ returned as an attribute.
     ## [[2]]
     ## [1] NA
     ## attr(,"qsub_error")
-    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20180622_065302_R2PRISM_DcKEXdSfY3/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
+    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20180622_070428_R2PRISM_EiIsczBl6Q/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
     ## 
     ## [[3]]
     ## [1] 4

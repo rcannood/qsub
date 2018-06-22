@@ -29,6 +29,7 @@ qsub_lapply(1:3, function(i) i + 1)
 
 ## Installation
 On unix-based systems, you will first have to install libssh.
+
  * deb: `apt-get install libssh-dev` (Debian, Ubuntu, etc)
  * rpm: `dnf install libssh-devel` (Fedora, EPEL) (if `dnf` is not install, try `yum`)
  * brew: `brew install libssh` (OSX)
