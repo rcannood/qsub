@@ -162,7 +162,7 @@ setup_execution <- function(
     }
 
     # create folders
-    dir.create(src_dir)
+    dir.create(src_dir, recursive = TRUE)
     dir.create(src_outdir)
     dir.create(src_logdir)
 
@@ -208,6 +208,11 @@ setup_execution <- function(
     readr::write_lines(sh_script, src_shfile)
 
     # rsync local with remote
+    mkdir_remote(
+      path = remote_tmp_path,
+      remote = remote,
+      verbose = verbose
+    )
     cp_remote(
       remote_src = "",
       path_src = paste0(src_dir, "/"),
