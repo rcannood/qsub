@@ -168,7 +168,16 @@ set_default_qsub_config <- function(
   } else {
     test_qsub_config(qsub_config)
     .default_qsub_config <<- qsub_config
+
+    # if save is permanent
     if (permanent) {
+      # create parent folder, if necessary
+      folder <- gsub("[^\\/]*$", "", config_file)
+      if (!file.exists(folder)) {
+        dir.create(folder, recursive = TRUE)
+      }
+
+      # save file at desired location
       saveRDS(qsub_config, config_file)
     }
   }
