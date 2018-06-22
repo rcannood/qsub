@@ -46,7 +46,7 @@ create_ssh_connection <- function(remote) {
   if (grepl("@", remote)) username <- sub("@.*", "", remote)
   if (grepl(":", remote)) port <- sub(".*:", "", remote)
 
-  create_ssh_connection(remote)
+  ssh::ssh_connect(remote)
 }
 
 #' \code{run_remote} - Runs the command locally or remotely using ssh.
