@@ -1,3 +1,4 @@
+#' @importFrom utils head
 fetch_hostname_from_config <- function(host) {
   hostname <- NULL
   username <- NULL
@@ -14,7 +15,7 @@ fetch_hostname_from_config <- function(host) {
 
     hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
     if (length(hostname_match) == 1) {
-      end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% head(1)
+      end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% utils::head(1)
       if (length(end) == 0) {
         end <- length(ssh_config) + 1
       }
