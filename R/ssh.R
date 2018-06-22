@@ -1,34 +1,36 @@
 fetch_hostname_from_config <- function(host, location = "~/.ssh/config") {
-  ssh_config <- readr::read_lines(location)
-
   hostname <- NULL
   username <- NULL
   port <- NULL
+  
+  if (file.exists(location)) {
+    ssh_config <- readr::read_lines(location)
 
-  hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
-  if (length(hostname_match) == 1) {
-    end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% head(1)
-    if (length(end) == 0) {
-      end <- length(ssh_config) + 1
+    hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
+    if (length(hostname_match) == 1) {
+      end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% head(1)
+      if (length(end) == 0) {
+        end <- length(ssh_config) + 1
+      }
+
+      rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
+
+      rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
+      if (length(rel_hostname) == 1) {
+        hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
+      }
+
+      rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
+      if (length(rel_hostname) == 1) {
+        username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
+      }
+      
+      rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
+      if (length(rel_hostname) == 1) {
+        port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
+      }
+  
     }
-
-    rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
-
-    rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
-    if (length(rel_hostname) == 1) {
-      hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
-    }
-
-    rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
-    if (length(rel_hostname) == 1) {
-      username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
-    }
-
-    rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
-    if (length(rel_hostname) == 1) {
-      port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
-    }
-
   }
 
   lst(hostname, username, port)
