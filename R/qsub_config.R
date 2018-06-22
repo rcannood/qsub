@@ -133,7 +133,7 @@ config_file_location <- function() {
   if (.Platform$OS.type == "unix") {
     "~/.local/share/R2PRISM/qsub_config.rds"
   } else if (.Platform$OS.type == "windows") {
-    "%localappdata%\\R2PRISM/qsub_config.rds"
+    "~/../AppData/Local/R2PRISM/qsub_config.rds"
   }
 }
 

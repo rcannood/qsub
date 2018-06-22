@@ -1,8 +1,14 @@
-fetch_hostname_from_config <- function(host, location = "~/.ssh/config") {
+fetch_hostname_from_config <- function(host) {
   hostname <- NULL
   username <- NULL
   port <- NULL
-  
+
+  if (.Platform$OS.type == "windows") {
+    location <- "~/../.ssh/config"
+  } else {
+    location <- "~/.ssh/config"
+  }
+
   if (file.exists(location)) {
     ssh_config <- readr::read_lines(location)
 
@@ -24,12 +30,12 @@ fetch_hostname_from_config <- function(host, location = "~/.ssh/config") {
       if (length(rel_hostname) == 1) {
         username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
       }
-      
+
       rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
       if (length(rel_hostname) == 1) {
         port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
       }
-  
+
     }
   }
 
@@ -47,6 +53,8 @@ create_ssh_connection <- function(remote) {
 
   if (grepl("@", remote)) username <- sub("@.*", "", remote)
   if (grepl(":", remote)) port <- sub(".*:", "", remote)
+
+  remote <- glue::glue("{username}@{hostname}:{port}")
 
   ssh::ssh_connect(remote)
 }
@@ -213,8 +221,6 @@ cp_remote <- function(
 #' @param exclude A vector of files / regexs to be excluded
 #' @param verbose Prints elapsed time if TRUE
 #'
-#' @importFrom glue glue
-#'
 #' @export
 rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
   if (.Platform$OS.type == "windows") {
@@ -265,8 +271,6 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
-#'
-#' @importFrom glue glue
 #'
 #' @export
 #'
