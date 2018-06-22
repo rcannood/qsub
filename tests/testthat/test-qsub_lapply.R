@@ -9,6 +9,10 @@ if (Sys.getenv("PRISM_HOST") != "") {
   readr::write_lines(privkey, path = "~/.ssh/id_rsa")
   readr::write_lines(pubkey, path = "~/.ssh/id_rsa.pub")
 
+  Sys.chmod("~/.ssh", mode = "700")
+  Sys.chmod("~/.ssh/id_rsa", mode = "600")
+  Sys.chmod("~/.ssh/id_rsa.pub", mode = "644")
+
   qsub_config <- create_qsub_config(
     remote = host,
     local_tmp_path = tempfile(),
