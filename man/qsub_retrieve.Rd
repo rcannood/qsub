@@ -4,7 +4,7 @@
 \alias{qsub_retrieve}
 \title{Retrieve the results of a qsub execution.}
 \usage{
-qsub_retrieve(qsub_config, wait = T, post_fun = NULL)
+qsub_retrieve(qsub_config, wait = TRUE, post_fun = NULL)
 }
 \arguments{
 \item{qsub_config}{The qsub configuration of class \code{qsub_configuration}, as returned by any qsub execution}

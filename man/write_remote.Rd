@@ -4,7 +4,7 @@
 \alias{write_remote}
 \title{Write to a file remotely}
 \usage{
-write_remote(x, path, remote, verbose = F)
+write_remote(x, path, remote, verbose = FALSE)
 }
 \arguments{
 \item{x}{The text to write to the file.}

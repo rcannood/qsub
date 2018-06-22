@@ -6,7 +6,7 @@
 copying between remote hosts via the local machine.}
 \usage{
 cp_remote(remote_src, path_src, remote_dest, path_dest, verbose = FALSE,
-  via_local = FALSE, local_temp_dir = tempdir(), recursively = FALSE)
+  recursively = FALSE)
 }
 \arguments{
 \item{remote_src}{Remote machine for the source file in the format \code{user@machine} or an empty string for local.}
@@ -18,10 +18,6 @@ cp_remote(remote_src, path_src, remote_dest, path_dest, verbose = FALSE,
 \item{path_dest}{Path for the source file; can be a directory.}
 
 \item{verbose}{Prints elapsed time if TRUE}
-
-\item{via_local}{Copies the file via the local machine. Useful when two remote machines can't talk to each other directly.}
-
-\item{local_temp_dir}{When copying via local machine, the directory to use as scratch space.}
 
 \item{recursively}{Copy a directory recursively?}
 }

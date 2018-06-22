@@ -4,8 +4,7 @@
 \alias{mkdir_remote}
 \title{Creates a remote directory with the specified group ownership and permissions.}
 \usage{
-mkdir_remote(path, remote = "", user_group = NULL, permissions = "-",
-  verbose = F)
+mkdir_remote(path, remote = "", verbose = FALSE)
 }
 \arguments{
 \item{path}{Directory path. If using \code{remote}, this should be a full path or
@@ -14,15 +13,8 @@ a path relative to the user's home directory.}
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
 
-\item{user_group}{The user group. If NULL, the default group is used.}
-
-\item{permissions}{The group permissions on the directory. Default is '-'.}
-
 \item{verbose}{If \code{TRUE} prints the command.}
 }
 \description{
-If the directory already exists, attempts to set the group ownership to the
-\code{user_group}. The allowed group permissions are one of
-\code{c("g+rwx", "g+rx", "go-w", "go-rwx")}, or \code{"-"}. The value
-\code{"-"} means "don't change permissions".
+Creates a remote directory with the specified group ownership and permissions.
 }

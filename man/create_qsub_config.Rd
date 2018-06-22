@@ -2,6 +2,7 @@
 % Please edit documentation in R/qsub_config.R
 \name{create_qsub_config}
 \alias{create_qsub_config}
+\alias{override_qsub_config}
 \title{Create a qsub configuration object.}
 \usage{
 create_qsub_config(
@@ -27,36 +28,69 @@ create_qsub_config(
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
 )
+
+override_qsub_config(
+  qsub_config = get_default_qsub_config(),
+
+  # server settings
+  remote = qsub_config$remote,
+  local_tmp_path = qsub_config$local_tmp_path,
+  remote_tmp_path = qsub_config$remote_tmp_path,
+
+  # execution parameters
+  name = qsub_config$name,
+  num_cores = qsub_config$num_cores,
+  memory = qsub_config$memory,
+  max_running_tasks = qsub_config$max_running_tasks,
+  max_wall_time = qsub_config$max_wall_time,
+
+  # pre-execution parameters
+  r_module = qsub_config$r_module,
+  execute_before = qsub_config$execute_before,
+  verbose = qsub_config$verbose,
+
+  # post-execution parameters
+  wait = qsub_config$wait,
+  remove_tmp_folder = qsub_config$remove_tmp_folder,
+  stop_on_error = qsub_config$stop_on_error
+)
 }
 \arguments{
-\item{remote}{Remote machine specification for ssh, in format such as \code{user@server}
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server:port}
 that does not require interactive password entry.}
 
 \item{local_tmp_path}{A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').}
 
 \item{remote_tmp_path}{A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').}
 
-\item{name}{The name of the execution.}
+\item{name}{The name of the execution. This will show up, for instance, in \code{qstat}.}
 
-\item{num_cores}{The number of cores to allocate per task.}
+\item{num_cores}{The number of cores to allocate per element in \code{X} in a \code{\link{qsub_lapply}} (default: \code{1}).}
 
-\item{memory}{The memory to allocate per core.}
+\item{memory}{The memory to allocate per core (default: \code{"4G"}).
+If this is set too high without it being required, you might not be able to make optimal use of the remote cluster.}
 
-\item{max_running_tasks}{limit concurrent array job task execution.}
+\item{max_running_tasks}{limit concurrent array job task execution (default: \code{NULL}, infinite).
+If you have long jobs and there are many other users on the cluster,
+it is recommended you set this value to a reasonable number, such as 1/4th the total number of nodes * number of cores per node.}
 
-\item{max_wall_time}{The maximum time each task is allowed to run.}
+\item{max_wall_time}{The maximum time each task is allowed to run (default: \code{"01:00:00"}, 1 hour).
+If set to \code{NULL}, the job will be allowed to run indefinitely.
+Mind you, this might annoy other users of the cluster.}
 
-\item{r_module}{The R module to use.}
+\item{r_module}{The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.}
 
-\item{execute_before}{Commands to execute in the shell before running R.}
+\item{execute_before}{Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.}
 
-\item{verbose}{Print out any ssh commands.}
+\item{verbose}{Whether or not to print out any ssh commands.}
 
 \item{wait}{If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.}
 
 \item{remove_tmp_folder}{If \code{TRUE}, will remove everything that was created related to this execution at the end.}
 
 \item{stop_on_error}{If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.}
+
+\item{qsub_config}{A qsub_config to be overridden}
 }
 \value{
 A qsub configuration object.
@@ -67,14 +101,20 @@ Create a qsub configuration object.
 \examples{
 \dontrun{
 qsub_config <- create_qsub_config(
-  remote = "myserver",
+  remote = "myuser@myserver.mylocation.com:22",
   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
   remote_tmp_path = "/scratch/myuser/.r2gridengine"
 )
 qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
 
-set_default_qsub_config(qsub_config, permanent = T)
+set_default_qsub_config(qsub_config, permanent = TRUE)
 qsub_lapply(1:10, function(x) x + 1)
+
+qsub_lapply(
+  X = 1:10,
+  FUN = function(x) x + 1,
+  qsub_config = override_qsub_config(verbose = TRUE)
+)
 }
 }
 \seealso{

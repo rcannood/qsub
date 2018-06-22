@@ -25,26 +25,32 @@
 #'   stop_on_error = TRUE
 #' )
 #'
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server}
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server:port}
 #'   that does not require interactive password entry.
 #' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
 #' @param remote_tmp_path A directory on the remote machine in which to store temporary files. Should not contain a tilde ('~').
 #'
-#' @param name The name of the execution.
-#' @param num_cores The number of cores to allocate per task.
-#' @param memory The memory to allocate per core.
-#' @param max_running_tasks limit concurrent array job task execution.
-#' @param max_wall_time The maximum time each task is allowed to run.
+#' @param name The name of the execution. This will show up, for instance, in \code{qstat}.
+#' @param num_cores The number of cores to allocate per element in \code{X} in a \code{\link{qsub_lapply}} (default: \code{1}).
+#' @param memory The memory to allocate per core (default: \code{"4G"}).
+#'   If this is set too high without it being required, you might not be able to make optimal use of the remote cluster.
+#' @param max_running_tasks limit concurrent array job task execution (default: \code{NULL}, infinite).
+#'   If you have long jobs and there are many other users on the cluster,
+#'   it is recommended you set this value to a reasonable number, such as 1/4th the total number of nodes * number of cores per node.
+#' @param max_wall_time The maximum time each task is allowed to run (default: \code{"01:00:00"}, 1 hour).
+#'   If set to \code{NULL}, the job will be allowed to run indefinitely.
+#'   Mind you, this might annoy other users of the cluster.
 #'
-#' @param r_module The R module to use.
-#' @param execute_before Commands to execute in the shell before running R.
-#' @param verbose Print out any ssh commands.
+#' @param r_module The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
+#' @param execute_before Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.
+#' @param verbose Whether or not to print out any ssh commands.
 #'
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
 #' @param remove_tmp_folder If \code{TRUE}, will remove everything that was created related to this execution at the end.
 #' @param stop_on_error If \code{TRUE}, will stop when an error occurs, else returns a NA for errored instances.
 #'
 #' @importFrom random randomStrings
+#' @importFrom methods formalArgs
 #'
 #' @return A qsub configuration object.
 #'
@@ -52,17 +58,25 @@
 #'
 #' @seealso \code{\link{qsub_lapply}}, \code{\link{set_default_qsub_config}}
 #'
+#' @rdname create_qsub_config
+#'
 #' @examples
 #' \dontrun{
 #' qsub_config <- create_qsub_config(
-#'   remote = "myserver",
+#'   remote = "myuser@myserver.mylocation.com:22",
 #'   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
 #'   remote_tmp_path = "/scratch/myuser/.r2gridengine"
 #' )
 #' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
 #'
-#' set_default_qsub_config(qsub_config, permanent = T)
+#' set_default_qsub_config(qsub_config, permanent = TRUE)
 #' qsub_lapply(1:10, function(x) x + 1)
+#'
+#' qsub_lapply(
+#'   X = 1:10,
+#'   FUN = function(x) x + 1,
+#'   qsub_config = override_qsub_config(verbose = TRUE)
+#' )
 #' }
 create_qsub_config <- function(
   # server settings
@@ -90,7 +104,7 @@ create_qsub_config <- function(
 ) {
   test <- c(remote, local_tmp_path, remote_tmp_path)
   qsub_conf <- as.list(environment())
-  qsub_conf <- qsub_conf[intersect(names(qsub_conf), formalArgs(create_qsub_config))]
+  qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
   class(qsub_conf) <- c(class(qsub_conf), "PRISM::qsub_config")
   qsub_conf
 }
@@ -115,18 +129,22 @@ test_qsub_config <- function(object) {
   }
 }
 
+config_file_location <- function() {
+  if (.Platform$OS.type == "unix") {
+    "~/.local/share/R2PRISM/qsub_config.rds"
+  } else if (.Platform$OS.type == "windows") {
+    "~/../AppData/Local/R2PRISM/qsub_config.rds"
+  }
+}
+
 #' Set a default qsub_config.
 #'
-#' @description
 #' If permanent, the qsub_config will be written to the specified path.
 #' Otherwise, it will be saved in the current environment.
 #'
-#' @usage
-#' set_default_qsub_config(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
-#'
 #' @param qsub_config The qsub_config to use as default.
 #' @param permanent Whether or not to make this the default qsub_config.
-#' @param permanent_file The location to which to save the permanent qsub_config.
+#' @param config_file The location to which to save the permanent qsub_config.
 #'
 #' @export
 #'
@@ -142,17 +160,30 @@ test_qsub_config <- function(object) {
 #' }
 #'
 #' @seealso \code{\link{qsub_lapply}}, \code{\link{create_qsub_config}}
-set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds") {
+set_default_qsub_config <- function(
+  qsub_config,
+  permanent = TRUE,
+  config_file = config_file_location()
+) {
   if (is.null(qsub_config)) {
     rm(.default_qsub_config)
     if (permanent) {
-      file.remove(permanent_file)
+      file.remove(config_file)
     }
   } else {
     test_qsub_config(qsub_config)
     .default_qsub_config <<- qsub_config
+
+    # if save is permanent
     if (permanent) {
-      saveRDS(qsub_config, permanent_file)
+      # create parent folder, if necessary
+      folder <- gsub("[^\\/]*$", "", config_file)
+      if (!file.exists(folder)) {
+        dir.create(folder, recursive = TRUE)
+      }
+
+      # save file at desired location
+      saveRDS(qsub_config, config_file)
     }
   }
 }
@@ -163,17 +194,16 @@ set_default_qsub_config <- function(qsub_config, permanent = T, permanent_file =
 #' Will prefer the temporary default over the permanent default.
 #' You should typically not require this function.
 #'
-#' @usage
-#' get_default_qsub_config(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
-#'
-#' @param permanent_file The file in which a permanent default config is stored.
+#' @param config_file The file in which a permanent default config is stored.
 #'
 #' @export
-get_default_qsub_config <- function(permanent_file = "~/.local/share/R2PRISM/qsub_config.rds") {
-  if (".default_qsub_config" %in% ls(all.names = T)) {
+get_default_qsub_config <- function(
+  config_file = config_file_location()
+) {
+  if (".default_qsub_config" %in% ls(all.names = TRUE)) {
     .default_qsub_config
-  } else if (file.exists(permanent_file)) {
-    readRDS(permanent_file)
+  } else if (file.exists(config_file)) {
+    readRDS(config_file)
   } else {
     stop("No default qsub_config could be found. Did you run ", sQuote("set_default_qsub_config"), " yet?")
   }
@@ -202,68 +232,56 @@ instantiate_qsub_config <- function(qsub_config) {
     src_dir = src_dir,
     src_outdir = paste0(src_dir, "/out"),
     src_logdir = paste0(src_dir, "/log"),
-    src_rdata = paste0(src_dir, "/data.RData"),
+    src_qsub_rds = paste0(src_dir, "/data_qsub.rds"),
+    src_prism_rds = paste0(src_dir, "/data_prism.rds"),
     src_rfile = paste0(src_dir, "/script.R"),
     src_shfile = paste0(src_dir, "/script.sh"),
     remote_dir = remote_dir,
     remote_outdir = paste0(remote_dir, "/out"),
     remote_logdir = paste0(remote_dir, "/log"),
-    remote_rdata = paste0(remote_dir, "/data.RData"),
+    remote_qsub_rds = paste0(remote_dir, "/data_qsub.rds"),
+    remote_prism_rds = paste0(remote_dir, "/data_prism.rds"),
     remote_rfile = paste0(remote_dir, "/script.R"),
     remote_shfile = paste0(remote_dir, "/script.sh")
   ))
+
+  qsub_conf
 }
 
-#' Create a new qsub configuration object from an old qsub configuration.
+#' @rdname create_qsub_config
 #'
-#' @usage
-#' override_qsub_config(
-#'   qsub_config = NULL,
+#' @param qsub_config A qsub_config to be overridden
 #'
-#'   # server settings
-#'   remote,
-#'   local_tmp_path,
-#'   remote_tmp_path,
-#'
-#'   # execution parameters
-#'   name = "R2PRISM",
-#'   num_cores = 1,
-#'   memory = "4G",
-#'   max_running_tasks = NULL,
-#'   max_wall_time = "01:00:00",
-#'
-#'   # pre-execution parameters
-#'   r_module = "R",
-#'   execute_before = NULL,
-#'   verbose = FALSE,
-#'
-#'   # post-execution parameters
-#'   wait = TRUE,
-#'   remove_tmp_folder = TRUE,
-#'   stop_on_error = TRUE
-#' )
-#'
-#' @param qsub_config The qsub_config to be overridden. If NULL, will attempt to retrieve a default qsub_config.
-#' @inheritParams create_qsub_config
+#' @importFrom methods formalArgs
 #'
 #' @export
 #'
-#' @return A new qsub_config object.
+#' @usage
+#' override_qsub_config(
+#'   qsub_config = get_default_qsub_config(),
 #'
-#' @seealso \code{\link{set_default_qsub_config}}
+#'   # server settings
+#'   remote = qsub_config$remote,
+#'   local_tmp_path = qsub_config$local_tmp_path,
+#'   remote_tmp_path = qsub_config$remote_tmp_path,
 #'
-#' @examples
-#' \dontrun{
-#' qsub_config <- create_qsub_config(
-#'   remote = "myserver",
-#'   local_tmp_path = "/home/myuser/workspace/.r2gridengine",
-#'   remote_tmp_path = "/scratch/myuser/.r2gridengine"
+#'   # execution parameters
+#'   name = qsub_config$name,
+#'   num_cores = qsub_config$num_cores,
+#'   memory = qsub_config$memory,
+#'   max_running_tasks = qsub_config$max_running_tasks,
+#'   max_wall_time = qsub_config$max_wall_time,
+#'
+#'   # pre-execution parameters
+#'   r_module = qsub_config$r_module,
+#'   execute_before = qsub_config$execute_before,
+#'   verbose = qsub_config$verbose,
+#'
+#'   # post-execution parameters
+#'   wait = qsub_config$wait,
+#'   remove_tmp_folder = qsub_config$remove_tmp_folder,
+#'   stop_on_error = qsub_config$stop_on_error
 #' )
-#' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
-#'
-#' qsub_config2 <- override_qsub_config(qsub_config, remote = "yourserver")
-#' qsub_lapply(1:10, function(x) x + 1, qsub_config = qsub_config)
-#' }
 override_qsub_config <- function(
   qsub_config = get_default_qsub_config(),
 
@@ -283,7 +301,6 @@ override_qsub_config <- function(
   r_module = qsub_config$r_module,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
-  # use_cpulimit = qsub_config$use_cpulimit,
 
   # post-execution parameters
   wait = qsub_config$wait,
@@ -293,7 +310,7 @@ override_qsub_config <- function(
   test_qsub_config(qsub_config)
   old_values <- qsub_config
 
-  qsub_config_param_names <- formalArgs(create_qsub_config)
+  qsub_config_param_names <- methods::formalArgs(create_qsub_config)
 
   new_values <- as.list(environment())
   new_values <- new_values[intersect(names(new_values), qsub_config_param_names)]

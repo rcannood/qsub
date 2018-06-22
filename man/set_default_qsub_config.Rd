@@ -4,14 +4,15 @@
 \alias{set_default_qsub_config}
 \title{Set a default qsub_config.}
 \usage{
-set_default_qsub_config(qsub_config, permanent = T, permanent_file = "~/.local/share/R2PRISM/qsub_config.rds")
+set_default_qsub_config(qsub_config, permanent = TRUE,
+  config_file = config_file_location())
 }
 \arguments{
 \item{qsub_config}{The qsub_config to use as default.}
 
 \item{permanent}{Whether or not to make this the default qsub_config.}
 
-\item{permanent_file}{The location to which to save the permanent qsub_config.}
+\item{config_file}{The location to which to save the permanent qsub_config.}
 }
 \description{
 If permanent, the qsub_config will be written to the specified path.
