@@ -215,9 +215,9 @@ setup_execution <- function(
     )
     cp_remote(
       remote_src = "",
-      path_src = paste0(src_dir, "/"),
+      path_src = gsub("[\\/]$", "", src_dir),
       remote_dest = remote,
-      path_dest = paste0(remote_tmp_path, "/")
+      path_dest = gsub("[\\/]$", "", remote_tmp_path)
     )
 
     invisible(NULL)

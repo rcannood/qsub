@@ -1,5 +1,5 @@
 Package: PRISM
-Title: Running commands remotely on PRISM
+Title: Running Commands Remotely on Gridengine Clusters
 Version: 1.0
 Authors@R: c(
     person(
@@ -10,23 +10,23 @@ Authors@R: c(
       comment = c(ORCID = "0000-0003-3641-729X", github = "rcannood")
     )
   )
-Description: This package allows you to easily perform a lapply using the PRISM
-    cluster! Hooray!
+Description: This package helps you parallellise lapply calls to gridengine clusters.
 Depends:
     R (>= 3.0)
-License: GPL (>= 2)
+License: GPL-3
 LazyData: true
 Imports:
+    dplyr,
     glue,
-    random,
-    stringr,
-    readr,
-    ssh,
+    methods,
     processx,
     purrr,
-    dplyr,
+    random,
+    readr,
+    ssh,
+    stringr,
     tidyr,
-    methods
+    utils
 URL: http://github.com/rcannood/PRISM
 BugReports: https://github.com/rcannood/PRISM/issues
 RoxygenNote: 6.0.1

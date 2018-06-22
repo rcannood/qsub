@@ -3,6 +3,9 @@ sudo: required
 dist: trusty
 cache: packages
 r_check_args: "--as-cran"
+os:
+  - linux
+  - osx
 addons:
   apt:
     packages:

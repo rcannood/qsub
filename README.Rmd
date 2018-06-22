@@ -8,7 +8,7 @@ editor_options:
 
 ```{r setup1, include=FALSE}
 knitr::opts_chunk$set(fig.path = "man/figures/README_", warning = FALSE, message = FALSE, error = FALSE, echo = TRUE)
-
+set.seed(1)
 ```
 
 # PRISM
@@ -43,7 +43,7 @@ devtools::install_github("rcannood/PRISM")
 ## Initial test
 For the remainder of this README, we will assume you have an account called `myuser` on a cluster located at `mycluster.address.org` listening on port `1234`. This cluster is henceforth called the 'remote'. You will require a local folder to store temporary data in (e.g. `/tmp/r2gridengine`), and a remote folder to store temporary data in (e.g. `/scratch/personal/myuser/r2gridengine`).
 
-After installation of the PRISM package, first try out whether you can connect to this server. If you have not yet [set up an SSH key](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2) and uploaded it to the remote, you will be asked for password.
+After installation of the PRISM package, first try out whether you can connect to the remote. If you have not yet set up an SSH key and uploaded it to the remote, you will be asked for password.
 ```{r test, eval=FALSE}
 qsub_config <- create_qsub_config(
   remote = "myuser@mycluster.address.org:1234",
@@ -60,7 +60,34 @@ If the previous section worked just fine, you can for a permanent configuration 
 set_default_qsub_config(qsub_config, permanent = TRUE)
 ``` 
 
-If you were asked for a password in the previous step, it would be useful to [set up an SSH key](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2) and uploaded it to the remote. 
+## Setting up an SSH key
+If you regularly submit jobs to the remote, it will be extremely useful to set up an SSH key configuration. This way, you don't need to enter your password every time you execute `qsub_lapply`.
+
+On Windows, you will first need to install [Git bash](https://gitforwindows.org/).
+
+The first step will be to open bash and create a file which contains the following content, and save it to `.ssh/config`.
+```
+Host myhost
+  HostName mycluster.address.org
+  Port 1234
+  User myuser
+```
+
+Secondly, generate an SSH key. You don't need to enter a password. If you do, though, you will be asked for this password every time you use your SSH key.
+
+```bash
+ssh-keygen -t rsa
+```
+
+Finally, copy the public key (`id_rsa.pub`) to the remote. Never share your private key (`id_rsa`)!
+```bash
+ssh-copy-id myhost
+```
+
+Alternatively, if you do not have `ssh-copy-id` installed, you can run the following:
+```bash
+cat ~/.ssh/id_rsa.pub | ssh myhost "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >>  ~/.ssh/authorized_keys"
+```
 
 ## Customisation of individual runs
 Some tasks will require you to finetune the qsub config, for example because they require more walltime or memory than allowed by default. These can also be specified using the `create_qsub_config` command, or using `override_qsub_config` if you have already created a default qsub config. Check `?override_qsub_config` for a detailed explanation of each of the possible parameters.

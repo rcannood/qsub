@@ -1,34 +1,43 @@
-fetch_hostname_from_config <- function(host, location = "~/.ssh/config") {
-  ssh_config <- readr::read_lines(location)
-
+#' @importFrom utils head
+fetch_hostname_from_config <- function(host) {
   hostname <- NULL
   username <- NULL
   port <- NULL
 
-  hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
-  if (length(hostname_match) == 1) {
-    end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% head(1)
-    if (length(end) == 0) {
-      end <- length(ssh_config) + 1
+  if (.Platform$OS.type == "windows") {
+    location <- "~/../.ssh/config"
+  } else {
+    location <- "~/.ssh/config"
+  }
+
+  if (file.exists(location)) {
+    ssh_config <- readr::read_lines(location)
+
+    hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
+    if (length(hostname_match) == 1) {
+      end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% utils::head(1)
+      if (length(end) == 0) {
+        end <- length(ssh_config) + 1
+      }
+
+      rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
+
+      rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
+      if (length(rel_hostname) == 1) {
+        hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
+      }
+
+      rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
+      if (length(rel_hostname) == 1) {
+        username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
+      }
+
+      rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
+      if (length(rel_hostname) == 1) {
+        port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
+      }
+
     }
-
-    rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
-
-    rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
-    if (length(rel_hostname) == 1) {
-      hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
-    }
-
-    rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
-    if (length(rel_hostname) == 1) {
-      username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
-    }
-
-    rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
-    if (length(rel_hostname) == 1) {
-      port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
-    }
-
   }
 
   lst(hostname, username, port)
@@ -45,6 +54,8 @@ create_ssh_connection <- function(remote) {
 
   if (grepl("@", remote)) username <- sub("@.*", "", remote)
   if (grepl(":", remote)) port <- sub(".*:", "", remote)
+
+  remote <- glue::glue("{username}@{hostname}:{port}")
 
   ssh::ssh_connect(remote)
 }
@@ -211,8 +222,6 @@ cp_remote <- function(
 #' @param exclude A vector of files / regexs to be excluded
 #' @param verbose Prints elapsed time if TRUE
 #'
-#' @importFrom glue glue
-#'
 #' @export
 rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
   if (.Platform$OS.type == "windows") {
@@ -263,8 +272,6 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
-#'
-#' @importFrom glue glue
 #'
 #' @export
 #'
