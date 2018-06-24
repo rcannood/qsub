@@ -13,6 +13,8 @@ if (Sys.getenv("PRISM_HOST") != "") {
   Sys.chmod("~/.ssh/id_rsa", mode = "600")
   Sys.chmod("~/.ssh/id_rsa.pub", mode = "644")
 
+  system("ssh-add -AK ~/.ssh/îd_rsa")
+
   qsub_config <- create_qsub_config(
     remote = host,
     local_tmp_path = tempfile(),
