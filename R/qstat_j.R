@@ -22,17 +22,16 @@ qstat_j <- function(qsub_config) {
 #' @param remote The remote
 #' @param job_id The job_id of the job
 #'
-#' @importFrom stringr str_sub
 #' @export
 qstat_j_remote <- function(remote, job_id) {
   out <- run_remote(paste0("qstat -j ", job_id), remote)$stdout
 
-  if (grepl("Following jobs do not exist:", out)[[1]]) {
+  if (str_detect(out, "Following jobs do not exist:")[[1]]) {
     NULL
   } else {
     name <- NULL ## appease r cmd check
 
-    breaks <- c(which(grepl("======", out)), length(out)+1)
+    breaks <- c(which(str_detect(out, "======")), length(out)+1)
     map_df(seq_len(length(breaks)-1), function(i) {
       strs <- out[seq(breaks[[i]]+1, breaks[[i+1]]-1)]
       data_frame(
@@ -40,7 +39,7 @@ qstat_j_remote <- function(remote, job_id) {
         task_id = i,
         name = gsub(": *$", "", stringr::str_sub(strs, 1, 27)),
         value = gsub(" *$", "", stringr::str_sub(strs, 29, -1))
-      ) %>% filter(!grepl("^ *$", name))
+      ) %>% filter(!str_detect(name, "^ *$"))
     }) %>%
       spread_("name", "value")
   }
