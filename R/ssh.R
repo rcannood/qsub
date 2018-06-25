@@ -102,7 +102,7 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   }
 
   if (is(remote, "ssh_session")) {
-    cmd2 <- paste0("source /etc/profile.d/modules.sh; source /etc/profile.d/sge.sh; ", cmd)
+      cmd2 <- paste0("source /etc/profile; ", cmd) # see https://stackoverflow.com/a/1472444
     cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
