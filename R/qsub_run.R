@@ -3,6 +3,7 @@
 #' @param X A vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.
 #' @param FUN The function to be applied to each element of X.
 #' @param object_envir The environment in which to go looking for the qsub_environment variables, if these are characters.
+#' @param ix_per_task How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
 #' @param qsub_config The configuration to use for this execution.
 #' @param qsub_environment \code{NULL}, a character vector or an environment. Specifies what data and functions will be uploaded to the server.
 #' @param qsub_packages The packages to be loaded on the cluster.
@@ -49,6 +50,7 @@ qsub_lapply <- function(
   X,
   FUN,
   object_envir = environment(FUN),
+  ix_per_task = 1,
   qsub_config = NULL,
   qsub_environment = NULL,
   qsub_packages = NULL,
@@ -80,8 +82,11 @@ qsub_lapply <- function(
     stop(sQuote("qsub_environment"), " must be NULL, a character vector, or an environment")
   }
 
+  QSUB_START <- seq(1, length(X), by = ix_per_task)
+  QSUB_STOP <- pmin(QSUB_START + ix_per_task - 1, length(X))
+
   # determine seeds
-  seeds <- sample.int(length(X)*10, length(X), replace = F)
+  seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
 
   # collect arguments
   prism_environment <- list(
@@ -89,7 +94,9 @@ qsub_lapply <- function(
     X = X,
     FUN = FUN,
     DOTPARAMS = dot_params,
-    PACKAGES = qsub_packages
+    PACKAGES = qsub_packages,
+    QSUB_START = QSUB_START,
+    QSUB_STOP = QSUB_STOP
   )
 
   # generate folder names
@@ -104,7 +111,7 @@ qsub_lapply <- function(
   }
 
   # set number of tasks
-  qsub_instance$num_tasks <- length(X)
+  qsub_instance$num_tasks <- length(QSUB_START)
 
   # upload all files to the remote
   setup_execution(
@@ -182,7 +189,14 @@ setup_execution <- function(
     "  }\n",
     "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
     "  PitSoL_envdata <- readRDS(\"data_qsub.rds\")\n",
-    "  PitSoL_out <- with(PitSoL_envdata, do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS)))\n",
+    "  PitSoL_out <- with(PitSoL_envdata, {\n",
+    "    lapply(\n",
+    "      seq(PitSoL_params$QSUB_START[[PitSoL_index]], PitSoL_params$QSUB_STOP[[PitSoL_index]]),\n",
+    "      function(PitSoL_data) {\n",
+    "        do.call(PitSoL_params$FUN, c(list(PitSoL_data), PitSoL_params$DOTPARAMS))\n",
+    "      }\n",
+    "    )\n",
+    "  })\n",
     "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
     "}\n"
   )
@@ -312,7 +326,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   # read rds files
   if (qs$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
-    outs <- lapply(seq_len(qs$num_tasks), function(rds_i) {
+    outs <- unlist(lapply(seq_len(qs$num_tasks), function(rds_i) {
       output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
       error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
       if (file.exists(output_file)) {
@@ -340,7 +354,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
           out_rds
         }
       }
-    })
+    }), recursive = FALSE)
   }, error = function(e) {
     stop(e)
   }, finally = {
