@@ -21,5 +21,5 @@ if (Sys.getenv("PRISM_HOST") != "") {
     qsub_config = override_qsub_config(qsub_config, batch_tasks = 10000)
   )
 
-  expect_equal(out, seq_len(100000) + 1)
+  expect_equal(out, as.list(seq_len(100000) + 1))
 }
