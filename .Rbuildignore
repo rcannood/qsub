@@ -4,3 +4,4 @@
 ^\.travis
 ^appveyor\.yml$
 ^README\.Rmd$
+^deploy_
