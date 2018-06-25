@@ -166,13 +166,13 @@ set_default_qsub_config <- function(
   config_file = config_file_location()
 ) {
   if (is.null(qsub_config)) {
-    rm(".default_qsub_config", envir = .GlobalEnv)
+    options("qsub_config" = NULL)
     if (permanent) {
       file.remove(config_file)
     }
   } else {
     test_qsub_config(qsub_config)
-    assign(".default_qsub_config", qsub_config, envir = .GlobalEnv)
+    options("qsub_config" = qsub_config)
 
     # if save is permanent
     if (permanent) {
@@ -200,8 +200,9 @@ set_default_qsub_config <- function(
 get_default_qsub_config <- function(
   config_file = config_file_location()
 ) {
-  if (".default_qsub_config" %in% ls(all.names = TRUE)) {
-    get(".default_qsub_config", envir = .GlobalEnv)
+  opt <- getOption("qsub_config")
+  if (!is.null(opt)) {
+    opt
   } else if (file.exists(config_file)) {
     readRDS(config_file)
   } else {
