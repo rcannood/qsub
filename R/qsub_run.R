@@ -288,6 +288,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
     }
   }
 
+  # load qsub config in this function's environment
   list2env(qsub_config, environment())
 
   # copy results to local
