@@ -4,20 +4,19 @@ dist: trusty
 cache: packages
 r_check_args: "--as-cran"
 os:
-  - linux
-  - osx
+- linux
+- osx
 addons:
   apt:
     packages:
-      - libssh-dev
-before_install:
-  - mkdir ~/.ssh
-  - echo -e "$PRISM_PRIVKEY" > ~/.ssh/id_rsa
-  - echo -e "$PRISM_PUBKEY" > ~/.ssh/id_rsa.pub
-  - chmod 700 ~/.ssh; chmod 600 ~/.ssh/id_rsa; chmod 644 ~/.ssh/id_rsa.pub
-  - eval "$(ssh-agent -s)"
+    - libssh-dev
 r_packages:
-  - covr
-  - devtools
+- covr
+- devtools
+before_install:
+- openssl aes-256-cbc -K $encrypted_fe0018b3032b_key -iv $encrypted_fe0018b3032b_iv -in deploy_key.enc -out ./deploy_key -d
+- eval "$(ssh-agent -s)"
+- chmod 600 ./deploy_key
+- ssh-add ./deploy_key
 after_success:
- - R -e 'covr::codecov()'
+- R -e 'covr::codecov()'
