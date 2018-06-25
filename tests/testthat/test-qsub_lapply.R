@@ -16,8 +16,8 @@ if (Sys.getenv("PRISM_HOST") != "") {
 
   # test batch_tasks functionality
   out <- qsub_lapply(
-    seq_len(100000),
-    function(i) i + 1,
+    X = seq_len(100000),
+    FUN = function(i) i + 1,
     qsub_config = override_qsub_config(qsub_config, batch_tasks = 10000)
   )
 
