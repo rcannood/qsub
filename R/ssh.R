@@ -22,19 +22,19 @@ fetch_hostname_from_config <- function(host) {
 
       rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
 
-      rel_hostname <- rel_config %>% keep(~ grepl("^ *HostName ", .))
+      rel_hostname <- rel_config %>% keep(~ str_detect("^ *HostName "))
       if (length(rel_hostname) == 1) {
-        hostname <- rel_hostname %>% gsub("^ *HostName *([^ ]*).*$", "\\1", .)
+        hostname <- rel_hostname %>% str_replace_all("^ *HostName *([^ ]*).*$", "\\1")
       }
 
-      rel_username <- rel_config %>% keep(~ grepl("^ *User ", .))
+      rel_username <- rel_config %>% keep(~ str_detect("^ *User "))
       if (length(rel_hostname) == 1) {
-        username <- rel_username %>% gsub("^ *User *([^ ]*).*$", "\\1", .)
+        username <- rel_username %>% str_replace_all("^ *User *([^ ]*).*$", "\\1")
       }
 
-      rel_port <- rel_config %>% keep(~ grepl("^ *Port ", .))
+      rel_port <- rel_config %>% keep(~ str_detect("^ *Port "))
       if (length(rel_hostname) == 1) {
-        port <- rel_port %>% gsub("^ *Port *([^ ]*).*$", "\\1", .)
+        port <- rel_port %>% str_replace_all("^ *Port *([^ ]*).*$", "\\1")
       }
 
     }
@@ -44,7 +44,7 @@ fetch_hostname_from_config <- function(host) {
 }
 
 create_ssh_connection <- function(remote) {
-  hostname <- remote %>% sub(".*@", "", .) %>% sub(":.*", "", .)
+  hostname <- remote %>% str_replace(".*@", "") %>% str_replace(":.*", "")
   port <- "22"
 
   config_data <- fetch_hostname_from_config(hostname)
@@ -52,8 +52,8 @@ create_ssh_connection <- function(remote) {
   if (!is.null(config_data$username)) username <- config_data$username
   if (!is.null(config_data$port)) port <- config_data$port
 
-  if (grepl("@", remote)) username <- sub("@.*", "", remote)
-  if (grepl(":", remote)) port <- sub(".*:", "", remote)
+  if (str_detect(remote, "@")) username <- str_replace(remote, "@.*", "")
+  if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
 
   remote <- glue::glue("{username}@{hostname}:{port}")
 
@@ -104,8 +104,8 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   if (is(remote, "ssh_session")) {
     cmd2 <- paste0("source /etc/profile.d/modules.sh; source /etc/profile.d/sge.sh; ", cmd)
     cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
-    cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% .[[1]]
-    cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% .[[1]]
+    cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
+    cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
   } else {
     cmd_out <- processx::run(
       command = sub(" .*$", "", cmd),
@@ -285,7 +285,7 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
     file.exists(file)
   } else { # assume remote is unix based
     cmd <- glue::glue("(ls {file} >> /dev/null 2>&1 && echo TRUE) || echo FALSE")
-    run_remote(cmd = cmd, remote = remote, verbose = verbose)$stdout %>% sub(".*(TRUE|FALSE)$", "\\1", .) %>% as.logical()
+    run_remote(cmd = cmd, remote = remote, verbose = verbose)$stdout %>% str_replace(".*(TRUE|FALSE)$", "\\1") %>% as.logical()
   }
 }
 

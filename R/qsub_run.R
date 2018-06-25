@@ -151,77 +151,76 @@ setup_execution <- function(
   qsub_environment,
   prism_environment
 ) {
+  qs <- qsub_config
 
-  with(qsub_config, {
-    # check whether folders exist
-    if (file_exists_remote(src_dir, remote = "", verbose = verbose)) {
-      stop("The local temporary folder already exists!")
-    }
-    if (file_exists_remote(remote_dir, remote = remote, verbose = verbose)) {
-      stop("The remote temporary folder already exists!")
-    }
+  # check whether folders exist
+  if (file_exists_remote(qs$src_dir, remote = "", verbose = qs$verbose)) {
+    stop("The local temporary folder already exists!")
+  }
+  if (file_exists_remote(qs$remote_dir, remote = qs$remote, verbose = qs$verbose)) {
+    stop("The remote temporary folder already exists!")
+  }
 
-    # create folders
-    dir.create(src_dir, recursive = TRUE)
-    dir.create(src_outdir)
-    dir.create(src_logdir)
+  # create folders
+  dir.create(qs$src_dir, recursive = TRUE)
+  dir.create(qs$src_outdir)
+  dir.create(qs$src_logdir)
 
-    # save environment
-    readr::write_rds(qsub_environment, src_qsub_rds)
-    readr::write_rds(prism_environment, src_prism_rds)
+  # save environment
+  readr::write_rds(qsub_environment, qs$src_qsub_rds)
+  readr::write_rds(prism_environment, qs$src_prism_rds)
 
-    # write r script
-    r_script <- paste0(
-      "setwd(\"", remote_dir, "\")\n",
-      "PitSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
-      "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
-      "if (!file.exists(PitSoL_file_out)) {\n",
-      "  PitSoL_params <- readRDS(\"data_prism.rds\")\n",
-      "  for (pack in PitSoL_params$PACKAGES) {\n",
-      "    suppressMessages(library(pack, character.only = T))\n",
-      "  }\n",
-      "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
-      "  PitSoL_envdata <- readRDS(\"data_qsub.rds\")\n",
-      "  PitSoL_out <- with(PitSoL_envdata, do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS)))\n",
-      "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
-      "}\n"
-    )
-    readr::write_lines(r_script, src_rfile)
+  # write r script
+  r_script <- paste0(
+    "setwd(\"", qs$remote_dir, "\")\n",
+    "PitSoL_index <- as.integer(commandArgs(trailingOnly=T)[[1]])\n",
+    "PitSoL_file_out <- paste0(\"out/out_\", PitSoL_index, \".rds\", sep=\"\")\n",
+    "if (!file.exists(PitSoL_file_out)) {\n",
+    "  PitSoL_params <- readRDS(\"data_prism.rds\")\n",
+    "  for (pack in PitSoL_params$PACKAGES) {\n",
+    "    suppressMessages(library(pack, character.only = T))\n",
+    "  }\n",
+    "  set.seed(PitSoL_params$SEEDS[[PitSoL_index]])\n",
+    "  PitSoL_envdata <- readRDS(\"data_qsub.rds\")\n",
+    "  PitSoL_out <- with(PitSoL_envdata, do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_index]]), PitSoL_params$DOTPARAMS)))\n",
+    "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
+    "}\n"
+  )
+  readr::write_lines(r_script, qs$src_rfile)
 
-    # write sh script
-    sh_script <- with(qsub_config, paste0(
-      "#!/bin/bash\n",
-      ifelse(num_cores == 1, "", paste0("#$ -pe serial ", num_cores, "\n")),
-      ifelse(is.numeric(max_running_tasks), paste0("#$ -tc ", max_running_tasks, "\n"), ""),
-      "#$ -t 1-", num_tasks, "\n",
-      "#$ -N ", name, "\n",
-      "#$ -e log/log.$TASK_ID.e.txt\n",
-      "#$ -o log/log.$TASK_ID.o.txt\n",
-      "#$ -l h_vmem=", memory, "\n",
-      ifelse(!is.null(max_wall_time), paste0("#$ -l h_rt=", max_wall_time, "\n"), ""),
-      "cd ", remote_dir, "\n",
-      "module unload R\n",
-      ifelse(!is.null(r_module), paste0("module load ", r_module, "\n"), ""),
-      paste0(paste0(execute_before, collapse="\n"), "\n"),
-      "Rscript --default-packages=methods,stats,utils,graphics,grDevices script.R $SGE_TASK_ID\n"
-    ))
-    readr::write_lines(sh_script, src_shfile)
+  # write sh script
+  sh_script <- paste0(
+    "#!/bin/bash\n",
+    ifelse(qs$num_cores == 1, "", paste0("#$ -pe serial ", qs$num_cores, "\n")),
+    ifelse(is.numeric(qs$max_running_tasks), paste0("#$ -tc ", qs$max_running_tasks, "\n"), ""),
+    "#$ -t 1-", qs$num_tasks, "\n",
+    "#$ -N ", qs$name, "\n",
+    "#$ -e log/log.$TASK_ID.e.txt\n",
+    "#$ -o log/log.$TASK_ID.o.txt\n",
+    "#$ -l h_vmem=", qs$memory, "\n",
+    ifelse(!is.null(qs$max_wall_time), paste0("#$ -l h_rt=", qs$max_wall_time, "\n"), ""),
+    "cd ", qs$remote_dir, "\n",
+    "module unload R\n",
+    ifelse(!is.null(qs$modules), paste0("module load ", qs$modules, "\n", collapse = "\n"), ""),
+    paste0(paste0(qs$execute_before, collapse = "\n"), "\n"),
+    "Rscript --default-packages=methods,stats,utils,graphics,grDevices script.R $SGE_TASK_ID\n"
+  )
+  readr::write_lines(sh_script, qs$src_shfile)
 
-    # rsync local with remote
-    mkdir_remote(
-      path = remote_tmp_path,
-      remote = remote,
-      verbose = verbose
-    )
-    cp_remote(
-      remote_src = "",
-      path_src = gsub("[\\/]$", "", src_dir),
-      remote_dest = remote,
-      path_dest = gsub("[\\/]$", "", remote_tmp_path)
-    )
+  # rsync local with remote
+  mkdir_remote(
+    path = qs$remote_tmp_path,
+    remote = qs$remote,
+    verbose = qs$verbose
+  )
+  cp_remote(
+    remote_src = "",
+    path_src = gsub("[\\/]$", "", qs$src_dir),
+    remote_dest = remote,
+    path_dest = gsub("[\\/]$", "", qs$remote_tmp_path)
+  )
 
-    invisible(NULL)
-  })
+  invisible(NULL)
 }
 
 execute_job <- function(qsub_config) {
@@ -258,7 +257,7 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 is_job_running <- function(qsub_config) {
   if (!is.null(qsub_config$job_id)) {
     qstat_out <- run_remote("qstat", qsub_config$remote)$stdout
-    any(grepl(paste0("^ *", qsub_config$job_id, " "), qstat_out))
+    any(str_detect(qstat_out, paste0("^ *", qsub_config$job_id, " ")))
   } else {
     FALSE
   }
@@ -272,9 +271,11 @@ is_job_running <- function(qsub_config) {
 #' @importFrom readr read_file
 #' @export
 qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
-  if (is.character(qsub_config$remote)) {
-    qsub_config$remote <- create_ssh_connection(qsub_config$remote)
-    on.exit(ssh::ssh_disconnect(qsub_config$remote))
+  qs <- qsub_config
+
+  if (is.character(qs$remote)) {
+    qs$remote <- create_ssh_connection(qs$remote)
+    on.exit(ssh::ssh_disconnect(qs$remote))
   }
 
   if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
@@ -283,40 +284,37 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
 
   if (!is.character(wait) || wait != "just_do_it") {
     while (is_job_running(qsub_config)) {
-      if (qsub_config$verbose) cat("Waiting for job ", qsub_config$job_id, " to finish\n", sep = "")
+      if (qs$verbose) cat("Waiting for job ", qs$job_id, " to finish\n", sep = "")
       Sys.sleep(1)
     }
   }
 
-  # load qsub config in this function's environment
-  list2env(qsub_config, environment())
-
   # copy results to local
   # unfortunately, we can't be using rsync to remain compatible with windows platforms
-  if (qsub_config$verbose) cat("Cleaning up local dirs\n", sep = "")
-  unlink(src_logdir, recursive = TRUE)
-  unlink(src_outdir, recursive = TRUE)
+  if (qs$verbose) cat("Cleaning up local dirs\n", sep = "")
+  unlink(qs$src_logdir, recursive = TRUE)
+  unlink(qs$src_outdir, recursive = TRUE)
 
-  if (qsub_config$verbose) cat("Downloading logs and outs\n", sep = "")
+  if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
   cp_remote(
-    remote_src = remote,
-    path_src = remote_logdir,
+    remote_src = qs$remote,
+    path_src = qs$remote_logdir,
     remote_dest = "",
-    path_dest = src_dir
+    path_dest = qs$src_dir
   )
   cp_remote(
-    remote_src = remote,
-    path_src = remote_outdir,
+    remote_src = qs$remote,
+    path_src = qs$remote_outdir,
     remote_dest = "",
-    path_dest = src_dir
+    path_dest = qs$src_dir
   )
 
   # read rds files
-  if (qsub_config$verbose) cat("Processing outs\n", sep = "")
+  if (qs$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
-    outs <- lapply(seq_len(num_tasks), function(rds_i) {
-      output_file <- paste0(src_dir, "/out/out_", rds_i, ".rds")
-      error_file <- paste0(src_dir, "/log/log.", rds_i, ".e.txt")
+    outs <- lapply(seq_len(qs$num_tasks), function(rds_i) {
+      output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
+      error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
       if (file.exists(output_file)) {
         out_rds <- readRDS(output_file)
         if (!is.null(post_fun)) {
@@ -331,10 +329,10 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
           txt <- paste0(
             "File: ", error_file, "\n",
             "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
-            "Check 'qacct -j ", job_id, "' for more info."
+            "Check 'qacct -j ", qs$job_id, "' for more info."
           )
         }
-        if (stop_on_error) {
+        if (qs$stop_on_error) {
           stop(txt)
         } else {
           out_rds <- NA
@@ -347,9 +345,13 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
     stop(e)
   }, finally = {
     # remove temporary folders afterwards
-    if (remove_tmp_folder) {
-      run_remote(paste0("rm -rf \"", remote_dir, "\""), remote = remote, verbose =verbose)
-      unlink(src_dir, recursive = TRUE, force = TRUE)
+    if (qs$remove_tmp_folder) {
+      run_remote(
+        paste0("rm -rf \"", qs$remote_dir, "\""),
+        remote = qs$remote,
+        verbose = qs$verbose
+      )
+      unlink(qs$src_dir, recursive = TRUE, force = TRUE)
     }
   })
 
