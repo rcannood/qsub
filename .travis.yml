@@ -10,6 +10,12 @@ addons:
   apt:
     packages:
       - libssh-dev
+before_install:
+  - mkdir ~/.ssh
+  - echo -e "$PRISM_PRIVKEY" > ~/.ssh/id_rsa
+  - echo -e "$PRISM_PUBKEY" > ~/.ssh/id_rsa.pub
+  - chmod 700 ~/.ssh; chmod 600 ~/.ssh/id_rsa; chmod 644 ~/.ssh/id_rsa.pub
+  - eval "$(ssh-agent -s)"
 r_packages:
   - covr
   - devtools

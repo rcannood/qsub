@@ -3,17 +3,6 @@ context("Testing qsub_lapply")
 if (Sys.getenv("PRISM_HOST") != "") {
   host <- Sys.getenv("PRISM_HOST")
   remote_tmp_path <- Sys.getenv("PRISM_REMOTEPATH")
-  privkey <- Sys.getenv("PRISM_PRIVKEY")
-  pubkey <- Sys.getenv("PRISM_PUBKEY")
-
-  readr::write_lines(privkey, path = "~/.ssh/id_rsa")
-  readr::write_lines(pubkey, path = "~/.ssh/id_rsa.pub")
-
-  Sys.chmod("~/.ssh", mode = "700")
-  Sys.chmod("~/.ssh/id_rsa", mode = "600")
-  Sys.chmod("~/.ssh/id_rsa.pub", mode = "644")
-
-  system("ssh-add -AK ~/.ssh/îd_rsa")
 
   qsub_config <- create_qsub_config(
     remote = host,
