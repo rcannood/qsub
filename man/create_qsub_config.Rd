@@ -12,7 +12,7 @@ create_qsub_config(
   remote_tmp_path,
 
   # execution parameters
-  name = "R2PRISM",
+  name = "r2qsub",
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,

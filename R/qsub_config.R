@@ -8,7 +8,7 @@
 #'   remote_tmp_path,
 #'
 #'   # execution parameters
-#'   name = "R2PRISM",
+#'   name = "r2qsub",
 #'   num_cores = 1,
 #'   memory = "4G",
 #'   max_running_tasks = NULL,
@@ -85,7 +85,7 @@ create_qsub_config <- function(
   remote_tmp_path,
 
   # execution parameters
-  name = "R2PRISM",
+  name = "r2qsub",
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
@@ -105,7 +105,7 @@ create_qsub_config <- function(
   test <- c(remote, local_tmp_path, remote_tmp_path)
   qsub_conf <- as.list(environment())
   qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
-  class(qsub_conf) <- c(class(qsub_conf), "PRISM::qsub_config")
+  class(qsub_conf) <- c(class(qsub_conf), "qsub::qsub_config")
   qsub_conf
 }
 
@@ -115,7 +115,7 @@ create_qsub_config <- function(
 #'
 #' @export
 is_qsub_config <- function(object) {
-  "PRISM::qsub_config" %in% class(object)
+  "qsub::qsub_config" %in% class(object)
 }
 
 #' Tests whether the passed object is a qsub_config object.
@@ -131,9 +131,9 @@ test_qsub_config <- function(object) {
 
 config_file_location <- function() {
   if (.Platform$OS.type == "unix") {
-    "~/.local/share/R2PRISM/qsub_config.rds"
+    "~/.local/share/qsub/qsub_config.rds"
   } else if (.Platform$OS.type == "windows") {
-    "~/../AppData/Local/R2PRISM/qsub_config.rds"
+    "~/../AppData/Local/qsub/qsub_config.rds"
   }
 }
 

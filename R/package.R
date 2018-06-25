@@ -1,4 +1,4 @@
-#' Running gridengine jobs on PRISM
+#' Running Commands Remotely on Gridengine Clusters
 #'
 #' @import dplyr
 #' @import tidyr
@@ -7,5 +7,5 @@
 #' @importFrom methods is
 #'
 #' @docType package
-#' @name PRISM
+#' @name qsub
 NULL
