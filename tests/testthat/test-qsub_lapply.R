@@ -14,12 +14,11 @@ if (Sys.getenv("PRISM_HOST") != "") {
 
   expect_equal(out, list(2,3,4))
 
-  # test ix_per_task functionality
+  # test batch_tasks functionality
   out <- qsub_lapply(
     seq_len(100000),
     function(i) i + 1,
-    ix_per_task = 10000,
-    qsub_config = qsub_config
+    qsub_config = override_qsub_config(qsub_config, batch_tasks = 10000)
   )
 
   expect_equal(out, seq_len(100000) + 1)

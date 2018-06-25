@@ -3,7 +3,6 @@
 #' @param X A vector (atomic or list) or an expression object. Other objects (including classed objects) will be coerced by base::as.list.
 #' @param FUN The function to be applied to each element of X.
 #' @param object_envir The environment in which to go looking for the qsub_environment variables, if these are characters.
-#' @param ix_per_task How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
 #' @param qsub_config The configuration to use for this execution.
 #' @param qsub_environment \code{NULL}, a character vector or an environment. Specifies what data and functions will be uploaded to the server.
 #' @param qsub_packages The packages to be loaded on the cluster.
@@ -50,7 +49,6 @@ qsub_lapply <- function(
   X,
   FUN,
   object_envir = environment(FUN),
-  ix_per_task = 1,
   qsub_config = NULL,
   qsub_environment = NULL,
   qsub_packages = NULL,
@@ -82,8 +80,8 @@ qsub_lapply <- function(
     stop(sQuote("qsub_environment"), " must be NULL, a character vector, or an environment")
   }
 
-  QSUB_START <- seq(1, length(X), by = ix_per_task)
-  QSUB_STOP <- pmin(QSUB_START + ix_per_task - 1, length(X))
+  QSUB_START <- seq(1, length(X), by = qsub_config$batch_tasks)
+  QSUB_STOP <- pmin(QSUB_START + qsub_config$batch_tasks - 1, length(X))
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)

@@ -40,6 +40,7 @@
 #' @param max_wall_time The maximum time each task is allowed to run (default: \code{"01:00:00"}, 1 hour).
 #'   If set to \code{NULL}, the job will be allowed to run indefinitely.
 #'   Mind you, this might annoy other users of the cluster.
+#' @param batch_tasks How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
 #'
 #' @param r_module The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
 #' @param execute_before Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.
@@ -90,6 +91,7 @@ create_qsub_config <- function(
   memory = "4G",
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
+  batch_tasks = 1,
 
   # pre-execution parameters
   r_module = "R",
@@ -297,6 +299,7 @@ override_qsub_config <- function(
   memory = qsub_config$memory,
   max_running_tasks = qsub_config$max_running_tasks,
   max_wall_time = qsub_config$max_wall_time,
+  batch_tasks = qsub_config$batch_tasks,
 
   # pre-execution parameters
   r_module = qsub_config$r_module,

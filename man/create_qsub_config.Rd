@@ -78,6 +78,8 @@ it is recommended you set this value to a reasonable number, such as 1/4th the t
 If set to \code{NULL}, the job will be allowed to run indefinitely.
 Mind you, this might annoy other users of the cluster.}
 
+\item{batch_tasks}{How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).}
+
 \item{r_module}{The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.}
 
 \item{execute_before}{Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.}
