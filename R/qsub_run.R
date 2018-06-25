@@ -235,7 +235,7 @@ execute_job <- function(qsub_config) {
   as.character(job_id)
 }
 
-#' Calculate the results of a function on PRISM!
+#' Run a Function on a gridengine system!
 #'
 #' @param FUN the function to be executed.
 #' @param qsub_config The configuration to use for this execution.

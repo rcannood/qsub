@@ -2,7 +2,7 @@
 % Please edit documentation in R/qsub_run.R
 \name{qsub_run}
 \alias{qsub_run}
-\title{Calculate the results of a function on PRISM!}
+\title{Run a Function on a gridengine system!}
 \usage{
 qsub_run(FUN, qsub_config = NULL, qsub_environment = NULL, ...)
 }
@@ -17,7 +17,7 @@ Specifies what data and functions will be uploaded to the server.}
 \item{...}{optional arguments to FUN.}
 }
 \description{
-Calculate the results of a function on PRISM!
+Run a Function on a gridengine system!
 }
 \seealso{
 \code{\link{create_qsub_config}}, \code{\link{set_default_qsub_config}}

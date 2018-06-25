@@ -1,25 +1,25 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-PRISM
-=====
+qsub
+====
 
 [![Build
-Status](https://travis-ci.org/rcannood/PRISM.svg?branch=master)](https://travis-ci.org/rcannood/PRISM)
+Status](https://travis-ci.org/rcannood/qsub.svg?branch=master)](https://travis-ci.org/rcannood/qsub)
 [![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/rcannood/PRISM?branch=master&svg=true)](https://ci.appveyor.com/project/rcannood/PRISM)
-[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/PRISM)](https://cran.r-project.org/package=PRISM)
+Status](https://ci.appveyor.com/api/projects/status/github/rcannood/qsub?branch=master&svg=true)](https://ci.appveyor.com/project/rcannood/qsub)
+[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/qsub)](https://cran.r-project.org/package=qsub)
 [![Coverage
-Status](https://codecov.io/gh/rcannood/PRISM/branch/master/graph/badge.svg)](https://codecov.io/gh/rcannood/PRISM?branch=master)
+Status](https://codecov.io/gh/rcannood/qsub/branch/master/graph/badge.svg)](https://codecov.io/gh/rcannood/qsub?branch=master)
 
-PRISM provides the `qsub_lapply` function, which helps you parallellise
+qsub provides the `qsub_lapply` function, which helps you parallellise
 lapply calls to gridengine clusters.
 
 Usage
 -----
 
-After installation and configuration of the PRISM package, running a job
+After installation and configuration of the qsub package, running a job
 on a cluster supporting gridengine is as easy as:
 
-    library(PRISM)
+    library(qsub)
     qsub_lapply(1:3, function(i) i + 1)
 
     ## [[1]]
@@ -41,9 +41,9 @@ On unix-based systems, you will first have to install libssh.
     install, try `yum`)
 -   brew: `brew install libssh` (OSX)
 
-You can install PRISM with devtools as follows:
+You can install qsub with devtools as follows:
 
-    devtools::install_github("rcannood/PRISM")
+    devtools::install_github("rcannood/qsub")
 
 Initial test
 ------------
@@ -55,7 +55,7 @@ listening on port `1234`. This cluster is henceforth called the
 (e.g. `/tmp/r2gridengine`), and a remote folder to store temporary data
 in (e.g. `/scratch/personal/myuser/r2gridengine`).
 
-After installation of the PRISM package, first try out whether you can
+After installation of the qsub package, first try out whether you can
 connect to the remote. If you have not yet set up an SSH key and
 uploaded it to the remote, you will be asked for password.
 
@@ -184,7 +184,7 @@ transferred to the cluster as follows:
 Oh no, something went wrong
 ---------------------------
 
-Inevitably, something will go break. PRISM will try to help you by
+Inevitably, something will go break. qsub will try to help you by
 reading out the log files if no output was produced.
 
     qsub_lapply(
@@ -195,7 +195,7 @@ reading out the log files if no output was produced.
       }
     )
 
-    ## Error in FUN(X[[i]], ...): File: C:/r2gridengine/20180622_081450_R2PRISM_DCcySsnp62/log/log.2.e.txt
+    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20180625_102837_r2qsub_RJDjMlQsd7/log/log.2.e.txt
     ## by .GlobalEnv when processing object ‘’
     ## Error in (function (i)  : Something went wrong!
     ## Calls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>
@@ -222,7 +222,7 @@ returned as an attribute.
     ## [[2]]
     ## [1] NA
     ## attr(,"qsub_error")
-    ## [1] "File: C:/r2gridengine/20180622_081458_R2PRISM_BxsZzBXYxc/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
+    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20180625_102845_r2qsub_gJt73SQUkv/log/log.2.e.txt\nby .GlobalEnv when processing object ‘’\nError in (function (i)  : Something went wrong!\nCalls: with ... with.default -> eval -> eval -> do.call -> <Anonymous>\nExecution halted\n"
     ## 
     ## [[3]]
     ## [1] 4

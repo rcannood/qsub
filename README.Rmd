@@ -11,19 +11,19 @@ knitr::opts_chunk$set(fig.path = "man/figures/README_", warning = FALSE, message
 set.seed(1)
 ```
 
-# PRISM
-[![Build Status](https://travis-ci.org/rcannood/PRISM.svg?branch=master)](https://travis-ci.org/rcannood/PRISM)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/rcannood/PRISM?branch=master&svg=true)](https://ci.appveyor.com/project/rcannood/PRISM)
-[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/PRISM)](https://cran.r-project.org/package=PRISM)
-[![Coverage Status](https://codecov.io/gh/rcannood/PRISM/branch/master/graph/badge.svg)](https://codecov.io/gh/rcannood/PRISM?branch=master)
+# qsub
+[![Build Status](https://travis-ci.org/rcannood/qsub.svg?branch=master)](https://travis-ci.org/rcannood/qsub)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/rcannood/qsub?branch=master&svg=true)](https://ci.appveyor.com/project/rcannood/qsub)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/qsub)](https://cran.r-project.org/package=qsub)
+[![Coverage Status](https://codecov.io/gh/rcannood/qsub/branch/master/graph/badge.svg)](https://codecov.io/gh/rcannood/qsub?branch=master)
 
-PRISM provides the `qsub_lapply` function, which helps you parallellise lapply calls to gridengine clusters.
+qsub provides the `qsub_lapply` function, which helps you parallellise lapply calls to gridengine clusters.
 
 ## Usage
-After installation and configuration of the PRISM package, running a job on a cluster supporting gridengine is as easy as:
+After installation and configuration of the qsub package, running a job on a cluster supporting gridengine is as easy as:
 
 ```{r example_usage}
-library(PRISM)
+library(qsub)
 qsub_lapply(1:3, function(i) i + 1)
 ```
 
@@ -34,16 +34,16 @@ On unix-based systems, you will first have to install libssh.
  * rpm: `dnf install libssh-devel` (Fedora, EPEL) (if `dnf` is not install, try `yum`)
  * brew: `brew install libssh` (OSX)
  
-You can install PRISM with devtools as follows:
+You can install qsub with devtools as follows:
 
 ```{r installation, eval=FALSE}
-devtools::install_github("rcannood/PRISM")
+devtools::install_github("rcannood/qsub")
 ```
 
 ## Initial test
 For the remainder of this README, we will assume you have an account called `myuser` on a cluster located at `mycluster.address.org` listening on port `1234`. This cluster is henceforth called the 'remote'. You will require a local folder to store temporary data in (e.g. `/tmp/r2gridengine`), and a remote folder to store temporary data in (e.g. `/scratch/personal/myuser/r2gridengine`).
 
-After installation of the PRISM package, first try out whether you can connect to the remote. If you have not yet set up an SSH key and uploaded it to the remote, you will be asked for password.
+After installation of the qsub package, first try out whether you can connect to the remote. If you have not yet set up an SSH key and uploaded it to the remote, you will be asked for password.
 ```{r test, eval=FALSE}
 qsub_config <- create_qsub_config(
   remote = "myuser@mycluster.address.org:1234",
@@ -154,7 +154,7 @@ qsub_lapply(
 
 
 ## Oh no, something went wrong
-Inevitably, something will go break. PRISM will try to help you by reading out the log files if no output was produced.
+Inevitably, something will go break. qsub will try to help you by reading out the log files if no output was produced.
 
 ```{r error_message, error=TRUE}
 qsub_lapply(
