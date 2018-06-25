@@ -44,6 +44,7 @@ override_qsub_config(
   memory = qsub_config$memory,
   max_running_tasks = qsub_config$max_running_tasks,
   max_wall_time = qsub_config$max_wall_time,
+  batch_tasks = qsub_config$batch_tasks,
 
   # pre-execution parameters
   r_module = qsub_config$r_module,
