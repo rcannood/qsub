@@ -192,7 +192,7 @@ cp_remote <- function(
 
   if (!is_remote_local(remote_src) && !is_remote_local(remote_dest)) {
     # BOTH ARE NOT LOCAL
-    path_tmp <- tempfile(pattern = "tmp_scp_", tmpdir = local_temp_dir)
+    path_tmp <- tempfile(pattern = "tmp_scp_")
     on.exit(unlink(path_tmp, recursive = TRUE, force = TRUE))
 
     ssh::scp_download(session = remote_src, files = path_src, to = path_tmp, verbose = verbose)
