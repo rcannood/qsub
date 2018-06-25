@@ -17,6 +17,7 @@ create_qsub_config(
   memory = "4G",
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
+  batch_tasks = 1,
 
   # pre-execution parameters
   r_module = "R",
