@@ -193,7 +193,7 @@ setup_execution <- function(
     "      function(PitSoL_data) {\n",
     "        do.call(PitSoL_params$FUN, c(list(PitSoL_data), PitSoL_params$DOTPARAMS))\n",
     "      }\n",
-    "  })\n",
+    "    )\n",
     "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
     "}\n"
   )
