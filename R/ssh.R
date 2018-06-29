@@ -255,8 +255,8 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 
   res <- run_remote(command, remote = "", verbose = verbose)
 
-  if (res$stderr) {
-    stop(glue("rsync failed: {res$stderr}"))
+  if (!is.null(res$stderr)) {
+    stop(paste0("rsync failed: ", res$stderr))
   }
 
   if (verbose) print(paste("Elapsed:", res$elapsed_time, "sec"))
