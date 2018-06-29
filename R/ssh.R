@@ -102,7 +102,16 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   }
 
   if (is(remote, "ssh_session")) {
-      cmd2 <- paste0("source /etc/profile; ", cmd) # see https://stackoverflow.com/a/1472444
+    cmd2 <- paste0( # see https://stackoverflow.com/a/1472444
+      "source /etc/profile;",
+      "if [[ -s \"$HOME/.bash_profile\" ]]; then",
+      "  source \"$HOME/.bash_profile\";",
+      "fi;",
+      "if [[ -s \"$HOME/.profile\" ]]; then",
+      "  source \"$HOME/.profile\";",
+      "fi;",
+      cmd
+    )
     cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
