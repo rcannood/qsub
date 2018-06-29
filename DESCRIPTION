@@ -1,6 +1,6 @@
 Package: qsub
 Title: Running Commands Remotely on 'Gridengine' Clusters
-Version: 1.0
+Version: 1.0.1.9000
 Authors@R: c(
     person(
       "Robrecht", 
