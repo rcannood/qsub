@@ -16,7 +16,7 @@
 #'   batch_tasks = 1,
 #'
 #'   # pre-execution parameters
-#'   r_module = "R",
+#'   modules = "R",
 #'   execute_before = NULL,
 #'   verbose = FALSE,
 #'
@@ -43,8 +43,8 @@
 #'   Mind you, this might annoy other users of the cluster.
 #' @param batch_tasks How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
 #'
-#' @param r_module The R module to use (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
-#' @param execute_before Commands to execute in the bash shell before running R. For instance, you might need to load other modules such as gcc or python.
+#' @param modules Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
+#' @param execute_before Commands to execute in the bash shell before running R.
 #' @param verbose Whether or not to print out any ssh commands.
 #'
 #' @param wait If \code{TRUE}, will wait until the execution has finished by periodically checking the job status.
@@ -95,7 +95,7 @@ create_qsub_config <- function(
   batch_tasks = 1,
 
   # pre-execution parameters
-  r_module = "R",
+  modules = "R",
   execute_before = NULL,
   verbose = FALSE,
   # use_cpulimit = TRUE,
@@ -278,7 +278,7 @@ instantiate_qsub_config <- function(qsub_config) {
 #'   batch_tasks = qsub_config$batch_tasks,
 #'
 #'   # pre-execution parameters
-#'   r_module = qsub_config$r_module,
+#'   modules = qsub_config$modules,
 #'   execute_before = qsub_config$execute_before,
 #'   verbose = qsub_config$verbose,
 #'
@@ -304,7 +304,7 @@ override_qsub_config <- function(
   batch_tasks = qsub_config$batch_tasks,
 
   # pre-execution parameters
-  r_module = qsub_config$r_module,
+  modules = qsub_config$modules,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
 
