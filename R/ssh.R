@@ -73,11 +73,13 @@ create_ssh_connection <- function(remote) {
 #' only once.
 #'
 #' If the command itself redirects output, the \code{stderr_redirect} flag should be set to \code{FALSE}.
-#' @param cmd Command to run. If run locally, quotes should be escaped once.
+#' @param command Command to run. If run locally, quotes should be escaped once.
 #'        If run remotely, quotes should be escaped twice.
+#' @param args Character vector, arguments to the command.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass an empty string "" (default).
 #' @param verbose If \code{TRUE} prints the command.
+#' @param shell Whether to execute the command in a shell
 #' @return A list with components:
 #' \itemize{
 #' \item \code{status} The exit status of the process. If this is NA, then the process was killed and had no exit status.
@@ -91,7 +93,7 @@ create_ssh_connection <- function(remote) {
 #' @importFrom processx run
 #'
 #' @export
-run_remote <- function(cmd, remote, verbose = FALSE) {
+run_remote <- function(command, remote, args = character(), verbose = FALSE, shell = FALSE) {
   if (verbose) cat("# ", gsub("\n", "\n# ", cmd), "\n", sep="")
 
   time1 <- Sys.time()
@@ -102,6 +104,8 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
   }
 
   if (is(remote, "ssh_session")) {
+    cmd <- paste0(command, " ", paste0(args, collapse = " "))
+
     cmd2 <- paste0( # see https://stackoverflow.com/a/1472444
       "source /etc/profile;",
       "if [[ -s \"$HOME/.bash_profile\" ]]; then",
@@ -116,10 +120,16 @@ run_remote <- function(cmd, remote, verbose = FALSE) {
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
   } else {
+    if (shell) {
+      args <- c("-c", paste0(command, " ", paste0(args, collapse = " ")))
+      command <- "bash"
+    }
+
     cmd_out <- processx::run(
-      command = sub(" .*$", "", cmd),
-      args = sub("^[^ ]* ?", "", cmd),
-      error_on_status = FALSE
+      command = command,
+      args = args,
+      error_on_status = FALSE,
+      echo_cmd = TRUE
     )
   }
 
@@ -238,7 +248,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
   }
 
   if (!is_remote_local(remote_src)) {
-    path_src <- glue("-e ssh {remote_src}:{path_src}")
+    path_src <- c("-e", "ssh", as.character(glue::glue("{remote_src}:{path_src}")))
 
     if (!is(remote_src, "ssh_session")) {
       remote_src <- create_ssh_connection(remote_src)
@@ -246,7 +256,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     }
   }
   if (!is_remote_local(remote_dest)) {
-    path_dest <- glue("-e ssh {remote_dest}:{path_dest}")
+    path_dest <- c("-e", "ssh", as.character(glue::glue("{remote_dest}:{path_dest}")))
 
     if (!is(remote_dest, "ssh_session")) {
       remote_dest <- create_ssh_connection(remote_dest)
@@ -255,16 +265,14 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
   }
 
   if (!is.null(exclude)) {
-    exclude_str <- paste(glue(" --exclude={exclude} "), collapse = "")
+    exclude_str <- glue("--exclude={exclude}")
   } else {
     exclude_str <- ""
   }
 
-  command <- glue("rsync -avz {path_src} {path_dest} {exclude_str}")
+  res <- run_remote("rsync", args = c("-avz", path_src, path_dest, exclude_str), remote = "", verbose = verbose, shell = TRUE)
 
-  res <- run_remote(command, remote = "", verbose = verbose)
-
-  if (!is.null(res$stderr)) {
+  if (res$stderr != "") {
     stop(paste0("rsync failed: ", res$stderr))
   }
 
@@ -294,7 +302,7 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
     file.exists(file)
   } else { # assume remote is unix based
     cmd <- glue::glue("(ls {file} >> /dev/null 2>&1 && echo TRUE) || echo FALSE")
-    run_remote(cmd = cmd, remote = remote, verbose = verbose)$stdout %>% str_replace(".*(TRUE|FALSE)$", "\\1") %>% as.logical()
+    run_remote(cmd, remote = remote, verbose = verbose, shell = TRUE)$stdout %>% paste0(collapse = " ") %>% str_replace(".*(TRUE|FALSE)$", "\\1") %>% as.logical()
   }
 }
 
@@ -314,9 +322,11 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
     }
   } else {
     if (!file_exists_remote(path, remote)) {
-      run_remote(paste("mkdir -p", path), remote = remote, verbose = verbose)
+      run_remote("mkdir", args = c("-p", path), remote = remote, verbose = verbose)
     }
   }
+
+  invisible()
 }
 
 #' Read from a file remotely
@@ -329,11 +339,17 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #' @importFrom readr read_file
 #'
 #' @export
-cat_remote <- function(path, remote = NULL, verbose = FALSE) {
+cat_remote <- function(path, remote = "", verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::read_file(path)
   } else {
-    run_remote(paste0("cat \"", path, "\""), remote = remote, verbose = verbose)$stdout
+    output <- run_remote("cat", args = path, remote = remote, verbose = verbose)
+
+    if (length(output$stderr) > 0 && output$stderr[[1]] != "") {
+      stop(output$stderr)
+    }
+
+    output$stdout
   }
 }
 
@@ -348,7 +364,7 @@ cat_remote <- function(path, remote = NULL, verbose = FALSE) {
 #' @importFrom readr write_lines
 #'
 #' @export
-write_remote <- function(x, path, remote, verbose = FALSE) {
+write_remote <- function(x, path, remote = "", verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
   } else {
@@ -382,7 +398,7 @@ ls_remote <- function(path, remote = NULL, verbose = FALSE) {
   if (is_remote_local(remote)) {
     list.files(path)
   } else {
-    run_remote(paste0("ls -1 \"", path, "\""), remote = remote, verbose = verbose)$stdout
+    run_remote("ls", args = c("-1", path), remote = remote, verbose = verbose)$stdout
   }
 }
 
