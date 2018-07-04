@@ -24,7 +24,14 @@ qacct <- function(qsub_config) {
 #'
 #' @export
 qacct_remote <- function(remote, job_id) {
-  out <- run_remote(paste0("qacct -j ", job_id), remote)$stdout
+  out <- run_remote(command = "qacct", args = c("-j", job_id), remote = remote)
+
+  if (out$stderr != "") {
+    stop(out$stderr)
+  }
+
+  out <- out$stdout
+
   if (str_detect(out, "job id \\d* not found")[[1]]) {
     NULL
   } else {

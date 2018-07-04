@@ -4,7 +4,7 @@
 \alias{cat_remote}
 \title{Read from a file remotely}
 \usage{
-cat_remote(path, remote = NULL, verbose = FALSE)
+cat_remote(path, remote = "", verbose = FALSE)
 }
 \arguments{
 \item{path}{Path of the file.}
