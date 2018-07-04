@@ -24,7 +24,13 @@ qstat_j <- function(qsub_config) {
 #'
 #' @export
 qstat_j_remote <- function(remote, job_id) {
-  out <- run_remote(paste0("qstat -j ", job_id), remote)$stdout
+  out <- run_remote(command = "qstat", args = c("-j", job_id), remote = remote)
+
+  if (out$stderr != "") {
+    stop(out$stderr)
+  }
+
+  out <- out$stdout
 
   if (str_detect(out, "Following jobs do not exist:")[[1]]) {
     NULL
