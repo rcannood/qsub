@@ -4,16 +4,21 @@
 \alias{run_remote}
 \title{\code{run_remote} - Runs the command locally or remotely using ssh.}
 \usage{
-run_remote(cmd, remote, verbose = FALSE)
+run_remote(command, remote, args = character(), verbose = FALSE,
+  shell = FALSE)
 }
 \arguments{
-\item{cmd}{Command to run. If run locally, quotes should be escaped once.
+\item{command}{Command to run. If run locally, quotes should be escaped once.
 If run remotely, quotes should be escaped twice.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass an empty string "" (default).}
 
+\item{args}{Character vector, arguments to the command.}
+
 \item{verbose}{If \code{TRUE} prints the command.}
+
+\item{shell}{Whether to execute the command in a shell}
 }
 \value{
 A list with components:
