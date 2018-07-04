@@ -21,7 +21,7 @@ if (!is.null(qsub_config)) {
     expect_equal(out, list(3,4,5))
 
     out <- qsub_lapply(letters, function(char) paste0("__", char, "__"), qsub_config = qsub_config)
-    expect_equal(out, list(paste0("__", char, "__")))
+    expect_equal(out, list(paste0("__", letters, "__")))
 
     # test batch_tasks functionality
     out <- qsub_lapply(
