@@ -17,11 +17,16 @@ if (Sys.getenv("PRISM_HOST") != "") {
 
 if (!is.null(qsub_config)) {
   test_that("qsub_lapply works", {
-    out <- qsub_lapply(1:3, function(i) i + 1, qsub_config = qsub_config)
+    out <- qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
+    expect_equal(out, list(3,4,5))
+  })
 
-    expect_equal(out, list(2,3,4))
+  test_that("qsub_lapply works with characters X", {
+    out <- qsub_lapply(letters, function(char) paste0("__", char, "__"), qsub_config = qsub_config)
+    expect_equal(out, as.list(paste0("__", letters, "__")))
+  })
 
-    # test batch_tasks functionality
+  test_that("batch_tasks functionality", {
     out <- qsub_lapply(
       X = seq_len(100000),
       FUN = function(i) i + 1,
@@ -30,17 +35,18 @@ if (!is.null(qsub_config)) {
 
     expect_equal(out, as.list(seq_len(100000) + 1))
 
+  })
 
-    # test whether environment objects are passed correctly
+  test_that("environment objects are passed correctly", {
     y <- 10
     out <- qsub_lapply(
-      X = seq_len(4),
+      X = seq_len(4)+5,
       FUN = function(i) i + y,
       qsub_config = override_qsub_config(qsub_config),
       qsub_environment = c("y")
     )
 
-    expect_equal(out, as.list(seq_len(4) + 10))
+    expect_equal(out, as.list(seq_len(4) + 15))
   })
 
 }
