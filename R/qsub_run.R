@@ -191,7 +191,7 @@ setup_execution <- function(
     "    lapply(\n",
     "      seq(PitSoL_params$QSUB_START[[PitSoL_index]], PitSoL_params$QSUB_STOP[[PitSoL_index]]),\n",
     "      function(PitSoL_data) {\n",
-    "        do.call(PitSoL_params$FUN, c(list(PitSoL_data), PitSoL_params$DOTPARAMS))\n",
+    "        do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_data]]), PitSoL_params$DOTPARAMS))\n",
     "      }\n",
     "    )\n",
     "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
