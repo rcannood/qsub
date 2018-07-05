@@ -285,7 +285,8 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #'
 #' @param file File path.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass an empty string "" (default). For
+#'        execution on the default qsub config remote, use TRUE.
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
@@ -298,6 +299,8 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #' # [1] TRUE
 #' }
 file_exists_remote <- function(file, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     file.exists(file)
   } else { # assume remote is unix based
@@ -311,11 +314,14 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
 #' @param path Directory path. If using \code{remote}, this should be a full path or
 #'             a path relative to the user's home directory.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass an empty string "" (default). For
+#'        execution on the default qsub config remote, use TRUE.
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 mkdir_remote <- function(path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     if (!file_exists_remote(path, remote)) {
       dir.create(path = path, recursive = TRUE, showWarnings = verbose)
@@ -333,13 +339,16 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @param path Path of the file.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass an empty string "" (default). For
+#'        execution on the default qsub config remote, use TRUE.
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @importFrom readr read_file
 #'
 #' @export
 cat_remote <- function(path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     readr::read_file(path)
   } else {
@@ -358,13 +367,16 @@ cat_remote <- function(path, remote = "", verbose = FALSE) {
 #' @param x The text to write to the file.
 #' @param path Path of the file.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass an empty string "" (default). For
+#'        execution on the default qsub config remote, use TRUE.
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @importFrom readr write_lines
 #'
 #' @export
 write_remote <- function(x, path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
   } else {
@@ -390,11 +402,14 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
 #'
 #' @param path Path of the directory.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass an empty string "" (default). For
+#'        execution on the default qsub config remote, use TRUE.
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
 ls_remote <- function(path, remote = NULL, verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     list.files(path)
   } else {
