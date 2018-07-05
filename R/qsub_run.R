@@ -346,8 +346,8 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
         if (qs$stop_on_error) {
           stop(txt)
         } else {
-          out_rds <- NA
-          attr(out_rds, "qsub_error") <- txt
+          out_rds <- list(NA)
+          attr(out_rds[[1]], "qsub_error") <- txt
           out_rds
         }
       }
