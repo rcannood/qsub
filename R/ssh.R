@@ -299,7 +299,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #' # [1] TRUE
 #' }
 file_exists_remote <- function(file, remote = "", verbose = FALSE) {
-  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+  if (identical(remote, TRUE)) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
     file.exists(file)
@@ -320,7 +320,7 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
 #'
 #' @export
 mkdir_remote <- function(path, remote = "", verbose = FALSE) {
-  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+  if (identical(remote, TRUE)) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
     if (!file_exists_remote(path, remote)) {
@@ -347,7 +347,7 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @export
 cat_remote <- function(path, remote = "", verbose = FALSE) {
-  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+  if (identical(remote, TRUE)) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
     readr::read_file(path)
@@ -375,7 +375,7 @@ cat_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @export
 write_remote <- function(x, path, remote = "", verbose = FALSE) {
-  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+  if (identical(remote, TRUE)) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
@@ -408,7 +408,7 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
 #'
 #' @export
 ls_remote <- function(path, remote = "", verbose = FALSE) {
-  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+  if (identical(remote, TRUE)) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
     list.files(path)
