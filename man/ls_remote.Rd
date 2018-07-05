@@ -4,7 +4,7 @@
 \alias{ls_remote}
 \title{View the contents of a directory remotely}
 \usage{
-ls_remote(path, remote = NULL, verbose = FALSE)
+ls_remote(path, remote = "", verbose = FALSE)
 }
 \arguments{
 \item{path}{Path of the directory.}
