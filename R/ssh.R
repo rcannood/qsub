@@ -407,7 +407,7 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
 #' @param verbose If \code{TRUE} prints the command.
 #'
 #' @export
-ls_remote <- function(path, remote = NULL, verbose = FALSE) {
+ls_remote <- function(path, remote = "", verbose = FALSE) {
   if (remote == TRUE) remote <- get_default_qsub_config()$remote
 
   if (is_remote_local(remote)) {
