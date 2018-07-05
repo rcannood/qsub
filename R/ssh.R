@@ -316,6 +316,8 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
 #'
 #' @export
 mkdir_remote <- function(path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     if (!file_exists_remote(path, remote)) {
       dir.create(path = path, recursive = TRUE, showWarnings = verbose)
@@ -340,6 +342,8 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @export
 cat_remote <- function(path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     readr::read_file(path)
   } else {
@@ -365,6 +369,8 @@ cat_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @export
 write_remote <- function(x, path, remote = "", verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
   } else {
@@ -395,6 +401,8 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
 #'
 #' @export
 ls_remote <- function(path, remote = NULL, verbose = FALSE) {
+  if (remote == TRUE) remote <- get_default_qsub_config()$remote
+
   if (is_remote_local(remote)) {
     list.files(path)
   } else {
