@@ -4,7 +4,7 @@
 \alias{run_remote}
 \title{\code{run_remote} - Runs the command locally or remotely using ssh.}
 \usage{
-run_remote(command, remote, args = character(), verbose = FALSE,
+run_remote(command, remote = FALSE, args = character(), verbose = FALSE,
   shell = FALSE)
 }
 \arguments{
@@ -12,7 +12,8 @@ run_remote(command, remote, args = character(), verbose = FALSE,
 If run remotely, quotes should be escaped twice.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
-require interactive password entry. For local execution, pass an empty string "" (default).}
+require interactive password entry. For local execution, pass \code{FALSE} (default). For
+execution on the default qsub config remote, use TRUE.}
 
 \item{args}{Character vector, arguments to the command.}
 

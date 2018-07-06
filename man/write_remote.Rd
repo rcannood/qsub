@@ -4,7 +4,7 @@
 \alias{write_remote}
 \title{Write to a file remotely}
 \usage{
-write_remote(x, path, remote = "", verbose = FALSE)
+write_remote(x, path, remote = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{x}{The text to write to the file.}
@@ -12,7 +12,7 @@ write_remote(x, path, remote = "", verbose = FALSE)
 \item{path}{Path of the file.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
-require interactive password entry. For local execution, pass an empty string "" (default). For
+require interactive password entry. For local execution, pass \code{FALSE} (default). For
 execution on the default qsub config remote, use TRUE.}
 
 \item{verbose}{If \code{TRUE} prints the command.}
