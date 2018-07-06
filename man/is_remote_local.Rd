@@ -7,7 +7,7 @@
 is_remote_local(remote)
 }
 \arguments{
-\item{remote}{A putative remote machine. This function will return true if \code{remote} is \code{NULL}, \code{NA}, or \code{""}.}
+\item{remote}{A putative remote machine. This function will return true if \code{remote == FALSE}.}
 }
 \description{
 Tests whether the remote is a local host or not.
