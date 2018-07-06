@@ -4,12 +4,14 @@
 \alias{qacct_remote}
 \title{Run qacct on remote}
 \usage{
-qacct_remote(remote, job_id)
+qacct_remote(job_id, remote = FALSE)
 }
 \arguments{
-\item{remote}{The remote}
-
 \item{job_id}{The job_id of the job}
+
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
+require interactive password entry. For local execution, pass \code{FALSE} (default). For
+execution on the default qsub config remote, use \code{TRUE}.}
 }
 \description{
 Run qacct on remote

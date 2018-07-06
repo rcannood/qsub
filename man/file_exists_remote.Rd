@@ -4,13 +4,14 @@
 \alias{file_exists_remote}
 \title{Checks if a local or remote file exists.}
 \usage{
-file_exists_remote(file, remote = "", verbose = FALSE)
+file_exists_remote(file, remote = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{file}{File path.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
-require interactive password entry. For local execution, pass an empty string "" (default).}
+require interactive password entry. For local execution, pass \code{FALSE} (default). For
+execution on the default qsub config remote, use \code{TRUE}.}
 
 \item{verbose}{If \code{TRUE} prints the command.}
 }
@@ -18,7 +19,7 @@ require interactive password entry. For local execution, pass an empty string ""
 \code{TRUE} or \code{FALSE} indicating whether the file exists.
 }
 \description{
-A wrapper around a bash script. Works with local files too if \code{remote=""}.
+Checks if a local or remote file exists.
 }
 \examples{
 \dontrun{

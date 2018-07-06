@@ -159,7 +159,7 @@ setup_execution <- function(
   qs <- qsub_config
 
   # check whether folders exist
-  if (file_exists_remote(qs$src_dir, remote = "", verbose = qs$verbose)) {
+  if (file_exists_remote(qs$src_dir, remote = FALSE, verbose = qs$verbose)) {
     stop("The local temporary folder already exists!")
   }
   if (file_exists_remote(qs$remote_dir, remote = qs$remote, verbose = qs$verbose)) {
@@ -225,7 +225,7 @@ setup_execution <- function(
     verbose = qs$verbose
   )
   cp_remote(
-    remote_src = "",
+    remote_src = NULL,
     path_src = qs$src_dir %>% str_replace_all("[\\/]$", ""),
     remote_dest = qs$remote,
     path_dest = qs$remote_tmp_path %>% str_replace_all("[\\/]$", "")
@@ -310,13 +310,13 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   cp_remote(
     remote_src = qs$remote,
     path_src = qs$remote_logdir,
-    remote_dest = "",
+    remote_dest = FALSE,
     path_dest = qs$src_dir
   )
   cp_remote(
     remote_src = qs$remote,
     path_src = qs$remote_outdir,
-    remote_dest = "",
+    remote_dest = FALSE,
     path_dest = qs$src_dir
   )
 
@@ -346,8 +346,8 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
         if (qs$stop_on_error) {
           stop(txt)
         } else {
-          out_rds <- NA
-          attr(out_rds, "qsub_error") <- txt
+          out_rds <- list(NA)
+          attr(out_rds[[1]], "qsub_error") <- txt
           out_rds
         }
       }

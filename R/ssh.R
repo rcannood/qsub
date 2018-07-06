@@ -43,8 +43,19 @@ fetch_hostname_from_config <- function(host) {
   lst(hostname, username, port)
 }
 
+#' Create an SSH connection with remote
+#'
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
+#'        require interactive password entry. For the default qsub config remote, use \code{TRUE}.
 create_ssh_connection <- function(remote) {
-  hostname <- remote %>% str_replace(".*@", "") %>% str_replace(":.*", "")
+  if (is.logical(remote) && remote) {
+    remote <- get_default_qsub_config()$remote
+  }
+
+  hostname <- remote %>%
+    str_replace(".*@", "") %>%
+    str_replace(":.*", "")
+
   port <- "22"
 
   config_data <- fetch_hostname_from_config(hostname)
@@ -55,7 +66,7 @@ create_ssh_connection <- function(remote) {
   if (str_detect(remote, "@")) username <- str_replace(remote, "@.*", "")
   if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
 
-  remote <- glue::glue("{username}@{hostname}:{port}")
+  remote <- paste0(username, "@", hostname, ":", port)
 
   ssh::ssh_connect(remote)
 }
@@ -77,7 +88,8 @@ create_ssh_connection <- function(remote) {
 #'        If run remotely, quotes should be escaped twice.
 #' @param args Character vector, arguments to the command.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
+#'        require interactive password entry. For local execution, pass \code{FALSE} (default). For
+#'        execution on the default qsub config remote, use \code{TRUE}.
 #' @param verbose If \code{TRUE} prints the command.
 #' @param shell Whether to execute the command in a shell
 #' @return A list with components:
@@ -93,7 +105,7 @@ create_ssh_connection <- function(remote) {
 #' @importFrom processx run
 #'
 #' @export
-run_remote <- function(command, remote, args = character(), verbose = FALSE, shell = FALSE) {
+run_remote <- function(command, remote = FALSE, args = character(), verbose = FALSE, shell = FALSE) {
   if (verbose) cat("# ", gsub("\n", "\n# ", cmd), "\n", sep = "")
 
   time1 <- Sys.time()
@@ -103,7 +115,7 @@ run_remote <- function(command, remote, args = character(), verbose = FALSE, she
     on.exit(ssh::ssh_disconnect(remote))
   }
 
-  if (is(remote, "ssh_session")) {
+  if (!is_remote_local(remote)) {
     cmd <- paste0(command, " ", paste0(args, collapse = " "))
 
     cmd2 <- paste0( # see https://stackoverflow.com/a/1472444
@@ -174,7 +186,7 @@ run_remote <- function(command, remote, args = character(), verbose = FALSE, she
 #'
 #' ## on local server in R:
 #' cp_remote(remote_src = "me@@myserver", path_src = "~/myfile.csv",
-#'           remote_dest = "", path_dest = getwd(), verbose = TRUE)
+#'           remote_dest = FALSE, path_dest = getwd(), verbose = TRUE)
 #' # [1] "Elapsed: 1.672 sec"
 #' df <- read.csv("myfile.csv")
 #' df
@@ -207,7 +219,6 @@ cp_remote <- function(
     remote_dest <- create_ssh_connection(remote_dest)
     on.exit(ssh::ssh_disconnect(remote_dest))
   }
-
 
   if (!is_remote_local(remote_src) && !is_remote_local(remote_dest)) {
     # BOTH ARE NOT LOCAL
@@ -270,7 +281,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     exclude_str <- ""
   }
 
-  res <- run_remote("rsync", args = c("-avz", path_src, path_dest, exclude_str), remote = "", verbose = verbose, shell = TRUE)
+  res <- run_remote("rsync", args = c("-avz", path_src, path_dest, exclude_str), remote = FALSE, verbose = verbose, shell = TRUE)
 
   if (res$stderr != "") {
     stop(paste0("rsync failed: ", res$stderr))
@@ -281,12 +292,8 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 
 #' Checks if a local or remote file exists.
 #'
-#' A wrapper around a bash script. Works with local files too if \code{remote=""}.
-#'
 #' @param file File path.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @return \code{TRUE} or \code{FALSE} indicating whether the file exists.
 #'
@@ -297,7 +304,7 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
 #' file_exists_remote("~/myfile.csv", remote = "me@@myserver")
 #' # [1] TRUE
 #' }
-file_exists_remote <- function(file, remote = "", verbose = FALSE) {
+file_exists_remote <- function(file, remote = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     file.exists(file)
   } else { # assume remote is unix based
@@ -310,12 +317,10 @@ file_exists_remote <- function(file, remote = "", verbose = FALSE) {
 #'
 #' @param path Directory path. If using \code{remote}, this should be a full path or
 #'             a path relative to the user's home directory.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @export
-mkdir_remote <- function(path, remote = "", verbose = FALSE) {
+mkdir_remote <- function(path, remote = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     if (!file_exists_remote(path, remote)) {
       dir.create(path = path, recursive = TRUE, showWarnings = verbose)
@@ -332,14 +337,12 @@ mkdir_remote <- function(path, remote = "", verbose = FALSE) {
 #' Read from a file remotely
 #'
 #' @param path Path of the file.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @importFrom readr read_file
 #'
 #' @export
-cat_remote <- function(path, remote = "", verbose = FALSE) {
+cat_remote <- function(path, remote = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::read_file(path)
   } else {
@@ -357,14 +360,12 @@ cat_remote <- function(path, remote = "", verbose = FALSE) {
 #'
 #' @param x The text to write to the file.
 #' @param path Path of the file.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @importFrom readr write_lines
 #'
 #' @export
-write_remote <- function(x, path, remote = "", verbose = FALSE) {
+write_remote <- function(x, path, remote = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     readr::write_lines(x, path)
   } else {
@@ -377,7 +378,7 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
     }
 
     cp_remote(
-      remote_src = "",
+      remote_src = FALSE,
       path_src = tmpfile,
       remote_dest = path,
       path_dest = remote,
@@ -389,12 +390,10 @@ write_remote <- function(x, path, remote = "", verbose = FALSE) {
 #' View the contents of a directory remotely
 #'
 #' @param path Path of the directory.
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @export
-ls_remote <- function(path, remote = NULL, verbose = FALSE) {
+ls_remote <- function(path, remote = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     list.files(path)
   } else {
@@ -404,18 +403,17 @@ ls_remote <- function(path, remote = NULL, verbose = FALSE) {
 
 #' Show the status of Grid Engine jobs and queues
 #'
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For local execution, pass an empty string "" (default).
-#' @param verbose If \code{TRUE} prints the command.
+#' @inheritParams run_remote
 #'
 #' @export
 qstat_remote <- function(remote = NULL, verbose = FALSE) {
   run_remote("qstat", remote = remote, verbose = verbose)$stdout
 }
 
+
 #' Tests whether the remote is a local host or not.
 #'
-#' @param remote A putative remote machine. This function will return true if \code{remote} is \code{NULL}, \code{NA}, or \code{""}.
+#' @param remote A putative remote machine. This function will return true if \code{remote == FALSE}.
 is_remote_local <- function(remote) {
-  !is(remote, "ssh_session") && ((is.character(remote) && nchar(remote) == 0) || is.null(remote) || is.na(remote))
+  !is(remote, "ssh_session") && (is.null(remote) || is.na(remote) || (is.logical(remote) && !remote))
 }
