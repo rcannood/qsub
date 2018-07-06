@@ -6,6 +6,10 @@
 \usage{
 create_ssh_connection(remote)
 }
+\arguments{
+\item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
+require interactive password entry. For the default qsub config remote, use \code{TRUE}.}
+}
 \description{
 Create an SSH connection with remote
 }

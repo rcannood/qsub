@@ -44,6 +44,9 @@ fetch_hostname_from_config <- function(host) {
 }
 
 #' Create an SSH connection with remote
+#'
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
+#'        require interactive password entry. For the default qsub config remote, use \code{TRUE}.
 create_ssh_connection <- function(remote) {
   if (is.logical(remote) && remote) {
     remote <- get_default_qsub_config()$remote
@@ -64,7 +67,6 @@ create_ssh_connection <- function(remote) {
   if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
 
   remote <- paste0(username, "@", hostname, ":", port)
-  # remote <- glue::glue("{username}@{hostname}:{port}")
 
   ssh::ssh_connect(remote)
 }
@@ -87,7 +89,7 @@ create_ssh_connection <- function(remote) {
 #' @param args Character vector, arguments to the command.
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For local execution, pass \code{FALSE} (default). For
-#'        execution on the default qsub config remote, use TRUE.
+#'        execution on the default qsub config remote, use \code{TRUE}.
 #' @param verbose If \code{TRUE} prints the command.
 #' @param shell Whether to execute the command in a shell
 #' @return A list with components:

@@ -11,7 +11,7 @@ qacct_remote(job_id, remote = FALSE)
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
 require interactive password entry. For local execution, pass \code{FALSE} (default). For
-execution on the default qsub config remote, use TRUE.}
+execution on the default qsub config remote, use \code{TRUE}.}
 }
 \description{
 Run qacct on remote
