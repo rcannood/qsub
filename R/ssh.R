@@ -61,7 +61,7 @@ create_ssh_connection <- function(remote) {
 #'
 #' @export
 run_remote <- function(command, remote = FALSE, args = character(), verbose = FALSE, shell = FALSE) {
-  if (verbose) cat("# ", gsub("\n", "\n# ", command), "\n", sep = "")
+  if (verbose) cat("# ", gsub("\n", "\n# ", command), " ", paste(args, collapse = ""), "\n", sep = "")
 
   time1 <- Sys.time()
 
@@ -71,9 +71,7 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
   }
 
   if (!is_remote_local(remote)) {
-    cmd <- paste0(command, " ", paste0(args, collapse = " "))
-
-    cmd2 <- paste0( # see https://stackoverflow.com/a/1472444
+    cmd <- paste0( # see https://stackoverflow.com/a/1472444
       "source /etc/profile;",
       "if [[ -s \"$HOME/.bash_profile\" ]]; then",
       "  source \"$HOME/.bash_profile\";",
@@ -81,9 +79,9 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
       "if [[ -s \"$HOME/.profile\" ]]; then",
       "  source \"$HOME/.profile\";",
       "fi;",
-      cmd
+      command, " ", paste(args, collapse = " ")
     )
-    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
+    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd, error = FALSE)
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
   } else {
@@ -213,21 +211,25 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     stop("rsync_remote is not implemented for Windows systems")
   }
 
-  if (!is_remote_local(remote_src)) {
-    path_src <- c("-e", "ssh", as.character(glue::glue("{remote_src}:{path_src}")))
+  if (is(remote_src, "ssh_connection")) {
+    stop("remote_src must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
+  }
 
-    if (!is(remote_src, "ssh_session")) {
-      remote_src <- create_ssh_connection(remote_src)
-      on.exit(ssh::ssh_disconnect(remote_src))
+  if (is(remote_dest, "ssh_connection")) {
+    stop("remote_dest must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
+  }
+
+  if (!is_remote_local(remote_src)) {
+    if (is.logical(remote_src) && remote_src) {
+      remote_src <- get_default_qsub_config()$remote
     }
+    path_src <- c("-e", "ssh", as.character(glue::glue("{remote_src}:{path_src}")))
   }
   if (!is_remote_local(remote_dest)) {
-    path_dest <- c("-e", "ssh", as.character(glue::glue("{remote_dest}:{path_dest}")))
-
-    if (!is(remote_dest, "ssh_session")) {
-      remote_dest <- create_ssh_connection(remote_dest)
-      on.exit(ssh::ssh_disconnect(remote_dest))
+    if (is.logical(remote_dest) && remote_dest) {
+      remote_dest <- get_default_qsub_config()$remote
     }
+    path_dest <- c("-e", "ssh", as.character(glue::glue("{remote_dest}:{path_dest}")))
   }
 
   if (!is.null(exclude)) {
