@@ -26,7 +26,7 @@ qacct <- function(qsub_config) {
 qacct_remote <- function(remote, job_id) {
   out <- run_remote(command = "qacct", args = c("-j", job_id), remote = remote)
 
-  if (out$stderr != "") {
+  if (length(out$stderr) > 0 && out$stderr != "") {
     stop(out$stderr)
   }
 
