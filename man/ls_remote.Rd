@@ -4,13 +4,14 @@
 \alias{ls_remote}
 \title{View the contents of a directory remotely}
 \usage{
-ls_remote(path, remote = NULL, verbose = FALSE)
+ls_remote(path, remote = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{path}{Path of the directory.}
 
 \item{remote}{Remote machine specification for ssh, in format such as \code{user@server} that does not
-require interactive password entry. For local execution, pass an empty string "" (default).}
+require interactive password entry. For local execution, pass \code{FALSE} (default). For
+execution on the default qsub config remote, use \code{TRUE}.}
 
 \item{verbose}{If \code{TRUE} prints the command.}
 }

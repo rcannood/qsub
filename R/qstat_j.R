@@ -19,11 +19,11 @@ qstat_j <- function(qsub_config) {
 
 #' Run qstat on remote
 #'
-#' @param remote The remote
 #' @param job_id The job_id of the job
+#' @inheritParams run_remote
 #'
 #' @export
-qstat_j_remote <- function(remote, job_id) {
+qstat_j_remote <- function(job_id, remote = FALSE) {
   out <- run_remote(command = "qstat", args = c("-j", job_id), remote = remote)
 
   if (out$stderr != "") {
