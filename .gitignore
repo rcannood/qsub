@@ -3,3 +3,4 @@
 .RData
 .DS_Store
 deploy_key
+cran-comments.md
