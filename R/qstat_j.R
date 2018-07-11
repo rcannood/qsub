@@ -26,7 +26,7 @@ qstat_j <- function(qsub_config) {
 qstat_j_remote <- function(job_id, remote = FALSE) {
   out <- run_remote(command = "qstat", args = c("-j", job_id), remote = remote)
 
-  if (out$stderr != "") {
+  if (length(out$stderr) > 0 && out$stderr != "") {
     stop(out$stderr)
   }
 
