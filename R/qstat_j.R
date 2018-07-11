@@ -14,7 +14,7 @@ qstat_j <- function(qsub_config) {
 
   remote <- qsub_config$remote
 
-  qstat_j_remote(remote, job_id)
+  qstat_j_remote(job_id, remote)
 }
 
 #' Run qstat on remote
