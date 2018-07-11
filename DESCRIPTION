@@ -17,7 +17,7 @@ Authors@R: c(
       comment = c(ORCID = "0000-0002-7114-6248", github = "zouter")
     )
   )
-Description: Parallellising lapply() by submitting them to 
+Description: Run lapply() calls in parallel by submitting them to 
     'gridengine' clusters using the 'qsub' command.
 Depends:
     R (>= 3.0)
