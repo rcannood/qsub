@@ -380,6 +380,7 @@ is_remote_local <- function(remote) {
 #' @inheritParams run_remote
 #' @param recursive Whether to work recursively
 #' @param force Whether to force removal
+#' @export
 rm_remote <- function(path, remote, recursive = FALSE, force = FALSE, verbose = FALSE) {
   if (is_remote_local(remote)) {
     unlink(path, recursive = recursive)
