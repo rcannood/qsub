@@ -1,5 +1,7 @@
 context("Testing qsub_lapply")
 
+skip_on_cran()
+
 if (Sys.getenv("PRISM_HOST") != "") {
   host <- Sys.getenv("PRISM_HOST")
   remote_tmp_path <- Sys.getenv("PRISM_REMOTEPATH")
