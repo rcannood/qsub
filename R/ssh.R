@@ -374,3 +374,20 @@ qstat_remote <- function(remote = NULL, verbose = FALSE) {
 is_remote_local <- function(remote) {
   !is(remote, "ssh_session") && (is.null(remote) || is.na(remote) || (is.logical(remote) && !remote))
 }
+
+#' Remove a file or folder
+#' @param path Path of the file/folder
+#' @inheritParams run_remote
+#' @param recursive Whether to work recursively
+#' @param force Whether to force removal
+rm_remote <- function(path, remote, recursive = FALSE, force = FALSE, verbose = FALSE) {
+  if (is_remote_local(remote)) {
+    unlink(path, recursive = recursive)
+  } else {
+    run_remote(
+      glue("rm {path} {ifelse(recursive, ' -r ', '')} {ifelse(force, ' -f ', '')}"),
+      remote = remote,
+      verbose = verbose
+    )$stdout
+  }
+}
