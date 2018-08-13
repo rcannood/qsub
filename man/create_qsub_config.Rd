@@ -18,6 +18,7 @@ create_qsub_config(
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
+  compress = "xz",
 
   # pre-execution parameters
   modules = "R",
@@ -45,6 +46,7 @@ override_qsub_config(
   max_running_tasks = qsub_config$max_running_tasks,
   max_wall_time = qsub_config$max_wall_time,
   batch_tasks = qsub_config$batch_tasks,
+  compress = qsub_config$compress,
 
   # pre-execution parameters
   modules = qsub_config$modules,
