@@ -94,7 +94,8 @@ qsub_lapply <- function(
     DOTPARAMS = dot_params,
     PACKAGES = qsub_packages,
     QSUB_START = QSUB_START,
-    QSUB_STOP = QSUB_STOP
+    QSUB_STOP = QSUB_STOP,
+    COMPRESS = c("bz" = "bzip2", "gz" = "gzip", "xz" = "xz", "none" = FALSE)[qsub_config$compress]
   )
 
   # generate folder names
@@ -172,8 +173,8 @@ setup_execution <- function(
   dir.create(qs$src_logdir)
 
   # save environment
-  readr::write_rds(qsub_environment, qs$src_qsub_rds)
-  readr::write_rds(prism_environment, qs$src_prism_rds)
+  readr::write_rds(qsub_environment, qs$src_qsub_rds, compress = qs$compress)
+  readr::write_rds(prism_environment, qs$src_prism_rds, compress = qs$compress)
 
   # write r script
   r_script <- paste0(
@@ -194,7 +195,7 @@ setup_execution <- function(
     "        do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_data]]), PitSoL_params$DOTPARAMS))\n",
     "      }\n",
     "    )\n",
-    "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
+    "  saveRDS(PitSoL_out, file = PitSoL_file_out, compress = PitSoL_params$COMPRESS)\n",
     "}\n"
   )
   readr::write_lines(r_script, qs$src_rfile)

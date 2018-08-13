@@ -82,6 +82,8 @@ Mind you, this might annoy other users of the cluster.}
 
 \item{batch_tasks}{How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).}
 
+\item{compress}{Compression method to use: \code{"none"}, \code{"gz"}, \code{"bz"}, or \code{"xz"} (default).}
+
 \item{modules}{Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.}
 
 \item{execute_before}{Commands to execute in the bash shell before running R.}
