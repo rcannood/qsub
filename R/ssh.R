@@ -61,7 +61,7 @@ create_ssh_connection <- function(remote) {
 #'
 #' @export
 run_remote <- function(command, remote = FALSE, args = character(), verbose = FALSE, shell = FALSE) {
-  if (verbose) cat("# ", gsub("\n", "\n# ", command), " ", paste(args, collapse = ""), "\n", sep = "")
+  if (verbose) cat("# ", gsub("\n", "\n# ", command), " ", paste(args, collapse = " "), "\n", sep = "")
 
   time1 <- Sys.time()
 
