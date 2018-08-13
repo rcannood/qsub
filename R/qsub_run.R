@@ -80,8 +80,14 @@ qsub_lapply <- function(
     stop(sQuote("qsub_environment"), " must be NULL, a character vector, or an environment")
   }
 
+  # determine batches
   QSUB_START <- seq(1, length(X), by = qsub_config$batch_tasks)
   QSUB_STOP <- pmin(QSUB_START + qsub_config$batch_tasks - 1, length(X))
+
+  # check compress param
+  if (is.null(qsub_config$compress)) {
+    qsub_config$compress <- "xz"
+  }
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
