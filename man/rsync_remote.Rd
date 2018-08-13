@@ -5,7 +5,7 @@
 \title{A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.}
 \usage{
 rsync_remote(remote_src, path_src, remote_dest, path_dest,
-  exclude = NULL, verbose = FALSE)
+  compress = TRUE, delete = "no", exclude = NULL, verbose = FALSE)
 }
 \arguments{
 \item{remote_src}{Remote machine for the source file in the format \code{user@machine} or an empty string for local.}
@@ -16,9 +16,13 @@ rsync_remote(remote_src, path_src, remote_dest, path_dest,
 
 \item{path_dest}{Path for the source file; can be a directory.}
 
-\item{exclude}{A vector of files / regexs to be excluded}
+\item{compress}{Whether or not to compress the data being transferred.}
 
-\item{verbose}{Prints elapsed time if TRUE}
+\item{delete}{Whether or not to delete files at the target remote. Use \code{"yes"} to delete files at the remote.}
+
+\item{exclude}{A vector of files / regexs to be excluded.}
+
+\item{verbose}{Prints elapsed time if TRUE.}
 }
 \description{
 A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.

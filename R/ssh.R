@@ -202,11 +202,22 @@ cp_remote <- function(
 #' @param path_src Path of the source file.
 #' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
 #' @param path_dest Path for the source file; can be a directory.
-#' @param exclude A vector of files / regexs to be excluded
-#' @param verbose Prints elapsed time if TRUE
+#' @param compress Whether or not to compress the data being transferred.
+#' @param delete Whether or not to delete files at the target remote. Use \code{"yes"} to delete files at the remote.
+#' @param exclude A vector of files / regexs to be excluded.
+#' @param verbose Prints elapsed time if TRUE.
 #'
 #' @export
-rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
+rsync_remote <- function(
+  remote_src,
+  path_src,
+  remote_dest,
+  path_dest,
+  compress = TRUE,
+  delete = "no",
+  exclude = NULL,
+  verbose = FALSE
+) {
   if (.Platform$OS.type == "windows") {
     stop("rsync_remote is not implemented for Windows systems")
   }
@@ -238,7 +249,29 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     exclude_str <- ""
   }
 
-  res <- run_remote("rsync", args = c("-avz", path_src, path_dest, exclude_str), remote = FALSE, verbose = verbose, shell = TRUE)
+  flags <- paste0(
+    "-av",
+    ifelse(compress, "z", "")
+  )
+
+  if (identical(delete, TRUE)) {
+    warning("Specify `delete = \"yes\"` in order to delete files at the target remote.")
+  }
+
+  delete_flag <-
+    if (delete == "yes") {
+      delete_flag <- "--delete"
+    } else {
+      delete_flag <- NULL
+    }
+
+  res <- run_remote(
+    "rsync",
+    args = c(flags, path_src, path_dest, exclude_str, delete_flag),
+    remote = FALSE,
+    verbose = verbose,
+    shell = TRUE
+  )
 
   if (res$stderr != "") {
     stop(paste0("rsync failed: ", res$stderr))
