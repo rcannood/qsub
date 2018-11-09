@@ -313,18 +313,13 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   unlink(qs$src_outdir, recursive = TRUE)
 
   if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
-  cp_remote(
-    remote_src = qs$remote,
-    path_src = qs$remote_logdir,
-    remote_dest = FALSE,
-    path_dest = qs$src_dir
-  )
-  cp_remote(
-    remote_src = qs$remote,
-    path_src = qs$remote_outdir,
-    remote_dest = FALSE,
-    path_dest = qs$src_dir
-  )
+  if (.Platform$OS.type == "windows") { # rsync is not supported on windows :(
+    cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
+    cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
+  } else {
+    rsync_remote(remote_src = qs$remote, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
+    rsync_remote(remote_src = qs$remote, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
+  }
 
   # read rds files
   if (qs$verbose) cat("Processing outs\n", sep = "")
