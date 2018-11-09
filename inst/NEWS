@@ -7,6 +7,8 @@ qsub 1.1.0 (unreleased)
 
 * BUG FIX: Let `post_fun` take into account the `batch_tasks` parameter; output files could consist of 
   multiple tasks.
+  
+* MINOR CHANGE: `qsub_retrieve()` now uses pbapply when loading in the output.
 
 qsub 1.0.0 (30-07-2018)
 

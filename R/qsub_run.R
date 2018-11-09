@@ -285,6 +285,7 @@ is_job_running <- function(qsub_config) {
 #' @param wait If \code{TRUE}, wait until the execution has finished in order to return the results, else returns \code{NULL} if execution is not finished.
 #' @param post_fun Apply a function to the output after execution. Interface: \code{function(index, output)}
 #' @importFrom readr read_file
+#' @importFrom pbapply pblapply
 #' @export
 qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   # short hand notation
@@ -324,7 +325,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   # read rds files
   if (qs$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
-    outs <- unlist(lapply(seq_len(qs$num_tasks), function(rds_i) {
+    outs <- pbapply::pblapply(seq_len(qs$num_tasks), function(rds_i) {
       output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
       error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
       if (file.exists(output_file)) {
@@ -353,7 +354,8 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
           out_rds
         }
       }
-    }), recursive = FALSE)
+    }) %>%
+      unlist(recursive = FALSE)
   }, error = function(e) {
     stop(e)
   }, finally = {

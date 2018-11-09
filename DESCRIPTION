@@ -27,6 +27,7 @@ Imports:
     dplyr,
     glue,
     methods,
+    pbapply,
     processx,
     purrr,
     random,
