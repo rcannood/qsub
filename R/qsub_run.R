@@ -108,11 +108,9 @@ qsub_lapply <- function(
   qsub_instance <- instantiate_qsub_config(qsub_config)
 
   # commence SSH connection
-  if (is.character(qsub_instance$remote)) {
-    remote_bup <- qsub_config$remote
-    qsub_instance$remote <- create_ssh_connection(qsub_config$remote)
-    ssh_bup <- qsub_instance$remote
-    on.exit(ssh::ssh_disconnect(ssh_bup))
+  if (is.null(qsub_instance$remote_ssh)) {
+    qsub_instance$remote_ssh <- create_ssh_connection(qsub_config$remote)
+    on.exit(ssh::ssh_disconnect(qsub_instance$remote_ssh))
   }
 
   # set number of tasks
@@ -132,7 +130,6 @@ qsub_lapply <- function(
   if (qsub_instance$wait) {
     qsub_retrieve(qsub_instance)
   } else {
-    qsub_instance$remote <- remote_bup
     qsub_instance
   }
 }
@@ -163,13 +160,14 @@ setup_execution <- function(
   qsub_environment,
   prism_environment
 ) {
+  # short hand notation
   qs <- qsub_config
 
   # check whether folders exist
   if (file_exists_remote(qs$src_dir, remote = FALSE, verbose = qs$verbose)) {
     stop("The local temporary folder already exists!")
   }
-  if (file_exists_remote(qs$remote_dir, remote = qs$remote, verbose = qs$verbose)) {
+  if (file_exists_remote(qs$remote_dir, remote = qs$remote_ssh %||% qs$remote, verbose = qs$verbose)) {
     stop("The remote temporary folder already exists!")
   }
 
@@ -228,13 +226,13 @@ setup_execution <- function(
   # rsync local with remote
   mkdir_remote(
     path = qs$remote_tmp_path,
-    remote = qs$remote,
+    remote = qs$remote_ssh %||% qs$remote,
     verbose = qs$verbose
   )
   cp_remote(
     remote_src = NULL,
     path_src = qs$src_dir %>% str_replace_all("[\\/]$", ""),
-    remote_dest = qs$remote,
+    remote_dest = qs$remote_ssh %||% qs$remote,
     path_dest = qs$remote_tmp_path %>% str_replace_all("[\\/]$", "")
   )
 
@@ -244,7 +242,7 @@ setup_execution <- function(
 execute_job <- function(qsub_config) {
   # start job remotely and read job_id
   cmd <- glue::glue("cd {qsub_config$remote_dir}; qsub script.sh")
-  output <- run_remote(cmd, remote = qsub_config$remote, verbose = qsub_config$verbose)
+  output <- run_remote(cmd, remote = qsub_config$remote_ssh %||% qsub_config$remote, verbose = qsub_config$verbose)
 
   # retrieve job id
   job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$stdout, collapse = "\n"))
@@ -274,7 +272,7 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 #' @export
 is_job_running <- function(qsub_config) {
   if (!is.null(qsub_config$job_id)) {
-    qstat_out <- run_remote("qstat", qsub_config$remote)$stdout
+    qstat_out <- run_remote("qstat", remote = qsub_config$remote_ssh %||% qsub_config$remote)$stdout
     any(str_detect(qstat_out, paste0("^ *", qsub_config$job_id, " ")))
   } else {
     FALSE
@@ -289,11 +287,12 @@ is_job_running <- function(qsub_config) {
 #' @importFrom readr read_file
 #' @export
 qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
+  # short hand notation
   qs <- qsub_config
 
-  if (is.character(qs$remote)) {
-    qs$remote <- create_ssh_connection(qs$remote)
-    on.exit(ssh::ssh_disconnect(qs$remote))
+  if (is.null(qs$remote_ssh)) {
+    qs$remote_ssh <- create_ssh_connection(qs$remote)
+    on.exit(ssh::ssh_disconnect(qs$remote_ssh))
   }
 
   if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
@@ -366,7 +365,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
     if (qs$remove_tmp_folder) {
       run_remote(
         paste0("rm -rf \"", qs$remote_dir, "\""),
-        remote = qs$remote,
+        remote = qs$remote_ssh %||% qs$remote,
         verbose = qs$verbose
       )
       unlink(qs$src_dir, recursive = TRUE, force = TRUE)
