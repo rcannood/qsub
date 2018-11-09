@@ -330,7 +330,8 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
       if (file.exists(output_file)) {
         out_rds <- readRDS(output_file)
         if (!is.null(post_fun)) {
-          out_rds <- post_fun(rds_i, out_rds)
+          ixs <- (rds_i - 1) * qs$batch_tasks + seq_along(out_rds)
+          out_rds <- map2(ixs, out_rds, post_fun)
         }
         out_rds
       } else {
