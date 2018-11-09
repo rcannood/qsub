@@ -94,7 +94,7 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
       command = command,
       args = args,
       error_on_status = FALSE,
-      echo_cmd = TRUE
+      echo_cmd = verbose
     )
   }
 
