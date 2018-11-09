@@ -51,7 +51,7 @@ Initial test
 For the remainder of this README, we will assume you have an account
 called `myuser` on a cluster located at `mycluster.address.org`
 listening on port `1234`. This cluster is henceforth called the
-'remote'. You will require a local folder to store temporary data in
+‘remote’. You will require a local folder to store temporary data in
 (e.g. `/tmp/r2gridengine`), and a remote folder to store temporary data
 in (e.g. `/scratch/personal/myuser/r2gridengine`).
 
@@ -79,7 +79,7 @@ Setting up an SSH key
 ---------------------
 
 If you regularly submit jobs to the remote, it will be extremely useful
-to set up an SSH key configuration. This way, you don't need to enter
+to set up an SSH key configuration. This way, you don’t need to enter
 your password every time you execute `qsub_lapply`.
 
 On Windows, you will first need to install [Git
@@ -93,7 +93,7 @@ following content, and save it to `.ssh/config`.
       Port 1234
       User myuser
 
-Secondly, generate an SSH key. You don't need to enter a password. If
+Secondly, generate an SSH key. You don’t need to enter a password. If
 you do, though, you will be asked for this password every time you use
 your SSH key.
 
@@ -244,3 +244,23 @@ line by line in R, by hand.
         remove_tmp_folder = FALSE
       )
     )
+
+Latest changes
+--------------
+
+Check out `news(package = "qsub")` or [NEWS.md](inst/NEWS.md) for a full
+list of changes.
+
+<!-- This section gets automatically generated from inst/NEWS.md, and also generates inst/NEWS -->
+### Latest changes in qsub 1.1.0 (unreleased)
+
+-   MINOR CHANGE: there is now an option to compress the output files,
+    which is turned on by default.
+
+-   MINOR CHANGE: Allow unix systems to use `rsync` instead of `cp` for
+    fetching the qsub output.
+
+### Latest changes in qsub 1.0.0 (30-07-2018)
+
+-   INITIAL RELEASE: qsub allows you to run lapply() calls in parallel
+    by submitting them to gridengine clusters using the `qsub` command.
