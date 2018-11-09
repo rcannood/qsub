@@ -307,16 +307,16 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   }
 
   # copy results to local
-  # unfortunately, we can't be using rsync to remain compatible with windows platforms
-  if (qs$verbose) cat("Cleaning up local dirs\n", sep = "")
-  unlink(qs$src_logdir, recursive = TRUE)
-  unlink(qs$src_outdir, recursive = TRUE)
-
-  if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
   if (.Platform$OS.type == "windows") { # rsync is not supported on windows :(
+    if (qs$verbose) cat("Cleaning up local dirs\n", sep = "")
+    unlink(qs$src_logdir, recursive = TRUE)
+    unlink(qs$src_outdir, recursive = TRUE)
+
+    if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
     cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
     cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
   } else {
+    if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
     rsync_remote(remote_src = qs$remote, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
     rsync_remote(remote_src = qs$remote, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
   }
