@@ -1,4 +1,5 @@
 citEntry(
+  entry    = "Misc",
   author   = "Robrecht Cannoodt",
   title    = "qsub: Running commands remotely on gridengine clusters",
   year     = "2018",
