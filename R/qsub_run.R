@@ -325,36 +325,46 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   # read rds files
   if (qs$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
-    outs <- pbapply::pblapply(seq_len(qs$num_tasks), function(rds_i) {
-      output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
-      error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
-      if (file.exists(output_file)) {
-        out_rds <- readRDS(output_file)
-        if (!is.null(post_fun)) {
-          ixs <- (rds_i - 1) * qs$batch_tasks + seq_along(out_rds)
-          out_rds <- map2(ixs, out_rds, post_fun)
+    outs <-
+      pbapply::pblapply(
+        X = seq_len(qs$num_tasks),
+        FUN = function(rds_i) {
+          output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
+          error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
+
+          if (file.exists(output_file)) {
+            out_rds <- readRDS(output_file)
+
+            if (!is.null(post_fun)) {
+              ixs <- (rds_i - 1) * qs$batch_tasks + seq_along(out_rds)
+              out_rds <- map2(ixs, out_rds, post_fun)
+            }
+
+            out_rds
+          } else {
+            if (file.exists(error_file)) {
+              msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
+              txt <- paste0("File: ", error_file, "\n", msg)
+            } else {
+              txt <- paste0(
+                "File: ", error_file, "\n",
+                "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
+                "Check 'qacct -j ", qs$job_id, "' for more info."
+              )
+            }
+
+            if (qs$stop_on_error) {
+              stop(txt)
+            } else {
+              map(seq_len(qs$batch_tasks), function(x) {
+                out <- NA
+                attr(out, "qsub_error") <- txt
+                out
+              })
+            }
+          }
         }
-        out_rds
-      } else {
-        if (file.exists(error_file)) {
-          msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
-          txt <- paste0("File: ", error_file, "\n", msg)
-        } else {
-          txt <- paste0(
-            "File: ", error_file, "\n",
-            "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
-            "Check 'qacct -j ", qs$job_id, "' for more info."
-          )
-        }
-        if (qs$stop_on_error) {
-          stop(txt)
-        } else {
-          out_rds <- list(NA)
-          attr(out_rds[[1]], "qsub_error") <- txt
-          out_rds
-        }
-      }
-    }) %>%
+      ) %>%
       unlist(recursive = FALSE)
   }, error = function(e) {
     stop(e)

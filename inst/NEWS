@@ -5,8 +5,8 @@ qsub 1.1.0 (unreleased)
   
 * MINOR CHANGE: Allow unix systems to use `rsync` instead of `cp` for fetching the qsub output.
 
-* BUG FIX: Let `post_fun` take into account the `batch_tasks` parameter; output files could consist of 
-  multiple tasks.
+* BUG FIX: Fix `qsub_retrieve()` when processing the output; it did not take into account that
+  `batch_tasks` could not be equal to 1.
   
 * MINOR CHANGE: `qsub_retrieve()` now uses pbapply when loading in the output.
 
