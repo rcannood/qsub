@@ -224,10 +224,10 @@ rsync_remote <- function(
     stop("rsync_remote is not implemented for Windows systems")
   }
 
-  if (!is.logical(remote_src) || !is.character(remote_src)) {
+  if (!is.logical(remote_src) && !is.character(remote_src)) {
     stop("remote_src must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
   }
-  if (!is.logical(remote_dest) || !is.character(remote_dest)) {
+  if (!is.logical(remote_dest) && !is.character(remote_dest)) {
     stop("remote_dest must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
   }
 
