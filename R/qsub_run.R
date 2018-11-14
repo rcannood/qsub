@@ -392,7 +392,8 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
 
 #' @importFrom ssh ssh_info
 is_valid_ssh_connection <- function(ssh_connection) {
-  if (is.null(ssh_connection)) return(FALSE)
+  if (is.null(ssh_connection) || !is(ssh_connection, "ssh_session"))
+    return(FALSE)
 
   tryCatch({
     info <- ssh::ssh_info(ssh_connection)
