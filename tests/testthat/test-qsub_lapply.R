@@ -36,7 +36,12 @@ if (!is.null(qsub_config)) {
     )
 
     expect_equal(out, as.list(seq_len(100000) + 1))
+  })
 
+  test_that("wait functionality works", {
+    handle <- qsub_lapply(2:4, function(i) i + 1, qsub_config = override_qsub_config(qsub_config, wait = FALSE))
+    out <- qsub_retrieve(handle)
+    expect_equal(out, list(3,4,5))
   })
 
   test_that("environment objects are passed correctly", {
