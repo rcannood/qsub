@@ -246,7 +246,7 @@ execute_job <- function(qsub_config) {
   # start job remotely and read job_id
   cmd <- glue::glue("cd {qsub_config$remote_dir}; qsub script.sh")
 
-  output <- run_remote(cmd, remote = get_valid_remote_info(qs), verbose = qsub_config$verbose)
+  output <- run_remote(cmd, remote = get_valid_remote_info(qsub_config), verbose = qsub_config$verbose)
 
   # retrieve job id
   job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$stdout, collapse = "\n"))
