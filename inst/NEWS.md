@@ -10,6 +10,8 @@
   
 * MINOR CHANGE: `qsub_retrieve()` now uses pbapply when loading in the output.
 
+* BUG FIX: Test ssh connection pointer before using it.
+
 # qsub 1.0.0 (30-07-2018)
 
 * INITIAL RELEASE: qsub allows you to run lapply() calls in parallel by submitting 
