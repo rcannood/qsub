@@ -65,12 +65,14 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
 
   time1 <- Sys.time()
 
-  if (!is_remote_local(remote) && !is(remote, "ssh_session")) {
-    remote <- create_ssh_connection(remote)
-    on.exit(ssh::ssh_disconnect(remote))
-  }
-
   if (!is_remote_local(remote)) {
+    if (!is_valid_ssh_connection(remote)) {
+      conn <- create_ssh_connection(remote)
+      on.exit(ssh::ssh_disconnect(conn))
+    } else {
+      conn <- remote
+    }
+
     cmd <- paste0( # see https://stackoverflow.com/a/1472444
       "source /etc/profile;",
       "if [[ -s \"$HOME/.bash_profile\" ]]; then",
@@ -81,7 +83,7 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
       "fi;",
       command, " ", paste(args, collapse = " ")
     )
-    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd, error = FALSE)
+    cmd_out <- ssh::ssh_exec_internal(session = conn, command = cmd, error = FALSE)
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
   } else {
@@ -222,11 +224,10 @@ rsync_remote <- function(
     stop("rsync_remote is not implemented for Windows systems")
   }
 
-  if (is(remote_src, "ssh_connection")) {
+  if (!is.logical(remote_src) || !is.character(remote_src)) {
     stop("remote_src must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
   }
-
-  if (is(remote_dest, "ssh_connection")) {
+  if (!is.logical(remote_dest) || !is.character(remote_dest)) {
     stop("remote_dest must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
   }
 
