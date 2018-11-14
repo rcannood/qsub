@@ -165,12 +165,12 @@ cp_remote <- function(
   verbose = FALSE,
   recursively = FALSE
 ) {
-  if (!is_remote_local(remote_src) && !is(remote_src, "ssh_session")) {
+  if (!is_remote_local(remote_src) && !is_valid_ssh_connection(remote_src)) {
     remote_src <- create_ssh_connection(remote_src)
     on.exit(ssh::ssh_disconnect(remote_src))
   }
 
-  if (!is_remote_local(remote_dest) && !is(remote_dest, "ssh_session")) {
+  if (!is_remote_local(remote_dest) && !is_valid_ssh_connection(remote_dest)) {
     remote_dest <- create_ssh_connection(remote_dest)
     on.exit(ssh::ssh_disconnect(remote_dest))
   }
