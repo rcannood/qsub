@@ -109,8 +109,9 @@ qsub_lapply <- function(
 
   # commence SSH connection
   if (!is_valid_ssh_connection(qsub_instance$remote_ssh)) {
-    qsub_instance$remote_ssh <- create_ssh_connection(qsub_config$remote)
-    on.exit(ssh::ssh_disconnect(qsub_instance$remote_ssh))
+    remote_ssh <- create_ssh_connection(qsub_config$remote)
+    qsub_instance$remote_ssh <- remote_ssh
+    on.exit(ssh::ssh_disconnect(remote_ssh))
   }
 
   # set number of tasks
@@ -163,7 +164,7 @@ setup_execution <- function(
 ) {
   # short hand notation
   qs <- qsub_config
-  remote <- get_valid_remote_info(qs)
+  remote <- qs$remote_ssh # this should have been created by qsub_lapply
 
   # check whether folders exist
   if (file_exists_remote(qs$src_dir, remote = FALSE, verbose = qs$verbose)) {
@@ -295,9 +296,11 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   # short hand notation
   qs <- qsub_config
 
+  # commence SSH connection
   if (!is_valid_ssh_connection(qs$remote_ssh)) {
-    qs$remote_ssh <- create_ssh_connection(qs$remote)
-    on.exit(ssh::ssh_disconnect(qs$remote_ssh))
+    remote_ssh <- create_ssh_connection(qs$remote)
+    qs$remote_ssh <- remote_ssh
+    on.exit(ssh::ssh_disconnect(remote_ssh))
   }
 
   if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
@@ -377,7 +380,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
     if (qs$remove_tmp_folder) {
       run_remote(
         paste0("rm -rf \"", qs$remote_dir, "\""),
-        remote = get_valid_remote_info(qs),
+        remote = qs$remote_ssh,
         verbose = qs$verbose
       )
       unlink(qs$src_dir, recursive = TRUE, force = TRUE)
