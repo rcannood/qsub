@@ -44,6 +44,22 @@ if (!is.null(qsub_config)) {
     expect_equal(out, list(3,4,5))
   })
 
+  test_that("postfun functionality works", {
+    handle <- qsub_lapply(2:4, function(i) i + 1, qsub_config = override_qsub_config(qsub_config, wait = FALSE))
+    out <- qsub_retrieve(handle, post_fun = function(index, out) out * 2)
+    expect_equal(out, list(6,8,10))
+  })
+
+  test_that("postfun in combination with batch tasks works", {
+    handle <- qsub_lapply(
+      X = seq_len(100000),
+      FUN = function(i) i + 1,
+      qsub_config = override_qsub_config(qsub_config, wait = FALSE, batch_tasks = 10000)
+    )
+    out <- qsub_retrieve(handle, post_fun = function(index, out) out * 2)
+    expect_equal(out, as.list((seq_len(100000) + 1)*2))
+  })
+
   test_that("environment objects are passed correctly", {
     y <- 10
     out <- qsub_lapply(
