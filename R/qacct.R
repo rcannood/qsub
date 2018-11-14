@@ -12,7 +12,7 @@ qacct <- function(qsub_config) {
     warning("job ", job_id, " is still running.")
   }
 
-  qacct_remote(job_id, qsub_config$remote_ssh %||% qsub_config$remote)
+  qacct_remote(job_id, remote = get_valid_remote_info(qsub_config))
 }
 
 #' Run qacct on remote
