@@ -350,7 +350,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
             out_rds
           } else {
             if (file.exists(error_file)) {
-              msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
+              msg <- readr::read_file(error_file)
               txt <- paste0("File: ", error_file, "\n", msg)
             } else {
               txt <- paste0(
