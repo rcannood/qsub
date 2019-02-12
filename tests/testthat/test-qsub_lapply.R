@@ -18,7 +18,10 @@ if (Sys.getenv("PRISM_HOST") != "") {
 }
 
 if (!is.null(qsub_config)) {
-  tmp <- ls_remote(path = "/", remote = qsub_config$remote)
+  # do not respond to warnings of initial "Warning: Permanently added the ECDSA host key for IP address" warning
+  suppressWarnings({
+    tmp <- ls_remote(path = "/", remote = qsub_config$remote)
+  })
 
   test_that("qsub_lapply works", {
     out <- qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
