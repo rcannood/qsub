@@ -12,6 +12,12 @@ qsub 1.1.0 (unreleased)
 
 * BUG FIX: Test ssh connection pointer before using it.
 
+* BUG FIX: Do not remove the first line of an error file.
+
+* MINOR CHANGE: Use absolute paths to output standard output and error logs (#16, suggested by @mmehan).
+
+* MINOR CHANGE; Allow rsync to also use the username@host:port notation (#16, suggested by @mmehan).
+
 qsub 1.0.0 (30-07-2018)
 
 * INITIAL RELEASE: qsub allows you to run lapply() calls in parallel by submitting 
