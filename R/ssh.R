@@ -1,29 +1,57 @@
-#' Create an SSH connection with remote
-#'
-#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
-#'        require interactive password entry. For the default qsub config remote, use \code{TRUE}.
-create_ssh_connection <- function(remote) {
-  if (is.logical(remote) && remote) {
-    remote <- get_default_qsub_config()$remote
+parse_remote <- function(remote) {
+  if (is.logical(remote)) {
+    if (remote) {
+      remote <- get_default_qsub_config()$remote
+    } else {
+      return(list(local = TRUE))
+    }
   }
 
-  hostname <- remote %>%
+  if (!is.character(remote)) {
+    stop("remote must be FALSE, TRUE, 'user@ipaddress:port', or a Host listed in your ~/.ssh/config.")
+  }
+
+  # retrieve the host name by removing
+  # the specified user and/or port, if present
+  hostname <-
+    remote %>%
     str_replace(".*@", "") %>%
     str_replace(":.*", "")
 
+  # use default port 22 if none is specified
   port <- "22"
 
+  # if hostname is listed in the .ssh config, use that
   config_data <- fetch_hostname_from_config(hostname)
   if (!is.null(config_data$hostname)) hostname <- config_data$hostname
   if (!is.null(config_data$username)) username <- config_data$username
   if (!is.null(config_data$port)) port <- config_data$port
 
+  # if a specific username or port is detected, use that instead
   if (str_detect(remote, "@")) username <- str_replace(remote, "@.*", "")
   if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
 
-  remote <- paste0(username, "@", hostname, ":", port)
+  list(
+    local = FALSE,
+    hostname = hostname,
+    username = username,
+    port = port
+  )
+}
 
-  ssh::ssh_connect(remote)
+#' Create an SSH connection with remote
+#'
+#' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
+#'        require interactive password entry. For the default qsub config remote, use \code{TRUE}.
+create_ssh_connection <- function(remote) {
+  remote_info <- parse_remote(remote)
+
+  if (remote_info$local) {
+    stop("Cannot create an SSH connection to the local machine.")
+  }
+  remote_string <- with(remote_info, paste0(username, "@", hostname, ":", port))
+
+  ssh::ssh_connect(remote_string)
 }
 
 #' \code{run_remote} - Runs the command locally or remotely using ssh.
@@ -198,16 +226,27 @@ cp_remote <- function(
 
 }
 
+#' Rsync files between machines
+#'
 #' A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
 #'
-#' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
+#' @param remote_src Remote machine for the source, see the section below 'Specifying a remote'.
 #' @param path_src Path of the source file.
-#' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
+#' @param remote_dest Remote machine for the destination, see the section below 'Specifying a remote'.
 #' @param path_dest Path for the source file; can be a directory.
 #' @param compress Whether or not to compress the data being transferred.
 #' @param delete Whether or not to delete files at the target remote. Use \code{"yes"} to delete files at the remote.
 #' @param exclude A vector of files / regexs to be excluded.
 #' @param verbose Prints elapsed time if TRUE.
+#'
+#' @section Specifying a remote:
+#' A remote can be specified in one of the following ways:
+#' \itemize{
+#'   \item{A character vector in format \code{user@@ipaddress:port},}
+#'   \item{The name of a Host in the \code{~/.ssh/config} file,}
+#'   \item{\code{FALSE} for the local machine,}
+#'   \item{\code{TRUE} for the default remote specified as \code{get_default_qsub_config()$remote}.}
+#' }
 #'
 #' @export
 rsync_remote <- function(
@@ -224,24 +263,22 @@ rsync_remote <- function(
     stop("rsync_remote is not implemented for Windows systems")
   }
 
-  if (!is.logical(remote_src) && !is.character(remote_src)) {
-    stop("remote_src must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
-  }
-  if (!is.logical(remote_dest) && !is.character(remote_dest)) {
-    stop("remote_dest must be FALSE, TRUE, or the HostName listed in your .ssh/config.")
-  }
+  remote_src_info <- parse_remote(remote_src)
+  remote_dest_info <- parse_remote(remote_dest)
 
-  if (!is_remote_local(remote_src)) {
-    if (is.logical(remote_src) && remote_src) {
-      remote_src <- get_default_qsub_config()$remote
-    }
-    path_src <- c("-e", "ssh", as.character(glue::glue("{remote_src}:{path_src}")))
+  if (!remote_src_info$local) {
+    path_src <- with(remote_src_info, c(
+      "-e",
+      paste0("'ssh -p ", port, "'"),
+      paste0(username, "@", hostname, ":", path_src)
+    ))
   }
-  if (!is_remote_local(remote_dest)) {
-    if (is.logical(remote_dest) && remote_dest) {
-      remote_dest <- get_default_qsub_config()$remote
-    }
-    path_dest <- c("-e", "ssh", as.character(glue::glue("{remote_dest}:{path_dest}")))
+  if (!remote_dest_info$local) {
+    path_dest <- with(remote_dest_info, c(
+      "-e",
+      paste0("'ssh -p ", port, "'"),
+      paste0(username, "@", hostname, ":", path_dest)
+    ))
   }
 
   if (!is.null(exclude)) {

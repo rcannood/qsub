@@ -2,17 +2,17 @@
 % Please edit documentation in R/ssh.R
 \name{rsync_remote}
 \alias{rsync_remote}
-\title{A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.}
+\title{Rsync files between machines}
 \usage{
 rsync_remote(remote_src, path_src, remote_dest, path_dest,
   compress = TRUE, delete = "no", exclude = NULL, verbose = FALSE)
 }
 \arguments{
-\item{remote_src}{Remote machine for the source file in the format \code{user@machine} or an empty string for local.}
+\item{remote_src}{Remote machine for the source, see the section below 'Specifying a remote'.}
 
 \item{path_src}{Path of the source file.}
 
-\item{remote_dest}{Remote machine for the destination file in the format \code{user@machine} or an empty string for local.}
+\item{remote_dest}{Remote machine for the destination, see the section below 'Specifying a remote'.}
 
 \item{path_dest}{Path for the source file; can be a directory.}
 
@@ -27,3 +27,14 @@ rsync_remote(remote_src, path_src, remote_dest, path_dest,
 \description{
 A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
 }
+\section{Specifying a remote}{
+
+A remote can be specified in one of the following ways:
+\itemize{
+  \item{A character vector in format \code{user@ipaddress:port},}
+  \item{The name of a Host in the \code{~/.ssh/config} file,}
+  \item{\code{FALSE} for the local machine,}
+  \item{\code{TRUE} for the default remote specified as \code{get_default_qsub_config()$remote}.}
+}
+}
+

@@ -107,7 +107,6 @@ create_qsub_config <- function(
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
 ) {
-  test <- c(remote, local_tmp_path, remote_tmp_path)
   qsub_conf <- as.list(environment())
   qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
   class(qsub_conf) <- c(class(qsub_conf), "qsub::qsub_config")
