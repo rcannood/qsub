@@ -18,6 +18,8 @@ if (Sys.getenv("PRISM_HOST") != "") {
 }
 
 if (!is.null(qsub_config)) {
+  tmp <- ls_remote(path = "/", remote = qsub_config$remote)
+
   test_that("qsub_lapply works", {
     out <- qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
     expect_equal(out, list(3,4,5))
