@@ -23,7 +23,10 @@ if (!is.null(qsub_config)) {
   sink("/dev/null")
   suppressMessages({
     suppressWarnings({
-      try(qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config), silent = TRUE)
+      try(
+        qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config),
+        silent = TRUE
+      )
     })
   })
   sink()
