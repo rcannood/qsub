@@ -1,5 +1,7 @@
 ---
-output: md_document
+output:
+  github_document:
+    html_preview: false
 editor_options: 
   chunk_output_type: console
 ---
@@ -26,6 +28,13 @@ After installation and configuration of the qsub package, running a job on a clu
 library(qsub)
 qsub_lapply(1:3, function(i) i + 1)
 ```
+
+ 
+## Permanent configuration
+If the previous section worked just fine, you can for a permanent configuration of the qsub config as follows:
+```{r permanent, eval=FALSE}
+set_default_qsub_config(qsub_config, permanent = TRUE)
+``` 
 
 ## Installation
 On unix-based systems, you will first have to install libssh.
@@ -54,16 +63,10 @@ qsub_config <- create_qsub_config(
 qsub_lapply(1:3, function(i) i + 1, qsub_config = qsub_config) 
 ```
 
-## Permanent configuration
-If the previous section worked just fine, you can for a permanent configuration of the qsub config as follows:
-```{r permanent, eval=FALSE}
-set_default_qsub_config(qsub_config, permanent = TRUE)
-``` 
-
 ## Setting up an SSH key
 If you regularly submit jobs to the remote, it will be extremely useful to set up an SSH key configuration. This way, you don't need to enter your password every time you execute `qsub_lapply`.
 
-On Windows, you will first need to install [Git bash](https://gitforwindows.org/).
+On Windows, you will first need to install [Git bash](https://gitforwindows.org) or use the Linux for Windows Subsystem.
 
 The first step will be to open bash and create a file which contains the following content, and save it to `.ssh/config`.
 ```
@@ -192,4 +195,35 @@ qsub_lapply(
     remove_tmp_folder = FALSE
   )
 )
+```
+
+
+
+## Latest changes
+Check out `news(package = "qsub")` or [NEWS.md](inst/NEWS.md) for a full list of changes.
+
+<!-- This section gets automatically generated from inst/NEWS.md, and also generates inst/NEWS -->
+
+```{r news, results='asis', echo=FALSE}
+library(tidyverse)
+
+news_md <- readr::read_lines("inst/NEWS.md")
+
+# creating NEWS for package
+news_normal <- news_md %>% 
+  str_replace_all("^# qsub", "qsub") %>% 
+  str_replace_all("\\[[^\\]]*\\]\\(([^\\)]*)\\)", "\\1")
+readr::write_lines(news_normal, "inst/NEWS")
+
+# creating text for readme
+ix <- which(str_detect(news_md, "^# qsub"))
+
+cat(str_replace(news_md[[ix[[1]]]], "^# ", "### Latest changes in "))
+
+cat(news_md[seq(ix[[1]]+1, ix[[2]]-1)], sep = "\n")
+
+cat(str_replace(news_md[[ix[[2]]]], "^# ", "### Latest changes in "))
+
+len2 <- if (length(ix) >= 3) ix[[3]] - 1 else length(news_md)
+cat(news_md[seq(ix[[2]]+1, len2)], sep = "\n")
 ```

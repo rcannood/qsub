@@ -1,46 +1,42 @@
-#' @importFrom utils head
-fetch_hostname_from_config <- function(host) {
-  hostname <- NULL
-  username <- NULL
-  port <- NULL
-
-  if (.Platform$OS.type == "windows") {
-    location <- "~/../.ssh/config"
-  } else {
-    location <- "~/.ssh/config"
-  }
-
-  if (file.exists(location)) {
-    ssh_config <- readr::read_lines(location)
-
-    hostname_match <- grep(paste0("^ *Host ", host, " *$"), ssh_config)
-    if (length(hostname_match) == 1) {
-      end <- grep("^ *Host .*$", ssh_config) %>% keep(~ . > hostname_match) %>% utils::head(1)
-      if (length(end) == 0) {
-        end <- length(ssh_config) + 1
-      }
-
-      rel_config <- ssh_config[seq(hostname_match + 1, end - 1)]
-
-      rel_hostname <- rel_config %>% keep(~ str_detect(., "^ *HostName "))
-      if (length(rel_hostname) == 1) {
-        hostname <- rel_hostname %>% str_replace_all("^ *HostName *([^ ]*).*$", "\\1")
-      }
-
-      rel_username <- rel_config %>% keep(~ str_detect(., "^ *User "))
-      if (length(rel_hostname) == 1) {
-        username <- rel_username %>% str_replace_all("^ *User *([^ ]*).*$", "\\1")
-      }
-
-      rel_port <- rel_config %>% keep(~ str_detect(., "^ *Port "))
-      if (length(rel_hostname) == 1) {
-        port <- rel_port %>% str_replace_all("^ *Port *([^ ]*).*$", "\\1")
-      }
-
+parse_remote <- function(remote) {
+  if (is.logical(remote)) {
+    if (remote) {
+      remote <- get_default_qsub_config()$remote
+    } else {
+      return(list(local = TRUE))
     }
   }
 
-  lst(hostname, username, port)
+  if (!is.character(remote)) {
+    stop("remote must be FALSE, TRUE, 'user@ipaddress:port', or a Host listed in your ~/.ssh/config.")
+  }
+
+  # retrieve the host name by removing
+  # the specified user and/or port, if present
+  hostname <-
+    remote %>%
+    str_replace(".*@", "") %>%
+    str_replace(":.*", "")
+
+  # use default port 22 if none is specified
+  port <- "22"
+
+  # if hostname is listed in the .ssh config, use that
+  config_data <- fetch_hostname_from_config(hostname)
+  if (!is.null(config_data$hostname)) hostname <- config_data$hostname
+  if (!is.null(config_data$username)) username <- config_data$username
+  if (!is.null(config_data$port)) port <- config_data$port
+
+  # if a specific username or port is detected, use that instead
+  if (str_detect(remote, "@")) username <- str_replace(remote, "@.*", "")
+  if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
+
+  list(
+    local = FALSE,
+    hostname = hostname,
+    username = username,
+    port = port
+  )
 }
 
 #' Create an SSH connection with remote
@@ -48,27 +44,14 @@ fetch_hostname_from_config <- function(host) {
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server} that does not
 #'        require interactive password entry. For the default qsub config remote, use \code{TRUE}.
 create_ssh_connection <- function(remote) {
-  if (is.logical(remote) && remote) {
-    remote <- get_default_qsub_config()$remote
+  remote_info <- parse_remote(remote)
+
+  if (remote_info$local) {
+    stop("Cannot create an SSH connection to the local machine.")
   }
+  remote_string <- with(remote_info, paste0(username, "@", hostname, ":", port))
 
-  hostname <- remote %>%
-    str_replace(".*@", "") %>%
-    str_replace(":.*", "")
-
-  port <- "22"
-
-  config_data <- fetch_hostname_from_config(hostname)
-  if (!is.null(config_data$hostname)) hostname <- config_data$hostname
-  if (!is.null(config_data$username)) username <- config_data$username
-  if (!is.null(config_data$port)) port <- config_data$port
-
-  if (str_detect(remote, "@")) username <- str_replace(remote, "@.*", "")
-  if (str_detect(remote, ":")) port <- str_replace(remote, ".*:", "")
-
-  remote <- paste0(username, "@", hostname, ":", port)
-
-  ssh::ssh_connect(remote)
+  ssh::ssh_connect(remote_string)
 }
 
 #' \code{run_remote} - Runs the command locally or remotely using ssh.
@@ -106,19 +89,19 @@ create_ssh_connection <- function(remote) {
 #'
 #' @export
 run_remote <- function(command, remote = FALSE, args = character(), verbose = FALSE, shell = FALSE) {
-  if (verbose) cat("# ", gsub("\n", "\n# ", cmd), "\n", sep = "")
+  if (verbose) cat("# ", gsub("\n", "\n# ", command), " ", paste(args, collapse = " "), "\n", sep = "")
 
   time1 <- Sys.time()
 
-  if (!is_remote_local(remote) && !is(remote, "ssh_session")) {
-    remote <- create_ssh_connection(remote)
-    on.exit(ssh::ssh_disconnect(remote))
-  }
-
   if (!is_remote_local(remote)) {
-    cmd <- paste0(command, " ", paste0(args, collapse = " "))
+    if (!is_valid_ssh_connection(remote)) {
+      conn <- create_ssh_connection(remote)
+      on.exit(ssh::ssh_disconnect(conn))
+    } else {
+      conn <- remote
+    }
 
-    cmd2 <- paste0( # see https://stackoverflow.com/a/1472444
+    cmd <- paste0( # see https://stackoverflow.com/a/1472444
       "source /etc/profile;",
       "if [[ -s \"$HOME/.bash_profile\" ]]; then",
       "  source \"$HOME/.bash_profile\";",
@@ -126,9 +109,9 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
       "if [[ -s \"$HOME/.profile\" ]]; then",
       "  source \"$HOME/.profile\";",
       "fi;",
-      cmd
+      command, " ", paste(args, collapse = " ")
     )
-    cmd_out <- ssh::ssh_exec_internal(session = remote, command = cmd2, error = FALSE)
+    cmd_out <- ssh::ssh_exec_internal(session = conn, command = cmd, error = FALSE)
     cmd_out$stdout <- rawToChar(cmd_out$stdout) %>% strsplit("\n") %>% first()
     cmd_out$stderr <- rawToChar(cmd_out$stderr) %>% strsplit("\n") %>% first()
   } else {
@@ -141,7 +124,7 @@ run_remote <- function(command, remote = FALSE, args = character(), verbose = FA
       command = command,
       args = args,
       error_on_status = FALSE,
-      echo_cmd = TRUE
+      echo_cmd = verbose
     )
   }
 
@@ -210,12 +193,12 @@ cp_remote <- function(
   verbose = FALSE,
   recursively = FALSE
 ) {
-  if (!is_remote_local(remote_src) && !is(remote_src, "ssh_session")) {
+  if (!is_remote_local(remote_src) && !is_valid_ssh_connection(remote_src)) {
     remote_src <- create_ssh_connection(remote_src)
     on.exit(ssh::ssh_disconnect(remote_src))
   }
 
-  if (!is_remote_local(remote_dest) && !is(remote_dest, "ssh_session")) {
+  if (!is_remote_local(remote_dest) && !is_valid_ssh_connection(remote_dest)) {
     remote_dest <- create_ssh_connection(remote_dest)
     on.exit(ssh::ssh_disconnect(remote_dest))
   }
@@ -243,36 +226,59 @@ cp_remote <- function(
 
 }
 
+#' Rsync files between machines
+#'
 #' A wrapper around the rsync shell command that allows copying between remote hosts via the local machine.
 #'
-#' @param remote_src Remote machine for the source file in the format \code{user@@machine} or an empty string for local.
+#' @param remote_src Remote machine for the source, see the section below 'Specifying a remote'.
 #' @param path_src Path of the source file.
-#' @param remote_dest Remote machine for the destination file in the format \code{user@@machine} or an empty string for local.
+#' @param remote_dest Remote machine for the destination, see the section below 'Specifying a remote'.
 #' @param path_dest Path for the source file; can be a directory.
-#' @param exclude A vector of files / regexs to be excluded
-#' @param verbose Prints elapsed time if TRUE
+#' @param compress Whether or not to compress the data being transferred.
+#' @param delete Whether or not to delete files at the target remote. Use \code{"yes"} to delete files at the remote.
+#' @param exclude A vector of files / regexs to be excluded.
+#' @param verbose Prints elapsed time if TRUE.
+#'
+#' @section Specifying a remote:
+#' A remote can be specified in one of the following ways:
+#' \itemize{
+#'   \item{A character vector in format \code{user@@ipaddress:port},}
+#'   \item{The name of a Host in the \code{~/.ssh/config} file,}
+#'   \item{\code{FALSE} for the local machine,}
+#'   \item{\code{TRUE} for the default remote specified as \code{get_default_qsub_config()$remote}.}
+#' }
 #'
 #' @export
-rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude = NULL, verbose = FALSE) {
+rsync_remote <- function(
+  remote_src,
+  path_src,
+  remote_dest,
+  path_dest,
+  compress = TRUE,
+  delete = "no",
+  exclude = NULL,
+  verbose = FALSE
+) {
   if (.Platform$OS.type == "windows") {
     stop("rsync_remote is not implemented for Windows systems")
   }
 
-  if (!is_remote_local(remote_src)) {
-    path_src <- c("-e", "ssh", as.character(glue::glue("{remote_src}:{path_src}")))
+  remote_src_info <- parse_remote(remote_src)
+  remote_dest_info <- parse_remote(remote_dest)
 
-    if (!is(remote_src, "ssh_session")) {
-      remote_src <- create_ssh_connection(remote_src)
-      on.exit(ssh::ssh_disconnect(remote_src))
-    }
+  if (!remote_src_info$local) {
+    path_src <- with(remote_src_info, c(
+      "-e",
+      paste0("'ssh -p ", port, "'"),
+      paste0(username, "@", hostname, ":", path_src)
+    ))
   }
-  if (!is_remote_local(remote_dest)) {
-    path_dest <- c("-e", "ssh", as.character(glue::glue("{remote_dest}:{path_dest}")))
-
-    if (!is(remote_dest, "ssh_session")) {
-      remote_dest <- create_ssh_connection(remote_dest)
-      on.exit(ssh::ssh_disconnect(remote_dest))
-    }
+  if (!remote_dest_info$local) {
+    path_dest <- with(remote_dest_info, c(
+      "-e",
+      paste0("'ssh -p ", port, "'"),
+      paste0(username, "@", hostname, ":", path_dest)
+    ))
   }
 
   if (!is.null(exclude)) {
@@ -281,7 +287,29 @@ rsync_remote <- function(remote_src, path_src, remote_dest, path_dest, exclude =
     exclude_str <- ""
   }
 
-  res <- run_remote("rsync", args = c("-avz", path_src, path_dest, exclude_str), remote = FALSE, verbose = verbose, shell = TRUE)
+  flags <- paste0(
+    "-av",
+    ifelse(compress, "z", "")
+  )
+
+  if (identical(delete, TRUE)) {
+    warning("Specify `delete = \"yes\"` in order to delete files at the target remote.")
+  }
+
+  delete_flag <-
+    if (delete == "yes") {
+      delete_flag <- "--delete"
+    } else {
+      delete_flag <- NULL
+    }
+
+  res <- run_remote(
+    "rsync",
+    args = c(flags, path_src, path_dest, exclude_str, delete_flag),
+    remote = FALSE,
+    verbose = verbose,
+    shell = TRUE
+  )
 
   if (res$stderr != "") {
     stop(paste0("rsync failed: ", res$stderr))
@@ -416,4 +444,22 @@ qstat_remote <- function(remote = NULL, verbose = FALSE) {
 #' @param remote A putative remote machine. This function will return true if \code{remote == FALSE}.
 is_remote_local <- function(remote) {
   !is(remote, "ssh_session") && (is.null(remote) || is.na(remote) || (is.logical(remote) && !remote))
+}
+
+#' Remove a file or folder
+#' @param path Path of the file/folder
+#' @inheritParams run_remote
+#' @param recursive Whether to work recursively
+#' @param force Whether to force removal
+#' @export
+rm_remote <- function(path, remote, recursive = FALSE, force = FALSE, verbose = FALSE) {
+  if (is_remote_local(remote)) {
+    unlink(path, recursive = recursive)
+  } else {
+    run_remote(
+      glue("rm {path} {ifelse(recursive, ' -r ', '')} {ifelse(force, ' -f ', '')}"),
+      remote = remote,
+      verbose = verbose
+    )$stdout
+  }
 }

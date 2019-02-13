@@ -12,7 +12,7 @@ qacct <- function(qsub_config) {
     warning("job ", job_id, " is still running.")
   }
 
-  qacct_remote(job_id, qsub_config$remote)
+  qacct_remote(job_id, remote = get_valid_remote_info(qsub_config))
 }
 
 #' Run qacct on remote
@@ -24,7 +24,7 @@ qacct <- function(qsub_config) {
 qacct_remote <- function(job_id, remote = FALSE) {
   out <- run_remote(command = "qacct", args = c("-j", job_id), remote = remote)
 
-  if (out$stderr != "") {
+  if (length(out$stderr) > 0 && out$stderr != "") {
     stop(out$stderr)
   }
 

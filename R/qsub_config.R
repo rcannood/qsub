@@ -14,6 +14,7 @@
 #'   max_running_tasks = NULL,
 #'   max_wall_time = "01:00:00",
 #'   batch_tasks = 1,
+#'   compress = "xz",
 #'
 #'   # pre-execution parameters
 #'   modules = "R",
@@ -42,6 +43,7 @@
 #'   If set to \code{NULL}, the job will be allowed to run indefinitely.
 #'   Mind you, this might annoy other users of the cluster.
 #' @param batch_tasks How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
+#' @param compress Compression method to use: \code{"none"}, \code{"gz"}, \code{"bz"}, or \code{"xz"} (default).
 #'
 #' @param modules Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
 #' @param execute_before Commands to execute in the bash shell before running R.
@@ -93,19 +95,18 @@ create_qsub_config <- function(
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
+  compress = "xz",
 
   # pre-execution parameters
   modules = "R",
   execute_before = NULL,
   verbose = FALSE,
-  # use_cpulimit = TRUE,
 
   # post-execution parameters
   wait = TRUE,
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
 ) {
-  test <- c(remote, local_tmp_path, remote_tmp_path)
   qsub_conf <- as.list(environment())
   qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
   class(qsub_conf) <- c(class(qsub_conf), "qsub::qsub_config")
@@ -276,6 +277,7 @@ instantiate_qsub_config <- function(qsub_config) {
 #'   max_running_tasks = qsub_config$max_running_tasks,
 #'   max_wall_time = qsub_config$max_wall_time,
 #'   batch_tasks = qsub_config$batch_tasks,
+#'   compress = qsub_config$compress,
 #'
 #'   # pre-execution parameters
 #'   modules = qsub_config$modules,
@@ -302,6 +304,7 @@ override_qsub_config <- function(
   max_running_tasks = qsub_config$max_running_tasks,
   max_wall_time = qsub_config$max_wall_time,
   batch_tasks = qsub_config$batch_tasks,
+  compress = qsub_config$compress,
 
   # pre-execution parameters
   modules = qsub_config$modules,

@@ -80,8 +80,14 @@ qsub_lapply <- function(
     stop(sQuote("qsub_environment"), " must be NULL, a character vector, or an environment")
   }
 
+  # determine batches
   QSUB_START <- seq(1, length(X), by = qsub_config$batch_tasks)
   QSUB_STOP <- pmin(QSUB_START + qsub_config$batch_tasks - 1, length(X))
+
+  # check compress param
+  if (is.null(qsub_config$compress)) {
+    qsub_config$compress <- "xz"
+  }
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
@@ -94,18 +100,18 @@ qsub_lapply <- function(
     DOTPARAMS = dot_params,
     PACKAGES = qsub_packages,
     QSUB_START = QSUB_START,
-    QSUB_STOP = QSUB_STOP
+    QSUB_STOP = QSUB_STOP,
+    COMPRESS = c("bz" = "bzip2", "gz" = "gzip", "xz" = "xz", "none" = FALSE)[qsub_config$compress]
   )
 
   # generate folder names
   qsub_instance <- instantiate_qsub_config(qsub_config)
 
   # commence SSH connection
-  if (is.character(qsub_instance$remote)) {
-    remote_bup <- qsub_config$remote
-    qsub_instance$remote <- create_ssh_connection(qsub_config$remote)
-    ssh_bup <- qsub_instance$remote
-    on.exit(ssh::ssh_disconnect(ssh_bup))
+  if (!is_valid_ssh_connection(qsub_instance$remote_ssh)) {
+    remote_ssh <- create_ssh_connection(qsub_config$remote)
+    qsub_instance$remote_ssh <- remote_ssh
+    on.exit(ssh::ssh_disconnect(remote_ssh))
   }
 
   # set number of tasks
@@ -125,7 +131,7 @@ qsub_lapply <- function(
   if (qsub_instance$wait) {
     qsub_retrieve(qsub_instance)
   } else {
-    qsub_instance$remote <- remote_bup
+    qsub_instance$remote_ssh <- NULL
     qsub_instance
   }
 }
@@ -156,13 +162,16 @@ setup_execution <- function(
   qsub_environment,
   prism_environment
 ) {
+  # short hand notation
   qs <- qsub_config
+  remote <- qs$remote_ssh # this should have been created by qsub_lapply
 
   # check whether folders exist
   if (file_exists_remote(qs$src_dir, remote = FALSE, verbose = qs$verbose)) {
     stop("The local temporary folder already exists!")
   }
-  if (file_exists_remote(qs$remote_dir, remote = qs$remote, verbose = qs$verbose)) {
+
+  if (file_exists_remote(qs$remote_dir, remote = remote, verbose = qs$verbose)) {
     stop("The remote temporary folder already exists!")
   }
 
@@ -172,8 +181,8 @@ setup_execution <- function(
   dir.create(qs$src_logdir)
 
   # save environment
-  readr::write_rds(qsub_environment, qs$src_qsub_rds)
-  readr::write_rds(prism_environment, qs$src_prism_rds)
+  readr::write_rds(qsub_environment, qs$src_qsub_rds, compress = qs$compress)
+  readr::write_rds(prism_environment, qs$src_prism_rds, compress = qs$compress)
 
   # write r script
   r_script <- paste0(
@@ -194,7 +203,7 @@ setup_execution <- function(
     "        do.call(PitSoL_params$FUN, c(list(PitSoL_params$X[[PitSoL_data]]), PitSoL_params$DOTPARAMS))\n",
     "      }\n",
     "    )\n",
-    "  saveRDS(PitSoL_out, file=PitSoL_file_out)\n",
+    "  saveRDS(PitSoL_out, file = PitSoL_file_out, compress = PitSoL_params$COMPRESS)\n",
     "}\n"
   )
   readr::write_lines(r_script, qs$src_rfile)
@@ -206,8 +215,8 @@ setup_execution <- function(
     ifelse(is.numeric(qs$max_running_tasks), paste0("#$ -tc ", qs$max_running_tasks, "\n"), ""),
     "#$ -t 1-", qs$num_tasks, "\n",
     "#$ -N ", qs$name, "\n",
-    "#$ -e log/log.$TASK_ID.e.txt\n",
-    "#$ -o log/log.$TASK_ID.o.txt\n",
+    "#$ -e ", qs$remote_dir, "/log/log.$TASK_ID.e.txt\n",
+    "#$ -o ", qs$remote_dir, "/log/log.$TASK_ID.o.txt\n",
     "#$ -l h_vmem=", qs$memory, "\n",
     ifelse(!is.null(qs$max_wall_time), paste0("#$ -l h_rt=", qs$max_wall_time, "\n"), ""),
     "cd ", qs$remote_dir, "\n",
@@ -221,13 +230,13 @@ setup_execution <- function(
   # rsync local with remote
   mkdir_remote(
     path = qs$remote_tmp_path,
-    remote = qs$remote,
+    remote = remote,
     verbose = qs$verbose
   )
   cp_remote(
     remote_src = NULL,
     path_src = qs$src_dir %>% str_replace_all("[\\/]$", ""),
-    remote_dest = qs$remote,
+    remote_dest = remote,
     path_dest = qs$remote_tmp_path %>% str_replace_all("[\\/]$", "")
   )
 
@@ -237,7 +246,8 @@ setup_execution <- function(
 execute_job <- function(qsub_config) {
   # start job remotely and read job_id
   cmd <- glue::glue("cd {qsub_config$remote_dir}; qsub script.sh")
-  output <- run_remote(cmd, remote = qsub_config$remote, verbose = qsub_config$verbose)
+
+  output <- run_remote(cmd, remote = get_valid_remote_info(qsub_config), verbose = qsub_config$verbose)
 
   # retrieve job id
   job_id <- gsub(".*Your job-array ([0-9]*)[^\n]* has been submitted.*", "\\1", paste(output$stdout, collapse = "\n"))
@@ -267,7 +277,7 @@ qsub_run <- function(FUN, qsub_config = NULL, qsub_environment = NULL, ...) {
 #' @export
 is_job_running <- function(qsub_config) {
   if (!is.null(qsub_config$job_id)) {
-    qstat_out <- run_remote("qstat", qsub_config$remote)$stdout
+    qstat_out <- run_remote("qstat", remote = get_valid_remote_info(qsub_config))$stdout
     any(str_detect(qstat_out, paste0("^ *", qsub_config$job_id, " ")))
   } else {
     FALSE
@@ -280,13 +290,17 @@ is_job_running <- function(qsub_config) {
 #' @param wait If \code{TRUE}, wait until the execution has finished in order to return the results, else returns \code{NULL} if execution is not finished.
 #' @param post_fun Apply a function to the output after execution. Interface: \code{function(index, output)}
 #' @importFrom readr read_file
+#' @importFrom pbapply pblapply
 #' @export
 qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
+  # short hand notation
   qs <- qsub_config
 
-  if (is.character(qs$remote)) {
-    qs$remote <- create_ssh_connection(qs$remote)
-    on.exit(ssh::ssh_disconnect(qs$remote))
+  # commence SSH connection
+  if (!is_valid_ssh_connection(qs$remote_ssh)) {
+    remote_ssh <- create_ssh_connection(qs$remote)
+    qs$remote_ssh <- remote_ssh
+    on.exit(ssh::ssh_disconnect(remote_ssh))
   }
 
   if (is.logical(wait) && !wait && is_job_running(qsub_config)) {
@@ -301,57 +315,64 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   }
 
   # copy results to local
-  # unfortunately, we can't be using rsync to remain compatible with windows platforms
-  if (qs$verbose) cat("Cleaning up local dirs\n", sep = "")
-  unlink(qs$src_logdir, recursive = TRUE)
-  unlink(qs$src_outdir, recursive = TRUE)
+  if (.Platform$OS.type == "windows") { # rsync is not supported on windows :(
+    if (qs$verbose) cat("Cleaning up local dirs\n", sep = "")
+    unlink(qs$src_logdir, recursive = TRUE)
+    unlink(qs$src_outdir, recursive = TRUE)
 
-  if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
-  cp_remote(
-    remote_src = qs$remote,
-    path_src = qs$remote_logdir,
-    remote_dest = FALSE,
-    path_dest = qs$src_dir
-  )
-  cp_remote(
-    remote_src = qs$remote,
-    path_src = qs$remote_outdir,
-    remote_dest = FALSE,
-    path_dest = qs$src_dir
-  )
+    if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
+    cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
+    cp_remote(remote_src = qs$remote_ssh, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
+  } else {
+    if (qs$verbose) cat("Downloading logs and outs\n", sep = "")
+    rsync_remote(remote_src = qs$remote, path_src = qs$remote_logdir, remote_dest = FALSE, path_dest = qs$src_dir)
+    rsync_remote(remote_src = qs$remote, path_src = qs$remote_outdir, remote_dest = FALSE, path_dest = qs$src_dir)
+  }
 
   # read rds files
   if (qs$verbose) cat("Processing outs\n", sep = "")
   tryCatch({
-    outs <- unlist(lapply(seq_len(qs$num_tasks), function(rds_i) {
-      output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
-      error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
-      if (file.exists(output_file)) {
-        out_rds <- readRDS(output_file)
-        if (!is.null(post_fun)) {
-          out_rds <- post_fun(rds_i, out_rds)
+    outs <-
+      pbapply::pblapply(
+        X = seq_len(qs$num_tasks),
+        FUN = function(rds_i) {
+          output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
+          error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
+
+          if (file.exists(output_file)) {
+            out_rds <- readRDS(output_file)
+
+            if (!is.null(post_fun)) {
+              ixs <- (rds_i - 1) * qs$batch_tasks + seq_along(out_rds)
+              out_rds <- map2(ixs, out_rds, post_fun)
+            }
+
+            out_rds
+          } else {
+            if (file.exists(error_file)) {
+              msg <- readr::read_file(error_file)
+              txt <- paste0("File: ", error_file, "\n", msg)
+            } else {
+              txt <- paste0(
+                "File: ", error_file, "\n",
+                "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
+                "Check 'qacct -j ", qs$job_id, "' for more info."
+              )
+            }
+
+            if (qs$stop_on_error) {
+              stop(txt)
+            } else {
+              map(seq_len(qs$batch_tasks), function(x) {
+                out <- NA
+                attr(out, "qsub_error") <- txt
+                out
+              })
+            }
+          }
         }
-        out_rds
-      } else {
-        if (file.exists(error_file)) {
-          msg <- sub("^[^\n]*\n", "", readr::read_file(error_file))
-          txt <- paste0("File: ", error_file, "\n", msg)
-        } else {
-          txt <- paste0(
-            "File: ", error_file, "\n",
-            "No output or log file found. Either the job did not run, or it ran out of time or memory.\n",
-            "Check 'qacct -j ", qs$job_id, "' for more info."
-          )
-        }
-        if (qs$stop_on_error) {
-          stop(txt)
-        } else {
-          out_rds <- list(NA)
-          attr(out_rds[[1]], "qsub_error") <- txt
-          out_rds
-        }
-      }
-    }), recursive = FALSE)
+      ) %>%
+      unlist(recursive = FALSE)
   }, error = function(e) {
     stop(e)
   }, finally = {
@@ -359,7 +380,7 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
     if (qs$remove_tmp_folder) {
       run_remote(
         paste0("rm -rf \"", qs$remote_dir, "\""),
-        remote = qs$remote,
+        remote = qs$remote_ssh,
         verbose = qs$verbose
       )
       unlink(qs$src_dir, recursive = TRUE, force = TRUE)
@@ -367,4 +388,25 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
   })
 
   return(outs)
+}
+
+#' @importFrom ssh ssh_info
+is_valid_ssh_connection <- function(ssh_connection) {
+  if (is.null(ssh_connection) || !is(ssh_connection, "ssh_session"))
+    return(FALSE)
+
+  tryCatch({
+    info <- ssh::ssh_info(ssh_connection)
+    TRUE
+  }, error = function(e) {
+    FALSE
+  })
+}
+
+get_valid_remote_info <- function(qsub_config) {
+  if (is_valid_ssh_connection(qsub_config$remote_ssh)) {
+    qsub_config$remote_ssh
+  } else {
+    qsub_config$remote
+  }
 }

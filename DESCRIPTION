@@ -1,6 +1,6 @@
 Package: qsub
 Title: Running Commands Remotely on 'Gridengine' Clusters
-Version: 1.0.3.9001
+Version: 1.1.0
 Authors@R: c(
     person(
       "Robrecht", 
@@ -17,7 +17,7 @@ Authors@R: c(
       comment = c(ORCID = "0000-0002-7114-6248", github = "zouter")
     )
   )
-Description: Parallellising lapply() by submitting them to 
+Description: Run lapply() calls in parallel by submitting them to 
     'gridengine' clusters using the 'qsub' command.
 Depends:
     R (>= 3.0)
@@ -27,6 +27,7 @@ Imports:
     dplyr,
     glue,
     methods,
+    pbapply,
     processx,
     purrr,
     random,
@@ -37,5 +38,5 @@ Imports:
     utils
 URL: http://github.com/rcannood/qsub
 BugReports: https://github.com/rcannood/qsub/issues
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: testthat
