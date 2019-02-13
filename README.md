@@ -210,7 +210,7 @@ qsub_lapply(
 )
 ```
 
-    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20190212_143727_r2qsub_sL8SsHMvrW/log/log.2.e.txt
+    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20190213_133822_r2qsub_4XGIFwJTDg/log/log.2.e.txt
     ## Error in (function (i)  : Something went wrong!
     ## Calls: lapply -> FUN -> do.call -> <Anonymous>
     ## Execution halted
@@ -238,7 +238,7 @@ qsub_lapply(
     ## [[2]]
     ## [1] NA
     ## attr(,"qsub_error")
-    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20190212_143802_r2qsub_wKY4NXtEsU/log/log.2.e.txt\nError in (function (i)  : Something went wrong!\nCalls: lapply -> FUN -> do.call -> <Anonymous>\nExecution halted\n"
+    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20190213_133830_r2qsub_I4Tk4mjacf/log/log.2.e.txt\nError in (function (i)  : Something went wrong!\nCalls: lapply -> FUN -> do.call -> <Anonymous>\nExecution halted\n"
     ## 
     ## [[3]]
     ## [1] 4
@@ -271,7 +271,7 @@ changes.
 
 <!-- This section gets automatically generated from inst/NEWS.md, and also generates inst/NEWS -->
 
-### Latest changes in qsub 1.1.0 (unreleased)
+### Latest changes in qsub 1.1.0 (13-02-2019)
 
   - MINOR CHANGE: There is now an option to compress the output files,
     which is turned on by default.

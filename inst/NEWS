@@ -1,4 +1,4 @@
-qsub 1.1.0 (unreleased)
+qsub 1.1.0 (13-02-2019)
 
 * MINOR CHANGE: There is now an option to compress the output files, which is turned
   on by default. 
