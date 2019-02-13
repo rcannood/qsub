@@ -18,14 +18,15 @@ if (Sys.getenv("PRISM_HOST") != "") {
 }
 
 if (!is.null(qsub_config)) {
-  # do not respond to warnings of initial "Warning: Permanently added the ECDSA host key for IP address" warning
-  suppressWarnings({
-    tmpfile <- tempfile()
-    write_remote("hi", tmpfile)
-    rsync_remote(remote_src = FALSE, path_src = tmpfile, remote_dest = qsub_config$remote, path_dest = "~")
-    cat_remote("~/test.txt", qsub_config$remote)
-    rm_remote("~/test.txt", qsub_config$remote)
+  # initial qsub lapply may generate warning:
+  # "Warning: Permanently added the ECDSA host key for IP address"
+  sink("/dev/null")
+  suppressMessages({
+    suppressWarnings({
+      qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
+    })
   })
+  sink()
 
   test_that("qsub_lapply works", {
     out <- qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
