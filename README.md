@@ -210,7 +210,7 @@ qsub_lapply(
 )
 ```
 
-    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20190213_133822_r2qsub_4XGIFwJTDg/log/log.2.e.txt
+    ## Error in FUN(X[[i]], ...): File: /home/rcannood/Workspace/.r2gridengine/20190807_175926_r2qsub_GYamwjc87q/log/log.2.e.txt
     ## Error in (function (i)  : Something went wrong!
     ## Calls: lapply -> FUN -> do.call -> <Anonymous>
     ## Execution halted
@@ -238,7 +238,7 @@ qsub_lapply(
     ## [[2]]
     ## [1] NA
     ## attr(,"qsub_error")
-    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20190213_133830_r2qsub_I4Tk4mjacf/log/log.2.e.txt\nError in (function (i)  : Something went wrong!\nCalls: lapply -> FUN -> do.call -> <Anonymous>\nExecution halted\n"
+    ## [1] "File: /home/rcannood/Workspace/.r2gridengine/20190807_175948_r2qsub_NMxDbj3YAv/log/log.2.e.txt\nError in (function (i)  : Something went wrong!\nCalls: lapply -> FUN -> do.call -> <Anonymous>\nExecution halted\n"
     ## 
     ## [[3]]
     ## [1] 4
@@ -265,13 +265,12 @@ qsub_lapply(
 
 ## Latest changes
 
-Check out `news(package = "qsub")` or [NEWS.md](inst/NEWS.md) for a full
-list of
-changes.
+Check out `news(package = "qsub")` or [NEWS.md](NEWS.md) for a full list
+of changes.
 
-<!-- This section gets automatically generated from inst/NEWS.md, and also generates inst/NEWS -->
+<!-- This section gets automatically generated from inst/NEWS.md -->
 
-### Latest changes in qsub 1.1.0 (13-02-2019)
+### Recent changes in qsub 1.1.0 (13-02-2019)
 
   - MINOR CHANGE: There is now an option to compress the output files,
     which is turned on by default.
@@ -295,7 +294,7 @@ changes.
   - MINOR CHANGE; Allow rsync to also use the <username@host>:port
     notation (\#16, suggested by @mmehan).
 
-### Latest changes in qsub 1.0.0 (30-07-2018)
+### Recent changes in qsub 1.0.0 (30-07-2018)
 
   - INITIAL RELEASE: qsub allows you to run lapply() calls in parallel
     by submitting them to gridengine clusters using the `qsub` command.
