@@ -1,3 +1,8 @@
+# qsub 1.1.1
+
+* BUG FIX: Surround `readRDS()` with `tryCatch()` such that if there is an rds object but it is
+  truncated, qsub handles this as if there was no file at all.
+
 # qsub 1.1.0 (13-02-2019)
 
 * MINOR CHANGE: There is now an option to compress the output files, which is turned

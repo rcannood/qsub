@@ -40,3 +40,4 @@ URL: http://github.com/rcannood/qsub
 BugReports: https://github.com/rcannood/qsub/issues
 RoxygenNote: 6.1.1
 Suggests: testthat
+Encoding: UTF-8
