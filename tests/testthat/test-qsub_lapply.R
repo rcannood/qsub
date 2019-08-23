@@ -18,18 +18,18 @@ if (Sys.getenv("PRISM_HOST") != "") {
 }
 
 if (!is.null(qsub_config)) {
-  # initial qsub lapply may generate warning:
-  # "Warning: Permanently added the ECDSA host key for IP address"
-  sink("/dev/null")
-  suppressMessages({
-    suppressWarnings({
-      try(
-        qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config),
-        silent = TRUE
-      )
-    })
-  })
-  sink()
+  # # initial qsub lapply may generate warning:
+  # # "Warning: Permanently added the ECDSA host key for IP address"
+  # sink("/dev/null")
+  # suppressMessages({
+  #   suppressWarnings({
+  #     try(
+  #       qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config),
+  #       silent = TRUE
+  #     )
+  #   })
+  # })
+  # sink()
 
   test_that("qsub_lapply works", {
     out <- qsub_lapply(2:4, function(i) i + 1, qsub_config = qsub_config)
