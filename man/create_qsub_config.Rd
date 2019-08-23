@@ -18,7 +18,7 @@ create_qsub_config(
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
-  compress = "xz",
+  compress = "gzip",
 
   # pre-execution parameters
   modules = "R",
@@ -84,7 +84,7 @@ Mind you, this might annoy other users of the cluster.}
 
 \item{batch_tasks}{How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).}
 
-\item{compress}{Compression method to use: \code{"none"}, \code{"gz"}, \code{"bz"}, or \code{"xz"} (default).}
+\item{compress}{Compression method to use: \code{"none"}, \code{"gzip"} (default), \code{"bzip2"}, or \code{"xz"}.}
 
 \item{modules}{Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.}
 

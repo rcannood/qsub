@@ -86,13 +86,17 @@ qsub_lapply <- function(
 
   # check compress param
   if (is.null(qsub_config$compress)) {
-    qsub_config$compress <- "xz"
+    qsub_config$compress <- "gzip"
   }
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
 
   # collect arguments
+  qsub_config$compress <- match.arg(qsub_config$compress, c("bzip2", "gzip", "xz", "none"))
+  if (qsub_config$compress == "none") {
+    qsub_config$compress <- FALSE
+  }
   prism_environment <- list(
     SEEDS = seeds,
     X = X,
@@ -101,7 +105,7 @@ qsub_lapply <- function(
     PACKAGES = qsub_packages,
     QSUB_START = QSUB_START,
     QSUB_STOP = QSUB_STOP,
-    COMPRESS = c("bz" = "bzip2", "gz" = "gzip", "xz" = "xz", "none" = FALSE)[qsub_config$compress]
+    COMPRESS = qsub_config$compress
   )
 
   # generate folder names
