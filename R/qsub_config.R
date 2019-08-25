@@ -187,7 +187,7 @@ set_default_qsub_config <- function(
       }
 
       # save file at desired location
-      saveRDS(qsub_config, config_file)
+      readr::write_rds(qsub_config, config_file)
     }
   }
 }
