@@ -86,7 +86,7 @@ qsub_lapply <- function(
 
   # check compress param
   if (is.null(qsub_config$compress)) {
-    qsub_config$compress <- "gzip"
+    qsub_config$compress <- "gz"
   }
 
   # determine seeds
