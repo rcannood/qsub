@@ -93,10 +93,19 @@ qsub_lapply <- function(
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
 
   # collect arguments
-  qsub_config$compress <- match.arg(qsub_config$compress, c("bzip2", "gzip", "xz", "none"))
-  if (qsub_config$compress == "none") {
-    qsub_config$compress <- FALSE
-  }
+  compval <- qsub_config$compress[[1]]
+  qsub_config$compress <-
+    if (identical(compval, "gz") || identical(compval, "gzip")) {
+      "gzip"
+    } else if (identical(compval, "bz2") || identical(compval, "bzip2")) {
+      "bzip2"
+    } else if (identical(compval, "xz")) {
+      "xz"
+    } else if (identical(compval, "none") || identical(compval, FALSE)) {
+      FALSE
+    } else {
+      stop('Invalid format for the `compress` parameter, must be one of c("gz", "bz2", "xz", "none")')
+    }
   prism_environment <- list(
     SEEDS = seeds,
     X = X,
