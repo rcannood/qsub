@@ -1,5 +1,8 @@
 #' Running Commands Remotely on Gridengine Clusters
 #'
+#' Run `lapply()` calls in parallel by submitting them to
+#' 'gridengine' clusters using the 'qsub' command.
+#'
 #' @import dplyr
 #' @import tidyr
 #' @importFrom stringr str_replace str_replace_all str_detect str_sub

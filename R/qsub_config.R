@@ -133,12 +133,9 @@ test_qsub_config <- function(object) {
   }
 }
 
+#' @importFrom tools R_user_dir
 config_file_location <- function() {
-  if (.Platform$OS.type == "unix") {
-    "~/.local/share/qsub/qsub_config.rds"
-  } else if (.Platform$OS.type == "windows") {
-    "~/../AppData/Local/qsub/qsub_config.rds"
-  }
+  file.path(tools::R_user_dir("qsub", "config"), "qsub_config.rds")
 }
 
 #' Set a default qsub_config.

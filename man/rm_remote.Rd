@@ -4,8 +4,7 @@
 \alias{rm_remote}
 \title{Remove a file or folder}
 \usage{
-rm_remote(path, remote, recursive = FALSE, force = FALSE,
-  verbose = FALSE)
+rm_remote(path, remote, recursive = FALSE, force = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{path}{Path of the file/folder}

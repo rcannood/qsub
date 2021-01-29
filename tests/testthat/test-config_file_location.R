@@ -1,12 +1,13 @@
 context("config_file_location")
 
+loc <- config_file_location()
+
 test_that("config_file_location returns a character", {
-  loc <- config_file_location()
   expect_is(loc, "character")
 })
 
 test_that("should be able to set and get a default qsub config", {
-  if (file.exists(config_file_location())) {
+  if (file.exists(loc)) {
     prev <- get_default_qsub_config()
   } else {
     prev <- NULL
