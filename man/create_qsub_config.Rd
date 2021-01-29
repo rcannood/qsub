@@ -6,26 +6,19 @@
 \title{Create a qsub configuration object.}
 \usage{
 create_qsub_config(
-  # server settings
   remote,
   local_tmp_path,
   remote_tmp_path,
-
-  # execution parameters
   name = "r2qsub",
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
-  compress = "gzip",
-
-  # pre-execution parameters
+  compress = c("gz", "bz2", "xz", "none"),
   modules = "R",
   execute_before = NULL,
   verbose = FALSE,
-
-  # post-execution parameters
   wait = TRUE,
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
@@ -33,13 +26,9 @@ create_qsub_config(
 
 override_qsub_config(
   qsub_config = get_default_qsub_config(),
-
-  # server settings
   remote = qsub_config$remote,
   local_tmp_path = qsub_config$local_tmp_path,
   remote_tmp_path = qsub_config$remote_tmp_path,
-
-  # execution parameters
   name = qsub_config$name,
   num_cores = qsub_config$num_cores,
   memory = qsub_config$memory,
@@ -47,13 +36,9 @@ override_qsub_config(
   max_wall_time = qsub_config$max_wall_time,
   batch_tasks = qsub_config$batch_tasks,
   compress = qsub_config$compress,
-
-  # pre-execution parameters
   modules = qsub_config$modules,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
-
-  # post-execution parameters
   wait = qsub_config$wait,
   remove_tmp_folder = qsub_config$remove_tmp_folder,
   stop_on_error = qsub_config$stop_on_error

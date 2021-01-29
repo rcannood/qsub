@@ -36,7 +36,7 @@ Imports:
     tools,
     utils
 Suggests: testthat
-URL: http://github.com/rcannood/qsub
+URL: https://github.com/rcannood/qsub
 BugReports: https://github.com/rcannood/qsub/issues
 RoxygenNote: 7.1.1
 Encoding: UTF-8
