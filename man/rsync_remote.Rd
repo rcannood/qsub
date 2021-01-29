@@ -4,8 +4,16 @@
 \alias{rsync_remote}
 \title{Rsync files between machines}
 \usage{
-rsync_remote(remote_src, path_src, remote_dest, path_dest,
-  compress = TRUE, delete = "no", exclude = NULL, verbose = FALSE)
+rsync_remote(
+  remote_src,
+  path_src,
+  remote_dest,
+  path_dest,
+  compress = TRUE,
+  delete = "no",
+  exclude = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{remote_src}{Remote machine for the source, see the section below 'Specifying a remote'.}

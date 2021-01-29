@@ -3,8 +3,8 @@
 \docType{package}
 \name{qsub}
 \alias{qsub}
-\alias{qsub-package}
 \title{Running Commands Remotely on Gridengine Clusters}
 \description{
-Running Commands Remotely on Gridengine Clusters
+Run `lapply()` calls in parallel by submitting them to
+'gridengine' clusters using the 'qsub' command.
 }

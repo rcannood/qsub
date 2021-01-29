@@ -4,8 +4,11 @@
 \alias{set_default_qsub_config}
 \title{Set a default qsub_config.}
 \usage{
-set_default_qsub_config(qsub_config, permanent = TRUE,
-  config_file = config_file_location())
+set_default_qsub_config(
+  qsub_config,
+  permanent = TRUE,
+  config_file = config_file_location()
+)
 }
 \arguments{
 \item{qsub_config}{The qsub_config to use as default.}

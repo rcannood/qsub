@@ -5,8 +5,14 @@
 \title{A wrapper around the scp shell command that handles local/remote files and allows
 copying between remote hosts via the local machine.}
 \usage{
-cp_remote(remote_src, path_src, remote_dest, path_dest, verbose = FALSE,
-  recursively = FALSE)
+cp_remote(
+  remote_src,
+  path_src,
+  remote_dest,
+  path_dest,
+  verbose = FALSE,
+  recursively = FALSE
+)
 }
 \arguments{
 \item{remote_src}{Remote machine for the source file in the format \code{user@machine} or an empty string for local.}
