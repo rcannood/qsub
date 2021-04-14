@@ -1,3 +1,8 @@
+# qsub 1.1.2
+
+* BUG FIX: Copy paste the relevant code from `tools::R_user_dir()` into `config_file_location()` to ensure
+  that qsub works with older versions of R.
+
 # qsub 1.1.1
 
 * BUG FIX: Surround `readRDS()` with `tryCatch()` such that if there is an rds object but it is

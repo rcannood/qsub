@@ -106,9 +106,24 @@ test_qsub_config <- function(object) {
   }
 }
 
-#' @importFrom tools R_user_dir
 config_file_location <- function() {
-  file.path(tools::R_user_dir("qsub", "config"), "qsub_config.rds")
+  if (getRversion() < "4.0.0") {
+    # copy paste the relevant code of tools::R_user_dir for backwards compatibility
+    package <- "qsub"
+
+    home <- normalizePath("~")
+    path <-
+      if (nzchar(p <- Sys.getenv("R_USER_CONFIG_DIR"))) p
+      else if (nzchar(p <- Sys.getenv("XDG_CONFIG_HOME"))) p
+      else if (.Platform$OS.type == "windows") file.path(Sys.getenv("APPDATA"), "R", "config")
+      else if (Sys.info()["sysname"] == "Darwin") file.path(home, "Library", "Preferences", "org.R-project.R")
+      else file.path(home, ".config")
+
+    file.path(path, "R", package)
+  } else {
+    requireNamespace("tools")
+    file.path(tools::R_user_dir("qsub", "config"), "qsub_config.rds")
+  }
 }
 
 #' Set a default qsub_config.
