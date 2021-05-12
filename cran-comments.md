@@ -1,9 +1,10 @@
-# qsub 1.1.1
+# qsub 1.1.2
 
-* BUG FIX: Surround `readRDS()` with `tryCatch()` such that if there is an rds object but it is
-  truncated, qsub handles this as if there was no file at all.
+* BUG FIX: Copy paste the relevant code from `tools::R_user_dir()` into `config_file_location()` to ensure
+  that qsub works with older versions of R.
   
-* MINOR CHANGE: `config_file_location()` now uses `tools::R_user_dir()` to determine the path of the config file.
+* TESTING: Skip test on CRAN which might result in the creation of the cache dir as specified by R_user_dir 
+  if it did not already exist.
 
 ## Test environments
 * local Fedora install, R 4.0.3
@@ -12,8 +13,11 @@
 
 ## R CMD check results
 
-Duration: 1m 33s
+```
+── R CMD check results ───────────────────────────────────────── qsub 1.1.2 ────
+Duration: 31.7s
 
-0 errors ✔ | 0 warnings ✔ | 0 notes ✔
+0 errors ✓ | 0 warnings ✓ | 0 notes ✓
 
 R CMD check succeeded
+```

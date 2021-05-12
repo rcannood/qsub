@@ -41,4 +41,3 @@ BugReports: https://github.com/rcannood/qsub/issues
 RoxygenNote: 7.1.1
 Encoding: UTF-8
 License: GPL-3
-LazyData: true
