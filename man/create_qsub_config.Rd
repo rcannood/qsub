@@ -6,26 +6,19 @@
 \title{Create a qsub configuration object.}
 \usage{
 create_qsub_config(
-  # server settings
   remote,
   local_tmp_path,
   remote_tmp_path,
-
-  # execution parameters
   name = "r2qsub",
   num_cores = 1,
   memory = "4G",
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
-  compress = "xz",
-
-  # pre-execution parameters
+  compress = c("gz", "bz2", "xz", "none"),
   modules = "R",
   execute_before = NULL,
   verbose = FALSE,
-
-  # post-execution parameters
   wait = TRUE,
   remove_tmp_folder = TRUE,
   stop_on_error = TRUE
@@ -33,13 +26,9 @@ create_qsub_config(
 
 override_qsub_config(
   qsub_config = get_default_qsub_config(),
-
-  # server settings
   remote = qsub_config$remote,
   local_tmp_path = qsub_config$local_tmp_path,
   remote_tmp_path = qsub_config$remote_tmp_path,
-
-  # execution parameters
   name = qsub_config$name,
   num_cores = qsub_config$num_cores,
   memory = qsub_config$memory,
@@ -47,13 +36,9 @@ override_qsub_config(
   max_wall_time = qsub_config$max_wall_time,
   batch_tasks = qsub_config$batch_tasks,
   compress = qsub_config$compress,
-
-  # pre-execution parameters
   modules = qsub_config$modules,
   execute_before = qsub_config$execute_before,
   verbose = qsub_config$verbose,
-
-  # post-execution parameters
   wait = qsub_config$wait,
   remove_tmp_folder = qsub_config$remove_tmp_folder,
   stop_on_error = qsub_config$stop_on_error
@@ -84,7 +69,7 @@ Mind you, this might annoy other users of the cluster.}
 
 \item{batch_tasks}{How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).}
 
-\item{compress}{Compression method to use: \code{"none"}, \code{"gz"}, \code{"bz"}, or \code{"xz"} (default).}
+\item{compress}{Compression method to use: \code{"none"}, \code{"gz"} (default), \code{"bz2"}, or \code{"xz"}.}
 
 \item{modules}{Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.}
 

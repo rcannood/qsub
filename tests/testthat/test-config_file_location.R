@@ -1,5 +1,8 @@
 context("config_file_location")
 
+# skip on cran because this test writes files
+skip_on_cran()
+
 loc <- config_file_location()
 
 test_that("config_file_location returns a character", {
@@ -12,7 +15,9 @@ test_that("should be able to set and get a default qsub config", {
   } else {
     prev <- NULL
   }
-  on.exit(set_default_qsub_config(prev))
+  on.exit({
+    set_default_qsub_config(prev)
+  })
 
   # test whether you can save a config
   config <- create_qsub_config(remote = "foo", local_tmp_path = "/help", remote_tmp_path = "/bar")

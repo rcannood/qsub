@@ -1,3 +1,18 @@
+# qsub 1.1.2
+
+* BUG FIX: Copy paste the relevant code from `tools::R_user_dir()` into `config_file_location()` to ensure
+  that qsub works with older versions of R.
+  
+* TESTING: Skip test on CRAN which might result in the creation of the cache dir as specified by R_user_dir 
+  if it did not already exist.
+
+# qsub 1.1.1
+
+* BUG FIX: Surround `readRDS()` with `tryCatch()` such that if there is an rds object but it is
+  truncated, qsub handles this as if there was no file at all.
+  
+* MINOR CHANGE: `config_file_location()` now uses `tools::R_user_dir()` to determine the path of the config file.
+
 # qsub 1.1.0 (13-02-2019)
 
 * MINOR CHANGE: There is now an option to compress the output files, which is turned

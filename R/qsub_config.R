@@ -1,32 +1,5 @@
 #' Create a qsub configuration object.
 #'
-#' @usage
-#' create_qsub_config(
-#'   # server settings
-#'   remote,
-#'   local_tmp_path,
-#'   remote_tmp_path,
-#'
-#'   # execution parameters
-#'   name = "r2qsub",
-#'   num_cores = 1,
-#'   memory = "4G",
-#'   max_running_tasks = NULL,
-#'   max_wall_time = "01:00:00",
-#'   batch_tasks = 1,
-#'   compress = "xz",
-#'
-#'   # pre-execution parameters
-#'   modules = "R",
-#'   execute_before = NULL,
-#'   verbose = FALSE,
-#'
-#'   # post-execution parameters
-#'   wait = TRUE,
-#'   remove_tmp_folder = TRUE,
-#'   stop_on_error = TRUE
-#' )
-#'
 #' @param remote Remote machine specification for ssh, in format such as \code{user@@server:port}
 #'   that does not require interactive password entry.
 #' @param local_tmp_path A directory on the local machine in which to store temporary files. Should not contain a tilde ('~').
@@ -43,7 +16,7 @@
 #'   If set to \code{NULL}, the job will be allowed to run indefinitely.
 #'   Mind you, this might annoy other users of the cluster.
 #' @param batch_tasks How many values in \code{X} should be processed per task. Useful for when the `length(X)` is very large (> 10000).
-#' @param compress Compression method to use: \code{"none"}, \code{"gz"}, \code{"bz"}, or \code{"xz"} (default).
+#' @param compress Compression method to use: \code{"none"}, \code{"gz"} (default), \code{"bz2"}, or \code{"xz"}.
 #'
 #' @param modules Which modules to load (default: \code{"R"}). If set to \code{NULL}, it will be assumed Rscript will be available in the path through other means.
 #' @param execute_before Commands to execute in the bash shell before running R.
@@ -95,7 +68,7 @@ create_qsub_config <- function(
   max_running_tasks = NULL,
   max_wall_time = "01:00:00",
   batch_tasks = 1,
-  compress = "xz",
+  compress = c("gz", "bz2", "xz", "none"),
 
   # pre-execution parameters
   modules = "R",
@@ -133,9 +106,24 @@ test_qsub_config <- function(object) {
   }
 }
 
-#' @importFrom tools R_user_dir
 config_file_location <- function() {
-  file.path(tools::R_user_dir("qsub", "config"), "qsub_config.rds")
+  if (getRversion() < "4.0.0") {
+    # copy paste the relevant code of tools::R_user_dir for backwards compatibility
+    package <- "qsub"
+
+    home <- normalizePath("~")
+    path <-
+      if (nzchar(p <- Sys.getenv("R_USER_CONFIG_DIR"))) p
+      else if (nzchar(p <- Sys.getenv("XDG_CONFIG_HOME"))) p
+      else if (.Platform$OS.type == "windows") file.path(Sys.getenv("APPDATA"), "R", "config")
+      else if (Sys.info()["sysname"] == "Darwin") file.path(home, "Library", "Preferences", "org.R-project.R")
+      else file.path(home, ".config")
+
+    file.path(path, "R", package)
+  } else {
+    requireNamespace("tools")
+    file.path(tools::R_user_dir("qsub", "config"), "qsub_config.rds")
+  }
 }
 
 #' Set a default qsub_config.
@@ -184,7 +172,7 @@ set_default_qsub_config <- function(
       }
 
       # save file at desired location
-      saveRDS(qsub_config, config_file)
+      readr::write_rds(qsub_config, config_file)
     }
   }
 }
@@ -257,35 +245,6 @@ instantiate_qsub_config <- function(qsub_config) {
 #' @importFrom methods formalArgs
 #'
 #' @export
-#'
-#' @usage
-#' override_qsub_config(
-#'   qsub_config = get_default_qsub_config(),
-#'
-#'   # server settings
-#'   remote = qsub_config$remote,
-#'   local_tmp_path = qsub_config$local_tmp_path,
-#'   remote_tmp_path = qsub_config$remote_tmp_path,
-#'
-#'   # execution parameters
-#'   name = qsub_config$name,
-#'   num_cores = qsub_config$num_cores,
-#'   memory = qsub_config$memory,
-#'   max_running_tasks = qsub_config$max_running_tasks,
-#'   max_wall_time = qsub_config$max_wall_time,
-#'   batch_tasks = qsub_config$batch_tasks,
-#'   compress = qsub_config$compress,
-#'
-#'   # pre-execution parameters
-#'   modules = qsub_config$modules,
-#'   execute_before = qsub_config$execute_before,
-#'   verbose = qsub_config$verbose,
-#'
-#'   # post-execution parameters
-#'   wait = qsub_config$wait,
-#'   remove_tmp_folder = qsub_config$remove_tmp_folder,
-#'   stop_on_error = qsub_config$stop_on_error
-#' )
 override_qsub_config <- function(
   qsub_config = get_default_qsub_config(),
 

@@ -86,13 +86,15 @@ qsub_lapply <- function(
 
   # check compress param
   if (is.null(qsub_config$compress)) {
-    qsub_config$compress <- "xz"
+    qsub_config$compress <- "gz"
   }
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
 
   # collect arguments
+  compval <- qsub_config$compress[[1]]
+  compress_map <- list(gz = "gzip", bz2 = "bzip2", xz = "xz", none = FALSE)
   prism_environment <- list(
     SEEDS = seeds,
     X = X,
@@ -101,7 +103,7 @@ qsub_lapply <- function(
     PACKAGES = qsub_packages,
     QSUB_START = QSUB_START,
     QSUB_STOP = QSUB_STOP,
-    COMPRESS = c("bz" = "bzip2", "gz" = "gzip", "xz" = "xz", "none" = FALSE)[qsub_config$compress]
+    COMPRESS = compress_map[[qsub_config$compress]]
   )
 
   # generate folder names
@@ -339,14 +341,21 @@ qsub_retrieve <- function(qsub_config, wait = TRUE, post_fun = NULL) {
           output_file <- paste0(qs$src_dir, "/out/out_", rds_i, ".rds")
           error_file <- paste0(qs$src_dir, "/log/log.", rds_i, ".e.txt")
 
-          if (file.exists(output_file)) {
-            out_rds <- readRDS(output_file)
+          error_occurred <- TRUE
 
+          if (file.exists(output_file)) {
+            tryCatch({
+              out_rds <- readRDS(output_file)
+              error_occurred <- FALSE
+            }, error = function(e) {
+
+            })
+          }
+          if (!error_occurred) {
             if (!is.null(post_fun)) {
               ixs <- (rds_i - 1) * qs$batch_tasks + seq_along(out_rds)
               out_rds <- map2(ixs, out_rds, post_fun)
             }
-
             out_rds
           } else {
             if (file.exists(error_file)) {
