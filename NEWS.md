@@ -1,3 +1,7 @@
+# qsub 1.1.3
+
+* BUG FIX: Fix compress parameter such that it should contain only one value at a time.
+
 # qsub 1.1.2
 
 * BUG FIX: Copy paste the relevant code from `tools::R_user_dir()` into `config_file_location()` to ensure

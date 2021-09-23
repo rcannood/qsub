@@ -88,12 +88,14 @@ qsub_lapply <- function(
   if (is.null(qsub_config$compress)) {
     qsub_config$compress <- "gz"
   }
+  if (length(qsub_config$compress) > 1) {
+    qsub_config$compress <- qsub_config$compress[[1]]
+  }
 
   # determine seeds
   seeds <- sample.int(length(QSUB_START)*10, length(QSUB_START), replace = F)
 
   # collect arguments
-  compval <- qsub_config$compress[[1]]
   compress_map <- list(gz = "gzip", bz2 = "bzip2", xz = "xz", none = FALSE)
   prism_environment <- list(
     SEEDS = seeds,

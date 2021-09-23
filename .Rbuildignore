@@ -6,3 +6,4 @@
 ^README\.Rmd$
 ^deploy_
 ^cran-comments\.md$
+^CRAN-RELEASE$
