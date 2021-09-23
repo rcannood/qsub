@@ -82,8 +82,8 @@ create_qsub_config <- function(
 ) {
   qsub_conf <- as.list(environment())
   qsub_conf <- qsub_conf[intersect(names(qsub_conf), methods::formalArgs(create_qsub_config))]
-  if (length(qsub_config$compress) > 1) {
-    qsub_config$compress <- qsub_config$compress[[1]]
+  if (length(qsub_conf$compress) > 1) {
+    qsub_conf$compress <- qsub_conf$compress[[1]]
   }
   class(qsub_conf) <- c(class(qsub_conf), "qsub::qsub_config")
   qsub_conf
