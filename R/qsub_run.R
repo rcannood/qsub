@@ -224,9 +224,9 @@ setup_execution <- function(
     "#$ -l h_vmem=", qs$memory, "\n",
     ifelse(!is.null(qs$max_wall_time), paste0("#$ -l h_rt=", qs$max_wall_time, "\n"), ""),
     "cd ", qs$remote_dir, "\n",
+    paste0(paste0(qs$execute_before, collapse = "\n"), "\n"),
     "module unload R\n",
     ifelse(!is.null(qs$modules), paste0("module load ", qs$modules, "\n", collapse = "\n"), ""),
-    paste0(paste0(qs$execute_before, collapse = "\n"), "\n"),
     "Rscript --default-packages=methods,stats,utils,graphics,grDevices script.R $SGE_TASK_ID\n"
   )
   readr::write_lines(sh_script, qs$src_shfile)
